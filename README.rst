@@ -11,14 +11,14 @@ Declare a schema::
         "event_ids": List(Integer(gt=0)),
     })
 
-Check to see if data is valid
+Check to see if data is valid::
 
     data = {"name": "Andrew", "height": 180.3, "event_ids": [1, "3"]}
     person.errors(data)
 
     # Key event_ids: Index 1: Not an integer
 
-And wrap functions to validate on the way in and out.
+And wrap functions to validate on the way in and out::
 
     kwargs = Dictionary({
         "name": UnicodeString(),
