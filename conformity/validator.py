@@ -40,5 +40,9 @@ def validate_call(kwargs, returns):
             # Validate return value
             validate(returns, return_value, "return value")
             return return_value
+        inner.__wrapped__ = func
+        # caveat: checking for f.__validated__ will only work if
+        # @validate_call is the outermost decorator
+        inner.__validated__ = True
         return inner
     return decorator
