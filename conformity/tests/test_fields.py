@@ -35,7 +35,7 @@ class FieldTests(unittest.TestCase):
         self.assertEqual(
             schema.errors({"child_ids": [1, 2, "ten"]}),
             [
-                "Key child_ids: Element 2: Not an integer",
+                "Key child_ids: Index 2: Not a integer",
                 "Key address missing",
             ],
         )
@@ -53,7 +53,6 @@ class FieldTests(unittest.TestCase):
             }),
             [],
         )
-
 
     def test_polymorph(self):
 
