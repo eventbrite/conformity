@@ -3,7 +3,13 @@ from __future__ import unicode_literals
 import unittest
 
 from ..fields import Dictionary, UnicodeString
-from ..validator import validate, validate_call, ValidationError, PositionalError
+from ..validator import (
+    validate,
+    validate_call,
+    validate_method,
+    ValidationError,
+    PositionalError
+)
 
 
 class ValidatorTests(unittest.TestCase):
@@ -26,7 +32,6 @@ class ValidatorTests(unittest.TestCase):
 
         with self.assertRaises(ValidationError):
             validate(schema, {"name": "Andrew", "greeeeeeting": "Ahoy-hoy"})
-
 
     def test_validate_call(self):
 
@@ -56,3 +61,34 @@ class ValidatorTests(unittest.TestCase):
 
         with self.assertRaises(PositionalError):
             greeter("Andrew")
+
+    def test_validate_method(self):
+
+        schema = Dictionary({
+            "name": UnicodeString(max_length=20),
+            "greeting": UnicodeString(),
+        }, optional_keys=["greeting"])
+
+        class Greeter(object):
+            @classmethod
+            @validate_method(schema, UnicodeString())
+            def greeter(cls, name, greeting="Hello"):
+                # Special case to check return value stuff
+                if name == "error":
+                    return 5
+                return "%s, %s!" % (greeting, name)
+
+        self.assertEqual(Greeter.greeter(name="Andrew"), "Hello, Andrew!")
+        self.assertEqual(Greeter.greeter(name="Andrew", greeting="Ahoy"), "Ahoy, Andrew!")
+
+        with self.assertRaises(ValidationError):
+            Greeter.greeter(name="Andrewverylongnameperson")
+
+        with self.assertRaises(ValidationError):
+            Greeter.greeter(name="Andrew", greeeeeeting="Boo")
+
+        with self.assertRaises(ValidationError):
+            Greeter.greeter(name="error")
+
+        with self.assertRaises(PositionalError):
+            Greeter.greeter("Andrew")
