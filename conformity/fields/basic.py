@@ -70,11 +70,11 @@ class Integer(Base):
             return ["Not a %s" % self.valid_noun]
         elif self.gt is not None and value <= self.gt:
             return ["Value not > %s" % self.gt]
-        elif self.lt is not None and value >= self.ly:
+        elif self.lt is not None and value >= self.lt:
             return ["Value not < %s" % self.lt]
         elif self.gte is not None and value < self.gte:
             return ["Value not >= %s" % self.gte]
-        elif self.lte is not None and value > self.lye:
+        elif self.lte is not None and value > self.lte:
             return ["Value not <= %s" % self.lte]
 
 

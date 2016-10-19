@@ -1,8 +1,19 @@
 from __future__ import unicode_literals
 
 import unittest
+import datetime
 
-from ..fields import UnicodeString, Dictionary, List, Integer, Polymorph, Constant
+from ..fields import (
+    UnicodeString,
+    Dictionary,
+    List,
+    Integer,
+    Polymorph,
+    Constant,
+    DateTime,
+    Date,
+    TimeDelta,
+)
 
 
 class FieldTests(unittest.TestCase):
@@ -92,4 +103,65 @@ class FieldTests(unittest.TestCase):
                 "account": "13910399",
             }),
             [],
+        )
+
+    def test_temporal(self):
+        past1985 = datetime.datetime(1985, 10, 26, 1, 21, 00)
+        past1955 = datetime.datetime(1955, 11, 12, 22, 04, 00)
+
+        datetime_schema = DateTime(gt=past1985)
+        date_schema = Date(gt=past1985.date())
+        delta_schema = TimeDelta(gt=datetime.timedelta(0))
+        negative_delta_schema = TimeDelta(lt=datetime.timedelta(0))
+
+        self.assertEqual(
+            datetime_schema.errors(datetime.datetime.now()),
+            None,
+        )
+
+        # date is not a valid datetime
+        self.assertEqual(
+            datetime_schema.errors(datetime.date.today()),
+            ['Not a datetime.datetime instance'],
+        )
+
+        self.assertEqual(
+            datetime_schema.errors(past1955),
+            ['Value not > 1985-10-26 01:21:00'],
+        )
+
+        self.assertEqual(
+            date_schema.errors(datetime.date.today()),
+            None,
+        )
+
+        # datetime is not a valid date
+        self.assertEqual(
+            date_schema.errors(datetime.datetime.now()),
+            ['Not a datetime.date instance'],
+        )
+
+        self.assertEqual(
+            date_schema.errors(past1955.date()),
+            ['Value not > 1985-10-26'],
+        )
+
+        self.assertEqual(
+            delta_schema.errors(past1985 - past1955),
+            None,
+        )
+
+        self.assertEqual(
+            delta_schema.errors(past1955 - past1985),
+            ['Value not > 0:00:00'],
+        )
+
+        self.assertEqual(
+            negative_delta_schema.errors(past1955 - past1985),
+            None,
+        )
+
+        self.assertEqual(
+            negative_delta_schema.errors(past1985 - past1955),
+            ['Value not < 0:00:00'],
         )
