@@ -1,7 +1,7 @@
 from __future__ import unicode_literals
 import six
 
-from .basic import Base
+from .basic import Base, AnythingHashable, Anything
 
 
 class List(Base):
@@ -35,10 +35,10 @@ class Dictionary(Base):
     A dictionary with types per key (and requirements per key).
     """
 
-    def __init__(self, contents, optional_keys=None, ignore_extra_keys=False):
+    def __init__(self, contents, optional_keys=None, allow_extra_keys=False):
         self.contents = contents
         self.optional_keys = optional_keys or []
-        self.ignore_extra_keys = ignore_extra_keys
+        self.allow_extra_keys = allow_extra_keys
 
     def errors(self, value):
         if not isinstance(value, dict):
@@ -59,6 +59,30 @@ class Dictionary(Base):
                 )
         # Check for extra keys
         extra_keys = set(value.keys()) - set(self.contents.keys())
-        if extra_keys and not self.ignore_extra_keys:
+        if extra_keys and not self.allow_extra_keys:
             result.append("Extra keys %s present" % (", ".join(six.text_type(key) for key in extra_keys)))
+        return result
+
+
+class SchemalessDictionary(Base):
+    """
+    Generic dictionary with requirements about key and value types, but not specific keys
+    """
+    def __init__(self, key_field_type=None, value_filed_type=None):
+        self.key_field_type = key_field_type or AnythingHashable()
+        self.value_filed_type = value_filed_type or Anything()
+
+    def errors(self, value):
+        if not isinstance(value, dict):
+            return ["Not a dict"]
+        result = []
+        for key, field in value.items():
+            result.extend(
+                "Key %r: %s" % (key, error)
+                for error in (self.key_field_type.errors(key) or [])
+            )
+            result.extend(
+                "Value %r: %s" % (field, error)
+                for error in (self.value_filed_type.errors(field) or [])
+            )
         return result

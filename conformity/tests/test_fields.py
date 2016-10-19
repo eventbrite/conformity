@@ -13,6 +13,7 @@ from ..fields import (
     DateTime,
     Date,
     TimeDelta,
+    SchemalessDictionary
 )
 
 
@@ -164,4 +165,29 @@ class FieldTests(unittest.TestCase):
         self.assertEqual(
             negative_delta_schema.errors(past1985 - past1955),
             ['Value not < 0:00:00'],
+        )
+
+    def test_schemaless_dict(self):
+        schema = SchemalessDictionary()
+
+        self.assertEqual(
+            schema.errors({"key": "value"}),
+            []
+        )\
+
+        self.assertEqual(
+            schema.errors("a thing"),
+            ['Not a dict']
+        )
+
+        schema = SchemalessDictionary(Integer(), UnicodeString())
+
+        self.assertEqual(
+            schema.errors({1: u"value"}),
+            []
+        )
+
+        self.assertEqual(
+            schema.errors({"x": 123}),
+            ["Key 'x': Not a integer", 'Value 123: Not a unicode string'],
         )
