@@ -41,7 +41,7 @@ class Anything(Base):
         pass
 
 
-class AnythingHashable(Anything):
+class Hashable(Anything):
     """
     Accepts any hashable value
     """

@@ -1,7 +1,7 @@
 from __future__ import unicode_literals
 import six
 
-from .basic import Base, AnythingHashable, Anything
+from .basic import Base, Hashable, Anything
 
 
 class List(Base):
@@ -68,9 +68,9 @@ class SchemalessDictionary(Base):
     """
     Generic dictionary with requirements about key and value types, but not specific keys
     """
-    def __init__(self, key_field_type=None, value_filed_type=None):
-        self.key_field_type = key_field_type or AnythingHashable()
-        self.value_filed_type = value_filed_type or Anything()
+    def __init__(self, key_type=None, value_type=None):
+        self.key_type = key_type or Hashable()
+        self.value_type = value_type or Anything()
 
     def errors(self, value):
         if not isinstance(value, dict):
@@ -79,10 +79,10 @@ class SchemalessDictionary(Base):
         for key, field in value.items():
             result.extend(
                 "Key %r: %s" % (key, error)
-                for error in (self.key_field_type.errors(key) or [])
+                for error in (self.key_type.errors(key) or [])
             )
             result.extend(
                 "Value %r: %s" % (field, error)
-                for error in (self.value_filed_type.errors(field) or [])
+                for error in (self.value_type.errors(field) or [])
             )
         return result
