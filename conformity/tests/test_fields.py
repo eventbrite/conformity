@@ -173,7 +173,7 @@ class FieldTests(unittest.TestCase):
         self.assertEqual(
             schema.errors({"key": "value"}),
             []
-        )\
+        )
 
         self.assertEqual(
             schema.errors("a thing"),
