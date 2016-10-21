@@ -15,7 +15,7 @@ class Base(object):
         return ["Validation not implemented on base type"]
 
 
-class Constant(object):
+class Constant(Base):
     """
     Value that must match exactly.
     """
@@ -32,13 +32,24 @@ class Constant(object):
             return ["Value is not %r" % self.value]
 
 
-class Anything(object):
+class Anything(Base):
     """
     Accepts any value.
     """
 
     def errors(self, value):
         pass
+
+
+class Hashable(Anything):
+    """
+    Accepts any hashable value
+    """
+    def errors(self, value):
+        try:
+            hash(value)
+        except TypeError:
+            return ["Value is not hashable"]
 
 
 class Boolean(Base):
@@ -112,4 +123,3 @@ class ByteString(UnicodeString):
 
     valid_type = six.binary_type
     valid_noun = "byte string"
-
