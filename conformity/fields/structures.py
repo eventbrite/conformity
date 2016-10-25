@@ -86,3 +86,25 @@ class SchemalessDictionary(Base):
                 for error in (self.value_type.errors(field) or [])
             )
         return result
+
+
+class Tuple(Base):
+    """
+    A tuple with types per element.
+    """
+
+    def __init__(self, *contents):
+        self.contents = contents
+
+    def errors(self, value):
+        if not isinstance(value, tuple):
+            return ["Not a tuple"]
+
+        result = []
+        if len(value) != len(self.contents):
+            result.append("number of elements %d doesn't match expected %d" % (len(value), len(self.contents)))
+
+        for i, (c_elem, v_elem) in enumerate(zip(self.contents, value)):
+            result.extend("Element %d: %s" % (i, error) for error in (c_elem.errors(v_elem) or []))
+
+        return result

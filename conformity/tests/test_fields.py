@@ -15,6 +15,7 @@ from ..fields import (
     TimeDelta,
     SchemalessDictionary,
     ObjectInstance,
+    Tuple,
 )
 
 
@@ -219,4 +220,31 @@ class FieldTests(unittest.TestCase):
         self.assertEqual(
             schema.errors(SomethingElse()),
             ["not an instance of Thing"]
+        )
+
+    def test_tuple(self):
+        schema = Tuple(Integer(gt=0), UnicodeString(), Constant("I love tuples"))
+
+        self.assertEqual(
+            schema.errors((1, "test", "I love tuples")),
+            []
+        )
+
+        # too short
+        self.assertEqual(
+            schema.errors((1, "test")),
+            ["number of elements 2 doesn't match expected 3"]
+        )
+
+        # too long
+        self.assertEqual(
+            schema.errors((1, "test", "I love tuples", "... and coffee")),
+            ["number of elements 4 doesn't match expected 3"]
+        )
+
+        self.assertEqual(
+            schema.errors((-1, None, "I hate tuples",)),
+            ['Element 0: Value not > 0',
+             'Element 1: Not a unicode string',
+             "Element 2: Value is not u'I love tuples'"]
         )
