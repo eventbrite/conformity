@@ -13,7 +13,8 @@ from ..fields import (
     DateTime,
     Date,
     TimeDelta,
-    SchemalessDictionary
+    SchemalessDictionary,
+    ObjectInstance,
 )
 
 
@@ -189,5 +190,33 @@ class FieldTests(unittest.TestCase):
 
         self.assertEqual(
             schema.errors({"x": 123}),
-            ["Key 'x': Not a integer", 'Value 123: Not a unicode string'],
+            ["Key u'x': Not a integer", 'Value 123: Not a unicode string'],
+        )
+
+    def test_objectinstance(self):
+        class Thing(object):
+            pass
+
+        class Thingy(Thing):
+            pass
+
+        class SomethingElse(object):
+            pass
+
+        schema = ObjectInstance(Thing)
+
+        self.assertEqual(
+            schema.errors(Thing()),
+            []
+        )
+
+        # subclasses are valid
+        self.assertEqual(
+            schema.errors(Thingy()),
+            []
+        )
+
+        self.assertEqual(
+            schema.errors(SomethingElse()),
+            ["not an instance of Thing"]
         )

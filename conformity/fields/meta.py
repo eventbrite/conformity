@@ -28,3 +28,17 @@ class Polymorph(Base):
         field = self.contents_map[switch_value]
         # Run field errors
         return field.errors(value)
+
+
+class ObjectInstance(Base):
+    """
+    Accepts only instances of a given class or type
+    """
+    def __init__(self, valid_type):
+        self.valid_type = valid_type
+
+    def errors(self, value):
+        if not isinstance(value, self.valid_type):
+            return ["not an instance of %s" % self.valid_type.__name__]
+        else:
+            return []
