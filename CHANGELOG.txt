@@ -1,0 +1,14 @@
+
+Changelog
+==========
+
+1.1.0 (2016-10-25)
+------------------
+- new types: Temporal, Tuple, ObjectInstance, SchemalessDictionary
+- renamed 'collections' to 'structures' to avoid name clash
+
+ 1.0.0 (2016-10-04)
+ ------------------
+ - Initial release
+ - validation marker
+ - @validate_method decorator
