@@ -220,5 +220,3 @@ class FieldTests(unittest.TestCase):
             schema.errors(SomethingElse()),
             ["not an instance of Thing"]
         )
-
-
