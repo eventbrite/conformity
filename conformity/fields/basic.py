@@ -89,7 +89,7 @@ class Integer(Base):
             return ["Value not <= %s" % self.lte]
 
 
-class Float(Base):
+class Float(Integer):
     """
     Accepts floating point numbers as well as integers.
     """
