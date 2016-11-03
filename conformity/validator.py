@@ -1,5 +1,5 @@
 import types
-from functools import partial
+from functools import partial, wraps
 
 
 class ValidationError(ValueError):
@@ -33,6 +33,7 @@ def validate_call(kwargs, returns, is_method=False):
     arguments are not supported.
     """
     def decorator(func):
+        @wraps(func)
         def inner(*passed_args, **passed_kwargs):
             # Enforce no positional args
             # first argument of instance method and class method is always positonal so we need
