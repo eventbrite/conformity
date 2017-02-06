@@ -2,6 +2,7 @@ from __future__ import unicode_literals
 import datetime
 
 from .basic import Base
+from ..error import Error
 
 
 class TemporalBase(Base):
@@ -14,15 +15,25 @@ class TemporalBase(Base):
     def errors(self, value):
         if not type(value) == self.valid_type:
             # using stricter type checking, because date is subclass of datetime, but they're not comparable
-            return ["Not a %s instance" % self.valid_noun]
+            return [
+                Error("Not a %s instance" % self.valid_noun),
+            ]
         elif self.gt is not None and value <= self.gt:
-            return ["Value not > %s" % self.gt]
+            return [
+                Error("Value not > %s" % self.gt),
+            ]
         elif self.lt is not None and value >= self.lt:
-            return ["Value not < %s" % self.lt]
+            return [
+                Error("Value not < %s" % self.lt),
+            ]
         elif self.gte is not None and value < self.gte:
-            return ["Value not >= %s" % self.gte]
+            return [
+                Error("Value not >= %s" % self.gte),
+            ]
         elif self.lte is not None and value > self.lte:
-            return ["Value not <= %s" % self.lte]
+            return [
+                Error("Value not <= %s" % self.lte),
+            ]
 
 
 class DateTime(TemporalBase):

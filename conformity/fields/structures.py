@@ -2,6 +2,19 @@ from __future__ import unicode_literals
 import six
 
 from .basic import Base, Hashable, Anything
+from ..error import Error
+
+
+def _update_error_pointer(error, pointer_or_prefix):
+    """
+    Helper function to update an Error's pointer attribute with a (potentially
+    prefixed) dictionary key or list index.
+    """
+    if error.pointer:
+        error.pointer = '{}.{}'.format(pointer_or_prefix, error.pointer)
+    else:
+        error.pointer = '{}'.format(pointer_or_prefix)
+    return error
 
 
 class List(Base):
@@ -16,15 +29,21 @@ class List(Base):
 
     def errors(self, value):
         if not isinstance(value, list):
-            return ["Not a list"]
+            return [
+                Error("Not a list"),
+            ]
         result = []
         if self.max_length is not None and len(value) > self.max_length:
-            result.append("List longer than %s" % self.max_length)
+            result.append(
+                Error("List longer than %s" % self.max_length),
+            )
         elif self.min_length is not None and len(value) < self.min_length:
-            result.append("List is shorter than %s" % self.min_length)
+            result.append(
+                Error("List is shorter than %s" % self.min_length),
+            )
         for i, element in enumerate(value):
             result.extend(
-                "Index %i: %s" % (i, error)
+                _update_error_pointer(error, i)
                 for error in (self.contents.errors(element) or [])
             )
         return result
@@ -42,25 +61,29 @@ class Dictionary(Base):
 
     def errors(self, value):
         if not isinstance(value, dict):
-            return ["Not a dict"]
+            return [
+                Error("Not a dict"),
+            ]
         result = []
-        seen_keys = set()
         for key, field in self.contents.items():
             # Check key is present
             if key not in value:
                 if key not in self.optional_keys:
-                    result.append("Key %s missing" % key)
+                    result.append(
+                        Error("Key %s missing" % key, pointer=key),
+                    )
             else:
-                seen_keys.add(key)
                 # Check key type
                 result.extend(
-                    "Key %s: %s" % (key, error)
+                    _update_error_pointer(error, key)
                     for error in (field.errors(value[key]) or [])
                 )
         # Check for extra keys
         extra_keys = set(value.keys()) - set(self.contents.keys())
         if extra_keys and not self.allow_extra_keys:
-            result.append("Extra keys %s present" % (", ".join(six.text_type(key) for key in extra_keys)))
+            result.append(
+                Error("Extra keys %s present" % (", ".join(six.text_type(key) for key in extra_keys))),
+            )
         return result
 
 
@@ -74,15 +97,17 @@ class SchemalessDictionary(Base):
 
     def errors(self, value):
         if not isinstance(value, dict):
-            return ["Not a dict"]
+            return [
+                Error("Not a dict"),
+            ]
         result = []
         for key, field in value.items():
             result.extend(
-                "Key %r: %s" % (key, error)
+                _update_error_pointer(error, key)
                 for error in (self.key_type.errors(key) or [])
             )
             result.extend(
-                "Value %r: %s" % (field, error)
+                _update_error_pointer(error, key)
                 for error in (self.value_type.errors(field) or [])
             )
         return result
@@ -98,13 +123,20 @@ class Tuple(Base):
 
     def errors(self, value):
         if not isinstance(value, tuple):
-            return ["Not a tuple"]
+            return [
+                Error("Not a tuple"),
+            ]
 
         result = []
         if len(value) != len(self.contents):
-            result.append("number of elements %d doesn't match expected %d" % (len(value), len(self.contents)))
+            result.append(
+                Error("Number of elements %d doesn't match expected %d" % (len(value), len(self.contents)))
+            )
 
         for i, (c_elem, v_elem) in enumerate(zip(self.contents, value)):
-            result.extend("Element %d: %s" % (i, error) for error in (c_elem.errors(v_elem) or []))
+            result.extend(
+                _update_error_pointer(error, i)
+                for error in (c_elem.errors(v_elem) or [])
+            )
 
         return result

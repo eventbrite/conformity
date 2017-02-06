@@ -17,6 +17,7 @@ from ..fields import (
     ObjectInstance,
     Tuple,
 )
+from ..error import Error
 
 
 class FieldTests(unittest.TestCase):
@@ -43,14 +44,14 @@ class FieldTests(unittest.TestCase):
 
         self.assertEqual(
             schema.errors(None),
-            ["Not a dict"],
+            [Error("Not a dict")],
         )
 
         self.assertEqual(
             schema.errors({"child_ids": [1, 2, "ten"]}),
             [
-                "Key child_ids: Index 2: Not a integer",
-                "Key address missing",
+                Error("Not a integer", pointer="child_ids.2"),
+                Error("Key address missing", pointer="address"),
             ],
         )
 
@@ -125,12 +126,12 @@ class FieldTests(unittest.TestCase):
         # date is not a valid datetime
         self.assertEqual(
             datetime_schema.errors(datetime.date.today()),
-            ['Not a datetime.datetime instance'],
+            [Error('Not a datetime.datetime instance')],
         )
 
         self.assertEqual(
             datetime_schema.errors(past1955),
-            ['Value not > 1985-10-26 01:21:00'],
+            [Error('Value not > 1985-10-26 01:21:00')],
         )
 
         self.assertEqual(
@@ -141,12 +142,12 @@ class FieldTests(unittest.TestCase):
         # datetime is not a valid date
         self.assertEqual(
             date_schema.errors(datetime.datetime.now()),
-            ['Not a datetime.date instance'],
+            [Error('Not a datetime.date instance')],
         )
 
         self.assertEqual(
             date_schema.errors(past1955.date()),
-            ['Value not > 1985-10-26'],
+            [Error('Value not > 1985-10-26')],
         )
 
         self.assertEqual(
@@ -156,7 +157,7 @@ class FieldTests(unittest.TestCase):
 
         self.assertEqual(
             delta_schema.errors(past1955 - past1985),
-            ['Value not > 0:00:00'],
+            [Error('Value not > 0:00:00')],
         )
 
         self.assertEqual(
@@ -166,7 +167,7 @@ class FieldTests(unittest.TestCase):
 
         self.assertEqual(
             negative_delta_schema.errors(past1985 - past1955),
-            ['Value not < 0:00:00'],
+            [Error('Value not < 0:00:00')],
         )
 
     def test_schemaless_dict(self):
@@ -179,7 +180,7 @@ class FieldTests(unittest.TestCase):
 
         self.assertEqual(
             schema.errors("a thing"),
-            ['Not a dict']
+            [Error('Not a dict')]
         )
 
         schema = SchemalessDictionary(Integer(), UnicodeString())
@@ -191,7 +192,10 @@ class FieldTests(unittest.TestCase):
 
         self.assertEqual(
             schema.errors({"x": 123}),
-            ["Key u'x': Not a integer", 'Value 123: Not a unicode string'],
+            [
+                Error("Not a integer", pointer="x"),
+                Error("Not a unicode string", pointer="x"),
+            ],
         )
 
     def test_objectinstance(self):
@@ -219,7 +223,7 @@ class FieldTests(unittest.TestCase):
 
         self.assertEqual(
             schema.errors(SomethingElse()),
-            ["not an instance of Thing"]
+            [Error("Not an instance of Thing")]
         )
 
     def test_tuple(self):
@@ -233,18 +237,20 @@ class FieldTests(unittest.TestCase):
         # too short
         self.assertEqual(
             schema.errors((1, "test")),
-            ["number of elements 2 doesn't match expected 3"]
+            [Error("Number of elements 2 doesn't match expected 3")]
         )
 
         # too long
         self.assertEqual(
             schema.errors((1, "test", "I love tuples", "... and coffee")),
-            ["number of elements 4 doesn't match expected 3"]
+            [Error("Number of elements 4 doesn't match expected 3")]
         )
 
         self.assertEqual(
             schema.errors((-1, None, "I hate tuples",)),
-            ['Element 0: Value not > 0',
-             'Element 1: Not a unicode string',
-             "Element 2: Value is not u'I love tuples'"]
+            [
+                Error('Value not > 0', pointer='0'),
+                Error('Not a unicode string', pointer='1'),
+                Error("Value is not u'I love tuples'", pointer='2'),
+            ]
         )
