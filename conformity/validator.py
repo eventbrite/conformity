@@ -23,7 +23,13 @@ def validate(schema, value, noun="value"):
     """
     errors = schema.errors(value)
     if errors:
-        raise ValidationError("Invalid %s:\n  - %s" % (noun, "\n  - ".join(errors)))
+        error_details = ''
+        for error in errors:
+            if error.pointer:
+                error_details += '  - %s: %s\n' % (error.pointer, error.message)
+            else:
+                error_details += '  - %s\n' % error.message
+        raise ValidationError("Invalid %s:\n%s" % (noun, error_details))
 
 
 def validate_call(kwargs, returns, is_method=False):

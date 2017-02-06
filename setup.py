@@ -9,4 +9,5 @@ setup(
     install_requires=[
         'six',
     ],
+    test_suite='conformity.tests',
 )

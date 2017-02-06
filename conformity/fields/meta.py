@@ -1,6 +1,7 @@
 from __future__ import unicode_literals
 
 from .basic import Base
+from ..error import Error
 
 
 class Polymorph(Base):
@@ -24,7 +25,9 @@ class Polymorph(Base):
             if "__default__" in self.contents_map:
                 switch_value = "__default__"
             else:
-                return ["Invalid switch value %r" % switch_value]
+                return [
+                    Error("Invalid switch value %r" % switch_value),
+                ]
         field = self.contents_map[switch_value]
         # Run field errors
         return field.errors(value)
@@ -39,6 +42,8 @@ class ObjectInstance(Base):
 
     def errors(self, value):
         if not isinstance(value, self.valid_type):
-            return ["not an instance of %s" % self.valid_type.__name__]
+            return [
+                Error("Not an instance of %s" % self.valid_type.__name__),
+            ]
         else:
             return []
