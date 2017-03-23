@@ -31,3 +31,22 @@ And wrap functions to validate on the way in and out::
             return "So nice to meet you, %s!" % name
         else:
             return "Hello, %s." % name
+
+
+Interface
+---------
+
+Anything can be a Conformity validator as long as it follows this interface:
+
+* An ``errors(value)`` method, that returns a list of ``confirmity.Error``
+  objects for each error or an empty list if the value is clean.
+
+* An ``introspect()`` method, that returns a dictionary describing the field.
+  The format of this dictionary has to vary by field, but it should reflect the
+  names of keyword arguments passed into the constructor, and provide enough
+  information to entirely re-create the field as-is. Any sub-fields declared
+  for structures should be represented using their own ``introspect()`` output.
+  The dictionary must also contain a ``type`` key that contains the name of the
+  type, but this should use lower case and underscores rather than the class
+  name. It can also contain a ``description`` key which should be interpreted
+  as the human-readable reason for the field.
