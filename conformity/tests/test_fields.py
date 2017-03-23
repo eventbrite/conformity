@@ -69,17 +69,45 @@ class FieldTests(unittest.TestCase):
             [],
         )
 
+        self.assertEqual(
+            schema.introspect(),
+            {
+                "type": "dictionary",
+                "allow_extra_keys": False,
+                "contents": {
+                    "address": {
+                        "type": "dictionary",
+                        "allow_extra_keys": False,
+                        "contents": {
+                            "city": {"type": "unicode"},
+                            "country": {"type": "unicode"},
+                            "line1": {"type": "unicode"},
+                            "line2": {"type": "unicode"},
+                            "postcode": {"type": "unicode"},
+                            "state": {"type": "unicode"},
+                        },
+                        "optional_keys": ["line2", "state"],
+                    },
+                    "child_ids": {
+                        "type": "list",
+                        "contents": {"gt": 0, "type": "integer"},
+                    },
+                },
+                "optional_keys": [],
+            },
+        )
+
     def test_polymorph(self):
 
         card = Dictionary({
             "payment_type": Constant("card"),
             "number": UnicodeString(),
-            "cvc": UnicodeString(),
+            "cvc": UnicodeString(description="Card Verification Code"),
         })
 
         bankacc = Dictionary({
             "payment_type": Constant("bankacc"),
-            "routing": UnicodeString(),
+            "routing": UnicodeString(description="US RTN or foreign equivalent"),
             "account": UnicodeString(),
         })
 
@@ -109,6 +137,48 @@ class FieldTests(unittest.TestCase):
             [],
         )
 
+        self.assertEqual(
+            schema.introspect(),
+            {
+                "type": "polymorph",
+                "contents_map": {
+                    "bankacc": {
+                        "type": "dictionary",
+                        "allow_extra_keys": False,
+                        "contents": {
+                            "account": {"type": "unicode"},
+                            "payment_type": {
+                                "type": "constant",
+                                "value": "bankacc",
+                            },
+                            "routing": {
+                                "type": "unicode",
+                                "description": "US RTN or foreign equivalent",
+                            },
+                        },
+                        "optional_keys": [],
+                    },
+                    "card": {
+                        "type": "dictionary",
+                        "allow_extra_keys": False,
+                        "contents": {
+                            "cvc": {
+                                "type": "unicode",
+                                "description": "Card Verification Code",
+                            },
+                            "number": {"type": "unicode"},
+                            "payment_type": {
+                                "type": "constant",
+                                "value": "card",
+                            },
+                        },
+                        "optional_keys": [],
+                    },
+                },
+                "switch_field": "payment_type",
+            },
+        )
+
     def test_temporal(self):
         past1985 = datetime.datetime(1985, 10, 26, 1, 21, 00)
         past1955 = datetime.datetime(1955, 11, 12, 22, 04, 00)
@@ -132,6 +202,14 @@ class FieldTests(unittest.TestCase):
         self.assertEqual(
             datetime_schema.errors(past1955),
             [Error('Value not > 1985-10-26 01:21:00')],
+        )
+
+        self.assertEqual(
+            datetime_schema.introspect(),
+            {
+                'type': 'datetime',
+                'gt': past1985,
+            },
         )
 
         self.assertEqual(
@@ -170,7 +248,11 @@ class FieldTests(unittest.TestCase):
             [Error('Value not < 0:00:00')],
         )
 
-    def test_schemaless_dict(self):
+    def test_schemaless_dict_empty(self):
+        """
+        Tests the schemaless dict without any schema at all
+        (so the default Hashable: Anything)
+        """
         schema = SchemalessDictionary()
 
         self.assertEqual(
@@ -183,6 +265,17 @@ class FieldTests(unittest.TestCase):
             [Error('Not a dict')]
         )
 
+        self.assertEqual(
+            schema.introspect(),
+            {
+                'type': 'schemaless_dictionary',
+            }
+        )
+
+    def test_schemaless_dict(self):
+        """
+        Tests the schemaless dict with some schema
+        """
         schema = SchemalessDictionary(Integer(), UnicodeString())
 
         self.assertEqual(
@@ -196,6 +289,15 @@ class FieldTests(unittest.TestCase):
                 Error("Not a integer", pointer="x"),
                 Error("Not a unicode string", pointer="x"),
             ],
+        )
+
+        self.assertEqual(
+            schema.introspect(),
+            {
+                'type': 'schemaless_dictionary',
+                'key_type': {'type': 'integer'},
+                'value_type': {'type': 'unicode'},
+            }
         )
 
     def test_objectinstance(self):
@@ -253,4 +355,16 @@ class FieldTests(unittest.TestCase):
                 Error('Not a unicode string', pointer='1'),
                 Error("Value is not u'I love tuples'", pointer='2'),
             ]
+        )
+
+        self.assertEqual(
+            schema.introspect(),
+            {
+                "type": "tuple",
+                "contents": [
+                    {"type": "integer", "gt": 0},
+                    {"type": "unicode"},
+                    {"type": "constant", "value": "I love tuples"},
+                ]
+            }
         )

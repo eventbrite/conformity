@@ -1,18 +1,21 @@
 from __future__ import unicode_literals
+import attr
 
 from .basic import Base
 from ..error import Error
+from ..utils import strip_none
 
 
+@attr.s
 class Polymorph(Base):
     """
     A field which has one of a set of possible contents based on a field
     within it (which must be accessible via dictionary lookups)
     """
 
-    def __init__(self, switch_field, contents_map):
-        self.switch_field = switch_field
-        self.contents_map = contents_map
+    switch_field = attr.ib()
+    contents_map = attr.ib()
+    description = attr.ib(default=None)
 
     def errors(self, value):
         # Get switch field value
@@ -32,13 +35,26 @@ class Polymorph(Base):
         # Run field errors
         return field.errors(value)
 
+    def introspect(self):
+        return strip_none({
+            "type": "polymorph",
+            "description": self.description,
+            "switch_field": self.switch_field,
+            "contents_map": {
+                key: value.introspect()
+                for key, value in self.contents_map.items()
+            }
+        })
 
+
+@attr.s
 class ObjectInstance(Base):
     """
     Accepts only instances of a given class or type
     """
-    def __init__(self, valid_type):
-        self.valid_type = valid_type
+
+    valid_type = attr.ib()
+    description = attr.ib(default=None)
 
     def errors(self, value):
         if not isinstance(value, self.valid_type):
@@ -47,3 +63,12 @@ class ObjectInstance(Base):
             ]
         else:
             return []
+
+    def introspect(self):
+        return strip_none({
+            "type": "object_instance",
+            "description": self.description,
+            # Unfortunately, this is the one sort of thing we can't represent
+            # super well. Maybe add some dotted path stuff in here.
+            "valid_type": repr(self.valid_type),
+        })

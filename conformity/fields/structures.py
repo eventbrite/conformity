@@ -1,8 +1,10 @@
 from __future__ import unicode_literals
+import attr
 import six
 
 from .basic import Base, Hashable, Anything
 from ..error import Error
+from ..utils import strip_none
 
 
 def _update_error_pointer(error, pointer_or_prefix):
@@ -17,15 +19,16 @@ def _update_error_pointer(error, pointer_or_prefix):
     return error
 
 
+@attr.s
 class List(Base):
     """
     A list of things of a single type.
     """
 
-    def __init__(self, contents, max_length=None, min_length=None):
-        self.contents = contents
-        self.max_length = max_length
-        self.min_length = min_length
+    contents = attr.ib()
+    max_length = attr.ib(default=None)
+    min_length = attr.ib(default=None)
+    description = attr.ib(default=None)
 
     def errors(self, value):
         if not isinstance(value, list):
@@ -48,16 +51,26 @@ class List(Base):
             )
         return result
 
+    def introspect(self):
+        return strip_none({
+            "type": "list",
+            "contents": self.contents.introspect(),
+            "max_length": self.max_length,
+            "min_length": self.min_length,
+            "description": self.description,
+        })
 
+
+@attr.s
 class Dictionary(Base):
     """
     A dictionary with types per key (and requirements per key).
     """
 
-    def __init__(self, contents, optional_keys=None, allow_extra_keys=False):
-        self.contents = contents
-        self.optional_keys = optional_keys or []
-        self.allow_extra_keys = allow_extra_keys
+    contents = attr.ib()
+    optional_keys = attr.ib(default=attr.Factory(list))
+    allow_extra_keys = attr.ib(default=False)
+    description = attr.ib(default=None)
 
     def errors(self, value):
         if not isinstance(value, dict):
@@ -86,14 +99,28 @@ class Dictionary(Base):
             )
         return result
 
+    def introspect(self):
+        return strip_none({
+            "type": "dictionary",
+            "contents": {
+                key: value.introspect()
+                for key, value in self.contents.items()
+            },
+            "optional_keys": self.optional_keys,
+            "allow_extra_keys": self.allow_extra_keys,
+            "description": self.description,
+        })
 
+
+@attr.s
 class SchemalessDictionary(Base):
     """
     Generic dictionary with requirements about key and value types, but not specific keys
     """
-    def __init__(self, key_type=None, value_type=None):
-        self.key_type = key_type or Hashable()
-        self.value_type = value_type or Anything()
+
+    key_type = attr.ib(default=attr.Factory(Hashable))
+    value_type = attr.ib(default=attr.Factory(Anything))
+    description = attr.ib(default=None)
 
     def errors(self, value):
         if not isinstance(value, dict):
@@ -112,14 +139,31 @@ class SchemalessDictionary(Base):
             )
         return result
 
+    def introspect(self):
+        result = {
+            "type": "schemaless_dictionary",
+            "description": self.description,
+        }
+        # We avoid using isinstance() here as that would also match subclass instances
+        if not self.key_type.__class__ == Hashable:
+            result["key_type"] = self.key_type.introspect()
+        if not self.value_type.__class__ == Anything:
+            result["value_type"] = self.value_type.introspect()
+        return strip_none(result)
+
 
 class Tuple(Base):
     """
     A tuple with types per element.
     """
 
-    def __init__(self, *contents):
+    def __init__(self, *contents, **kwargs):
+        # We can't use attrs here because we need to capture all positional
+        # arguments, but also extract the description kwarg if provided.
         self.contents = contents
+        self.description = kwargs.get("description", None)
+        if list(kwargs.keys()) not in ([], ["description"]):
+            raise ValueError("Unknown keyword arguments %s" % kwargs.keys())
 
     def errors(self, value):
         if not isinstance(value, tuple):
@@ -140,3 +184,10 @@ class Tuple(Base):
             )
 
         return result
+
+    def introspect(self):
+        return strip_none({
+            "type": "tuple",
+            "contents": [value.introspect() for value in self.contents],
+            "description": self.description,
+        })

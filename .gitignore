@@ -2,6 +2,7 @@
 /dist
 *.egg-info
 *.pyc
+*.eggs
 __pycache__
 
 *.swp
