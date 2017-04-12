@@ -119,7 +119,7 @@ class Integer(Base):
     Accepts valid integers, with optional range limits.
     """
 
-    valid_type = (int, long)
+    valid_type = six.integer_types
     valid_noun = "integer"
     introspect_type = "integer"
 
@@ -167,7 +167,7 @@ class Float(Integer):
     Accepts floating point numbers as well as integers.
     """
 
-    valid_type = (int, long, float)
+    valid_type = six.integer_types + (float,)
     valid_noun = "float"
     introspect_type = "float"
 
