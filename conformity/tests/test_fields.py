@@ -180,8 +180,8 @@ class FieldTests(unittest.TestCase):
         )
 
     def test_temporal(self):
-        past1985 = datetime.datetime(1985, 10, 26, 1, 21, 00)
-        past1955 = datetime.datetime(1955, 11, 12, 22, 04, 00)
+        past1985 = datetime.datetime(1985, 10, 26, 1, 21, 0)
+        past1955 = datetime.datetime(1955, 11, 12, 22, 4, 0)
 
         datetime_schema = DateTime(gt=past1985)
         date_schema = Date(gt=past1985.date())
@@ -353,7 +353,10 @@ class FieldTests(unittest.TestCase):
             [
                 Error('Value not > 0', pointer='0'),
                 Error('Not a unicode string', pointer='1'),
-                Error("Value is not u'I love tuples'", pointer='2'),
+                Error(
+                    'Value is not %r' % 'I love tuples',
+                    pointer='2',
+                ),
             ]
         )
 
