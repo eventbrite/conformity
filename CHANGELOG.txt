@@ -2,6 +2,11 @@
 Changelog
 ==========
 
+1.3.0 (2017-04-13)
+------------------
+- Add validation and description funcionality to fields for introspection
+- Now compatible with Python 3
+
 1.2.0 (2017-02-06)
 ------------------
 - errors() now returns Error instances instead of error message strings
@@ -11,14 +16,13 @@ Changelog
 - Float inherits methods from Integer
 - @validate_call / @validate_method decorators preserve meta by using funtools.wraps
 
-
 1.1.0 (2016-10-25)
 ------------------
 - new types: Temporal, Tuple, ObjectInstance, SchemalessDictionary
 - renamed 'collections' to 'structures' to avoid name clash
 
- 1.0.0 (2016-10-04)
- ------------------
- - Initial release
- - validation marker
- - @validate_method decorator
+1.0.0 (2016-10-04)
+------------------
+- Initial release
+- validation marker
+- @validate_method decorator
