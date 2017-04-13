@@ -2,7 +2,6 @@ from __future__ import unicode_literals
 
 import unittest
 import datetime
-import six
 
 from ..fields import (
     UnicodeString,
