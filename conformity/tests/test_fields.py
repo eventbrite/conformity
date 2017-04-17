@@ -48,11 +48,11 @@ class FieldTests(unittest.TestCase):
         )
 
         self.assertEqual(
-            schema.errors({"child_ids": [1, 2, "ten"]}),
-            [
+            sorted(schema.errors({"child_ids": [1, 2, "ten"]})),
+            sorted([
                 Error("Not a integer", pointer="child_ids.2"),
                 Error("Key address missing", pointer="address"),
-            ],
+            ]),
         )
 
         self.assertEqual(
