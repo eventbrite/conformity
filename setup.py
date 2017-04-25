@@ -7,8 +7,8 @@ setup(
     author='Eventbrite, Inc.',
     description='Cacheable schema description and validation',
     long_description=(
-        'Conformity allows easy creation of schemas to be checked against'
-        'function calls, service calls, or other uses, designed in a manner'
+        'Conformity allows easy creation of schemas to be checked against '
+        'function calls, service calls, or other uses, designed in a manner '
         'that allows heavy caching and is entirely deterministic.'
         '\n\nFor more, see http://github.com/eventbrite/bay/'
     ),
