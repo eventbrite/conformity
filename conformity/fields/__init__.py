@@ -2,3 +2,4 @@ from .basic import Base, Constant, Anything, Hashable, Boolean, Integer, Float, 
 from .structures import List, Dictionary, SchemalessDictionary, Tuple
 from .meta import Polymorph, ObjectInstance, Any
 from .temporal import DateTime, Date, TimeDelta, Time, TZInfo
+from .geo import Latitude, Longitude
