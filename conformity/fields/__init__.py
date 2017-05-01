@@ -3,3 +3,4 @@ from .structures import List, Dictionary, SchemalessDictionary, Tuple
 from .meta import Polymorph, ObjectInstance, Any
 from .temporal import DateTime, Date, TimeDelta, Time, TZInfo
 from .geo import Latitude, Longitude
+from .net import IPAddress, IPv4Address, IPv6Address

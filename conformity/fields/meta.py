@@ -2,7 +2,6 @@ from __future__ import unicode_literals
 import attr
 
 from .basic import Base
-from .structures import _update_error_pointer
 from ..error import Error
 from ..utils import strip_none
 
@@ -100,10 +99,7 @@ class Any(Base):
             if not sub_errors:
                 return []
             # Otherwise, add the errors to the overall results
-            result.extend(
-                _update_error_pointer(error, i)
-                for error in sub_errors
-            )
+            result.extend(sub_errors)
         return result
 
     def introspect(self):
