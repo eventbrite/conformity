@@ -16,6 +16,7 @@ from ..fields import (
     SchemalessDictionary,
     ObjectInstance,
     Tuple,
+    Any,
 )
 from ..error import Error
 
@@ -370,4 +371,20 @@ class FieldTests(unittest.TestCase):
                     {"type": "constant", "value": "I love tuples"},
                 ]
             }
+        )
+
+    def test_any(self):
+        schema = Any(Constant("one"), Constant("two"))
+
+        self.assertEqual(
+            schema.errors("one"),
+            [],
+        )
+        self.assertEqual(
+            schema.errors("two"),
+            [],
+        )
+        self.assertEqual(
+            schema.errors("three"),
+            [Error("Value is not u'one'", pointer="0"), Error("Value is not u'two'", pointer="1")],
         )
