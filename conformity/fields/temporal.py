@@ -18,6 +18,7 @@ class TemporalBase(Base):
     lt = attr.ib(default=None)
     lte = attr.ib(default=None)
     description = attr.ib(default=None)
+    validators = attr.ib(default=attr.Factory(list))
 
     def __init__(self, gt=None, lt=None, gte=None, lte=None):
         self.gt = gt
@@ -25,7 +26,7 @@ class TemporalBase(Base):
         self.gte = gte
         self.lte = lte
 
-    def errors(self, value):
+    def validate(self, value):
         if not type(value) == self.valid_type:
             # using stricter type checking, because date is subclass of datetime, but they're not comparable
             return [

@@ -16,8 +16,9 @@ class Polymorph(Base):
     switch_field = attr.ib()
     contents_map = attr.ib()
     description = attr.ib(default=None)
+    validators = attr.ib(default=attr.Factory(list))
 
-    def errors(self, value):
+    def validate(self, value):
         # Get switch field value
         bits = self.switch_field.split(".")
         switch_value = value
@@ -55,8 +56,9 @@ class ObjectInstance(Base):
 
     valid_type = attr.ib()
     description = attr.ib(default=None)
+    validators = attr.ib(default=attr.Factory(list))
 
-    def errors(self, value):
+    def validate(self, value):
         if not isinstance(value, self.valid_type):
             return [
                 Error("Not an instance of %s" % self.valid_type.__name__),

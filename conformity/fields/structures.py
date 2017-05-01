@@ -29,8 +29,9 @@ class List(Base):
     max_length = attr.ib(default=None)
     min_length = attr.ib(default=None)
     description = attr.ib(default=None)
+    validators = attr.ib(default=attr.Factory(list))
 
-    def errors(self, value):
+    def validate(self, value):
         if not isinstance(value, list):
             return [
                 Error("Not a list"),
@@ -71,8 +72,9 @@ class Dictionary(Base):
     optional_keys = attr.ib(default=attr.Factory(list))
     allow_extra_keys = attr.ib(default=False)
     description = attr.ib(default=None)
+    validators = attr.ib(default=attr.Factory(list))
 
-    def errors(self, value):
+    def validate(self, value):
         if not isinstance(value, dict):
             return [
                 Error("Not a dict"),
@@ -121,8 +123,9 @@ class SchemalessDictionary(Base):
     key_type = attr.ib(default=attr.Factory(Hashable))
     value_type = attr.ib(default=attr.Factory(Anything))
     description = attr.ib(default=None)
+    validators = attr.ib(default=attr.Factory(list))
 
-    def errors(self, value):
+    def validate(self, value):
         if not isinstance(value, dict):
             return [
                 Error("Not a dict"),
@@ -159,13 +162,15 @@ class Tuple(Base):
 
     def __init__(self, *contents, **kwargs):
         # We can't use attrs here because we need to capture all positional
-        # arguments, but also extract the description kwarg if provided.
+        # arguments, but also extract the description and validators kwargs if
+        # provided.
         self.contents = contents
         self.description = kwargs.get("description", None)
+        self.validators = kwargs.get("validators", [])
         if list(kwargs.keys()) not in ([], ["description"]):
             raise ValueError("Unknown keyword arguments %s" % kwargs.keys())
 
-    def errors(self, value):
+    def validate(self, value):
         if not isinstance(value, tuple):
             return [
                 Error("Not a tuple"),

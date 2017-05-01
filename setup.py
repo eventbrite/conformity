@@ -1,6 +1,11 @@
 from setuptools import setup, find_packages
 from conformity import __version__
 
+
+tests_require = [
+    'mock',
+]
+
 setup(
     name='conformity',
     version=__version__,
@@ -18,7 +23,11 @@ setup(
         'six',
         'attrs>=16',
     ],
+    tests_require=tests_require,
     test_suite='conformity.tests',
+    extras_require={
+        'testing': tests_require,
+    },
     classifiers=[
         'Development Status :: 5 - Production/Stable',
         'Intended Audience :: Developers',
