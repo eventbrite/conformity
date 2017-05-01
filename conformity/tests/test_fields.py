@@ -1,5 +1,6 @@
 from __future__ import unicode_literals
 
+import mock
 import unittest
 import datetime
 
@@ -190,7 +191,7 @@ class FieldTests(unittest.TestCase):
 
         self.assertEqual(
             datetime_schema.errors(datetime.datetime.now()),
-            None,
+            [],
         )
 
         # date is not a valid datetime
@@ -214,7 +215,7 @@ class FieldTests(unittest.TestCase):
 
         self.assertEqual(
             date_schema.errors(datetime.date.today()),
-            None,
+            [],
         )
 
         # datetime is not a valid date
@@ -230,7 +231,7 @@ class FieldTests(unittest.TestCase):
 
         self.assertEqual(
             delta_schema.errors(past1985 - past1955),
-            None,
+            [],
         )
 
         self.assertEqual(
@@ -240,7 +241,7 @@ class FieldTests(unittest.TestCase):
 
         self.assertEqual(
             negative_delta_schema.errors(past1955 - past1985),
-            None,
+            [],
         )
 
         self.assertEqual(
@@ -370,4 +371,66 @@ class FieldTests(unittest.TestCase):
                     {"type": "constant", "value": "I love tuples"},
                 ]
             }
+        )
+
+
+class FieldValidatorsTests(unittest.TestCase):
+    """
+    Test Field Validators
+    """
+
+    @mock.patch('conformity.fields.basic.Integer.validate')
+    def test_errors_calls_validate_and_validators(self, mock_integer_validate):
+        mock_validators = [
+            mock.MagicMock(return_value=[]),
+            mock.MagicMock(return_value=[]),
+        ]
+        schema = Integer(validators=mock_validators)
+        value = 1
+        mock_integer_validate.return_value = []
+
+        self.assertEqual(
+            schema.errors(value),
+            [],
+        )
+        mock_integer_validate.assert_called_with(value)
+        for mock_validator in mock_validators:
+            mock_validator.assert_called_with(value)
+
+    def test_validator_not_called_with_validate_errors(self):
+        error = Error('Always returned error')
+        schema = Integer(
+            validators=[
+                lambda x: [error],
+            ]
+        )
+        value = 'not an integer'
+
+        errors = schema.errors(value)
+        self.assertEqual(
+            len(errors),
+            1,
+        )
+        self.assertNotEqual(
+            errors[0],
+            error,
+        )
+
+    def test_validator_called_without_validate_errors(self):
+        error = Error('Always returned error')
+        schema = Integer(
+            validators=[
+                lambda x: [error],
+            ]
+        )
+        value = 1
+
+        errors = schema.errors(value)
+        self.assertEqual(
+            len(errors),
+            1,
+        )
+        self.assertEqual(
+            errors[0],
+            error,
         )

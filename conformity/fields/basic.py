@@ -12,14 +12,26 @@ class Base(object):
     Base field type.
     """
 
-    def errors(self, value):
+    def validate(self, value):
         """
-        Returns a list of errors with the value. An empty/None return means
-        that it's valid.
+        Validate the field.
         """
         return [
             Error("Validation not implemented on base type"),
         ]
+
+    def errors(self, value):
+        """
+        Returns a list of errors with the value. An empty return means that
+        it's valid.
+        """
+        errors = self.validate(value) or []
+
+        if not errors:
+            for validator in self.validators:
+                errors.extend(validator(value))
+
+        return errors
 
     def introspect(self):
         raise NotImplementedError("You must override introspect() in a subclass")
@@ -33,8 +45,10 @@ class Constant(Base):
 
     value = attr.ib()
     description = attr.ib(default=None)
+    validators = attr.ib(default=attr.Factory(list))
 
-    def errors(self, value):
+
+    def validate(self, value):
         """
         Returns a list of errors with the value. An empty/None return means
         that it's valid.
@@ -61,8 +75,9 @@ class Anything(Base):
     """
 
     description = attr.ib(default=None)
+    validators = attr.ib(default=attr.Factory(list))
 
-    def errors(self, value):
+    def validate(self, value):
         pass
 
     def introspect(self):
@@ -77,7 +92,7 @@ class Hashable(Anything):
     Accepts any hashable value
     """
 
-    def errors(self, value):
+    def validate(self, value):
         try:
             hash(value)
         except TypeError:
@@ -99,8 +114,9 @@ class Boolean(Base):
     """
 
     description = attr.ib(default=None)
+    validators = attr.ib(default=attr.Factory(list))
 
-    def errors(self, value):
+    def validate(self, value):
         if not isinstance(value, bool):
             return [
                 Error("Not a boolean"),
@@ -128,8 +144,9 @@ class Integer(Base):
     lt = attr.ib(default=None)
     lte = attr.ib(default=None)
     description = attr.ib(default=None)
+    validators = attr.ib(default=attr.Factory(list))
 
-    def errors(self, value):
+    def validate(self, value):
         if not isinstance(value, self.valid_type):
             return [
                 Error("Not a %s" % self.valid_noun),
@@ -184,8 +201,9 @@ class UnicodeString(Base):
 
     max_length = attr.ib(default=None)
     description = attr.ib(default=None)
+    validators = attr.ib(default=attr.Factory(list))
 
-    def errors(self, value):
+    def validate(self, value):
         if not isinstance(value, self.valid_type):
             return [
                 Error("Not a %s" % self.valid_noun),
