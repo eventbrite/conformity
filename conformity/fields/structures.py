@@ -67,10 +67,21 @@ class Dictionary(Base):
     A dictionary with types per key (and requirements per key).
     """
 
-    contents = attr.ib()
+    contents = attr.ib(default=None)
     optional_keys = attr.ib(default=attr.Factory(list))
     allow_extra_keys = attr.ib(default=False)
     description = attr.ib(default=None)
+
+    def __attrs_post_init__(self):
+        # If we're a subclass, look for body attributes
+        if self.__class__ is not Dictionary:
+            if not self.contents:
+                self.contents = self.__class__.contents
+            if not self.optional_keys:
+                self.optional_keys = self.__class__.optional_keys
+        # Check contents was set
+        if self.contents is None:
+            raise ValueError("Dictionary.contents must be set in a subclass or the constuctor call")
 
     def errors(self, value):
         if not isinstance(value, dict):

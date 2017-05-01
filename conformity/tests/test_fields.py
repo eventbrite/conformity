@@ -8,17 +8,13 @@ from ..fields import (
     Dictionary,
     List,
     Integer,
-    Polymorph,
+    Float,
     Constant,
     DateTime,
     Date,
     TimeDelta,
     SchemalessDictionary,
-    ObjectInstance,
     Tuple,
-    Any,
-    Latitude,
-    Longitude,
 )
 from ..error import Error
 
@@ -97,88 +93,6 @@ class FieldTests(unittest.TestCase):
                     },
                 },
                 "optional_keys": [],
-            },
-        )
-
-    def test_polymorph(self):
-
-        card = Dictionary({
-            "payment_type": Constant("card"),
-            "number": UnicodeString(),
-            "cvc": UnicodeString(description="Card Verification Code"),
-        })
-
-        bankacc = Dictionary({
-            "payment_type": Constant("bankacc"),
-            "routing": UnicodeString(description="US RTN or foreign equivalent"),
-            "account": UnicodeString(),
-        })
-
-        schema = Polymorph(
-            "payment_type",
-            {
-                "card": card,
-                "bankacc": bankacc,
-            },
-        )
-
-        self.assertEqual(
-            schema.errors({
-                "payment_type": "card",
-                "number": "1234567890123456",
-                "cvc": "000",
-            }),
-            [],
-        )
-
-        self.assertEqual(
-            schema.errors({
-                "payment_type": "bankacc",
-                "routing": "13456790",
-                "account": "13910399",
-            }),
-            [],
-        )
-
-        self.assertEqual(
-            schema.introspect(),
-            {
-                "type": "polymorph",
-                "contents_map": {
-                    "bankacc": {
-                        "type": "dictionary",
-                        "allow_extra_keys": False,
-                        "contents": {
-                            "account": {"type": "unicode"},
-                            "payment_type": {
-                                "type": "constant",
-                                "value": "bankacc",
-                            },
-                            "routing": {
-                                "type": "unicode",
-                                "description": "US RTN or foreign equivalent",
-                            },
-                        },
-                        "optional_keys": [],
-                    },
-                    "card": {
-                        "type": "dictionary",
-                        "allow_extra_keys": False,
-                        "contents": {
-                            "cvc": {
-                                "type": "unicode",
-                                "description": "Card Verification Code",
-                            },
-                            "number": {"type": "unicode"},
-                            "payment_type": {
-                                "type": "constant",
-                                "value": "card",
-                            },
-                        },
-                        "optional_keys": [],
-                    },
-                },
-                "switch_field": "payment_type",
             },
         )
 
@@ -303,34 +217,6 @@ class FieldTests(unittest.TestCase):
             }
         )
 
-    def test_objectinstance(self):
-        class Thing(object):
-            pass
-
-        class Thingy(Thing):
-            pass
-
-        class SomethingElse(object):
-            pass
-
-        schema = ObjectInstance(Thing)
-
-        self.assertEqual(
-            schema.errors(Thing()),
-            []
-        )
-
-        # subclasses are valid
-        self.assertEqual(
-            schema.errors(Thingy()),
-            []
-        )
-
-        self.assertEqual(
-            schema.errors(SomethingElse()),
-            [Error("Not an instance of Thing")]
-        )
-
     def test_tuple(self):
         schema = Tuple(Integer(gt=0), UnicodeString(), Constant("I love tuples"))
 
@@ -375,62 +261,34 @@ class FieldTests(unittest.TestCase):
             }
         )
 
-    def test_any(self):
-        schema = Any(Constant("one"), Constant("two"))
+    def test_dictionary_subclass(self):
+        """
+        Tests that subclassing a Dictionary allows you to provide the
+        same options as instantiating it.
+        """
+        class Coordinate(Dictionary):
+            contents = {
+                "x": Float(),
+                "y": Float(),
+                "z": Float(),
+            }
+            optional_keys = ["z"]
+        schema = Coordinate(description="Where the treasure is")
+
+        # Test the options work right
         self.assertEqual(
-            schema.errors("one"),
+            schema.errors({"x": 4.4, "y": 65.21}),
             [],
         )
         self.assertEqual(
-            schema.errors("two"),
+            schema.errors({"x": 4.4, "y": 65.21, "z": 5542}),
             [],
         )
         self.assertEqual(
-            len(schema.errors("three")),
+            len(schema.errors({"x": "HERRING", "z": 5542})),
             2,
         )
 
-    def test_latitude(self):
-        schema = Latitude()
-        self.assertEqual(
-            schema.errors(89) or [],
-            [],
-        )
-        self.assertEqual(
-            schema.errors(-1.3412) or [],
-            [],
-        )
-        self.assertEqual(
-            schema.errors(180),
-            [Error("Value not <= 90")],
-        )
-        self.assertEqual(
-            schema.errors(-91),
-            [Error("Value not >= -90")],
-        )
-
-    def test_longitude(self):
-        schema = Longitude()
-        self.assertEqual(
-            schema.errors(129.1) or [],
-            [],
-        )
-        self.assertEqual(
-            schema.errors(186) or [],
-            [Error("Value not <= 180")],
-        )
-        self.assertEqual(
-            schema.errors(-181.3412) or [],
-            [Error("Value not >= -180")],
-        )
-
-    def test_limited_longitude(self):
-        schema = Longitude(lte=-50)
-        self.assertEqual(
-            schema.errors(-51.2) or [],
-            [],
-        )
-        self.assertEqual(
-            schema.errors(-49.32) or [],
-            [Error("Value not <= -50")],
-        )
+        # Test you can't make a dict without contents
+        with self.assertRaises(ValueError):
+            Dictionary()

@@ -93,7 +93,7 @@ class Any(Base):
 
     def errors(self, value):
         result = []
-        for i, option in enumerate(self.options):
+        for option in self.options:
             sub_errors = option.errors(value)
             # If there's no errors from a sub-field, then it's all OK!
             if not sub_errors:
@@ -107,4 +107,35 @@ class Any(Base):
             "type": "any",
             "description": self.description,
             "options": [option.introspect() for option in self.options],
+        })
+
+
+class All(Base):
+    """
+    The value must pass all of the types passed as positional arguments.
+    Inteded to be used for adding extra validation.
+    """
+
+    description = None
+
+    def __init__(self, *args, **kwargs):
+        self.requirements = args
+        # We can't put a keyword argument after *args in Python 2, so we need this
+        if "description" in kwargs:
+            self.description = kwargs["description"]
+            del kwargs["description"]
+        if kwargs:
+            raise TypeError("Unknown keyword arguments: %s" % ", ".join(kwargs.keys()))
+
+    def errors(self, value):
+        result = []
+        for requirement in self.requirements:
+            result.extend(requirement.errors(value) or [])
+        return result
+
+    def introspect(self):
+        return strip_none({
+            "type": "all",
+            "description": self.description,
+            "requirements": [requirement.introspect() for requirement in self.requirements],
         })
