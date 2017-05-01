@@ -1,9 +1,6 @@
 from __future__ import unicode_literals
 import attr
-import six
 
-from ..error import Error
-from ..utils import strip_none
 from .basic import Float
 
 
