@@ -61,27 +61,32 @@ class List(Base):
         })
 
 
-@attr.s
 class Dictionary(Base):
     """
     A dictionary with types per key (and requirements per key).
     """
 
-    contents = attr.ib(default=None)
-    optional_keys = attr.ib(default=attr.Factory(list))
-    allow_extra_keys = attr.ib(default=False)
-    description = attr.ib(default=None)
+    contents = None
+    optional_keys = []
+    allow_extra_keys = False
+    description = None
 
-    def __attrs_post_init__(self):
-        # If we're a subclass, look for body attributes
-        if self.__class__ is not Dictionary:
-            if not self.contents:
-                self.contents = self.__class__.contents
-            if not self.optional_keys:
-                self.optional_keys = self.__class__.optional_keys
-        # Check contents was set
+    def __init__(self, contents=None, optional_keys=None, allow_extra_keys=None, description=None):
+        # Set values, falling back to class values
+        self.contents = contents
         if self.contents is None:
-            raise ValueError("Dictionary.contents must be set in a subclass or the constuctor call")
+            self.contents = self.__class__.contents
+        self.allow_extra_keys = allow_extra_keys
+        if self.allow_extra_keys is None:
+            self.allow_extra_keys = self.__class__.allow_extra_keys
+        self.optional_keys = optional_keys
+        if self.optional_keys is None:
+            self.optional_keys = self.__class__.optional_keys
+        self.description = description
+        if self.description is None:
+            self.description = self.__class__.description
+        if self.contents is None:
+            raise ValueError("contents is a required argument")
 
     def errors(self, value):
         if not isinstance(value, dict):
@@ -92,7 +97,7 @@ class Dictionary(Base):
         for key, field in self.contents.items():
             # Check key is present
             if key not in value:
-                if key not in self.optional_keys:
+                if key not in (self.optional_keys or []):
                     result.append(
                         Error("Key %s missing" % key, pointer=key),
                     )

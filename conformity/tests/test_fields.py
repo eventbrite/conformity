@@ -292,3 +292,15 @@ class FieldTests(unittest.TestCase):
         # Test you can't make a dict without contents
         with self.assertRaises(ValueError):
             Dictionary()
+
+        # Test not overriding one field
+        class TwoDeeCoordinate(Dictionary):
+            contents = {
+                "x": Float(),
+                "y": Float(),
+            }
+        schema2d = TwoDeeCoordinate(description="Where the treasure is")
+        self.assertEqual(
+            len(schema2d.errors({"x": 3.14, "z": 5542})),
+            2,
+        )
