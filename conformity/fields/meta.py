@@ -1,5 +1,6 @@
 from __future__ import unicode_literals
 import attr
+import six
 
 from .basic import Base
 from ..error import Error
@@ -138,4 +139,40 @@ class All(Base):
             "type": "all",
             "description": self.description,
             "requirements": [requirement.introspect() for requirement in self.requirements],
+        })
+
+
+@attr.s
+class BooleanValidator(Base):
+    """
+    Uses a boolean callable (probably lambda) passed in to validate the value
+    based on if it returns True (valid) or False (invalid).
+    """
+
+    validator = attr.ib()
+    validator_description = attr.ib(validator=attr.validators.instance_of(six.text_type))
+    error = attr.ib(validator=attr.validators.instance_of(six.text_type))
+    description = attr.ib(default=None)
+
+    def errors(self, value):
+        # Run the validator, but catch any errors and return them as an error
+        # as this is maybe in an All next to a type-checker.
+        try:
+            ok = self.validator(value)
+        except Exception:
+            return [
+                Error("Validator errored (invalid type?)"),
+            ]
+        if ok:
+            return []
+        else:
+            return [
+                Error(self.error),
+            ]
+
+    def introspect(self):
+        return strip_none({
+            "type": "boolean_validator",
+            "description": self.description,
+            "validator": self.validator_description,
         })
