@@ -65,6 +65,7 @@ def validate_call(kwargs, returns, is_method=False):
         return inner
     return decorator
 
+
 # use @validate_method for methods. If it's a class or static method,
 # @classdecorator/@staticmethod should be outmost, while @validate_method second outmost
 validate_method = partial(validate_call, is_method=True)
