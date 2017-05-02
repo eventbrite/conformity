@@ -34,7 +34,6 @@ class NetFieldTests(unittest.TestCase):
             [Error("Not a valid IPv4 address")],
         )
 
-
     def test_ipv6address(self):
         schema = IPv6Address()
         self.assertEqual(
