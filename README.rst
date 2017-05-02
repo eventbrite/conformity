@@ -32,6 +32,10 @@ And wrap functions to validate on the way in and out::
         else:
             return "Hello, %s." % name
 
+There's support for basic string, numeric, geographic, temporal, networking,
+and other field types, with everything easily extensible (optionally via
+subclassing)
+
 
 Interface
 ---------
