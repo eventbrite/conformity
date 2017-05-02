@@ -10,6 +10,7 @@ from ..fields import (
     ObjectInstance,
     All,
     Any,
+    BooleanValidator,
 )
 from ..error import Error
 
@@ -152,5 +153,43 @@ class MetaFieldTests(unittest.TestCase):
                     },
                 },
                 "switch_field": "payment_type",
+            },
+        )
+
+    def test_boolean_validator(self):
+        schema = BooleanValidator(
+            lambda x: x.isdigit(),
+            "str.isdigit()",
+            "Not all digits",
+        )
+        # Test valid unicode and byte strings
+        self.assertEqual(
+            schema.errors("123"),
+            [],
+        )
+        self.assertEqual(
+            schema.errors(b"123"),
+            [],
+        )
+        # Test invalid unicode and byte strings
+        self.assertEqual(
+            len(schema.errors("123a")),
+            1,
+        )
+        self.assertEqual(
+            len(schema.errors(b"123a")),
+            1,
+        )
+        # Test bad-type errors are swallowed well
+        self.assertEqual(
+            len(schema.errors(344532)),
+            1,
+        )
+        # Test introspection looks OK
+        self.assertEqual(
+            schema.introspect(),
+            {
+                "type": "boolean_validator",
+                "validator": "str.isdigit()",
             },
         )
