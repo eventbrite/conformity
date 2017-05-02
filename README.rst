@@ -1,6 +1,16 @@
 conformity
 ==========
 
+.. image:: https://api.travis-ci.org/eventbrite/conformity.svg
+    :target: https://travis-ci.org/eventbrite/conformity
+
+.. image:: https://img.shields.io/pypi/v/conformity.svg
+    :target: https://pypi.python.org/pypi/conformity
+
+.. image:: https://img.shields.io/pypi/l/conformity.svg
+    :target: https://pypi.python.org/pypi/conformity
+
+
 A low-level, declarative schema validation library.
 
 Declare a schema::
