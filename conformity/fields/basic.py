@@ -1,5 +1,6 @@
 from __future__ import unicode_literals
 import attr
+import decimal
 import six
 
 from ..error import Error
@@ -211,3 +212,30 @@ class ByteString(UnicodeString):
     valid_type = six.binary_type
     valid_noun = "byte string"
     introspect_type = "bytes"
+
+
+class UnicodeDecimal(Base):
+    """
+    A decimal value represented as its base-10 unicode string.
+    """
+
+    description = attr.ib(default=None)
+
+    def errors(self, value):
+        if not isinstance(value, six.text_type):
+            return [
+                Error("Invalid decimal value (not unicode string)"),
+            ]
+        try:
+            decimal.Decimal(value)
+        except decimal.InvalidOperation:
+            return [
+                Error("Invalid decimal value (parse error)"),
+            ]
+        return []
+
+    def introspect(self):
+        return strip_none({
+            "type": "unicode_decimal",
+            "description": self.description,
+        })

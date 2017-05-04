@@ -15,6 +15,7 @@ from ..fields import (
     TimeDelta,
     SchemalessDictionary,
     Tuple,
+    UnicodeDecimal,
 )
 from ..error import Error
 
@@ -303,4 +304,34 @@ class FieldTests(unittest.TestCase):
         self.assertEqual(
             len(schema2d.errors({"x": 3.14, "z": 5542})),
             2,
+        )
+
+    def test_unicode_decimal(self):
+        """
+        Tests unicode decimal parsing
+        """
+        schema = UnicodeDecimal()
+        self.assertEqual(
+            schema.errors("1.4"),
+            [],
+        )
+        self.assertEqual(
+            schema.errors("-3.14159"),
+            [],
+        )
+        self.assertEqual(
+            schema.errors(b"-3.14159"),
+            [Error("Invalid decimal value (not unicode string)")],
+        )
+        self.assertEqual(
+            schema.errors(b"-3.abc"),
+            [Error("Invalid decimal value (not unicode string)")],
+        )
+        self.assertEqual(
+            schema.errors("-3.abc"),
+            [Error("Invalid decimal value (parse error)")],
+        )
+        self.assertEqual(
+            schema.errors(-3.14159),
+            [Error("Invalid decimal value (not unicode string)")],
         )
