@@ -1,4 +1,7 @@
-from .basic import Base, Constant, Anything, Hashable, Boolean, Integer, Float, ByteString, UnicodeString  # noqa
+from .basic import (  # noqa
+    Base, Constant, Anything, Hashable, Boolean,
+    Integer, Float, ByteString, UnicodeString, UnicodeDecimal,
+)
 from .structures import List, Dictionary, SchemalessDictionary, Tuple  # noqa
 from .meta import Polymorph, ObjectInstance, Any, All, BooleanValidator  # noqa
 from .temporal import DateTime, Date, TimeDelta, Time, TZInfo  # noqa
