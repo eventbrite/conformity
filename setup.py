@@ -5,6 +5,7 @@ setup(
     name='conformity',
     version=__version__,
     author='Eventbrite, Inc.',
+    author_email='opensource@eventbrite.com',
     description='Cacheable schema description and validation',
     long_description=(
         'Conformity allows easy creation of schemas to be checked against '
