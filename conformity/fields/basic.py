@@ -26,29 +26,43 @@ class Base(object):
         raise NotImplementedError("You must override introspect() in a subclass")
 
 
-@attr.s
 class Constant(Base):
     """
-    Value that must match exactly.
+    Value that must match exactly. You can pass a series of options
+    and any will be accepted.
     """
 
-    value = attr.ib()
-    description = attr.ib(default=None)
+    def __init__(self, *args, **kwargs):
+        self.values = set(args)
+        if not self.values:
+            raise TypeError("You must provide at least one constant value")
+        self.description = kwargs.get("description", None)
+        # Check they didn't pass any other kwargs
+        if list(kwargs.keys()) not in ([], ["description"]):
+            raise TypeError("Invalid keyword arguments for Constant: %s" % kwargs.keys())
 
     def errors(self, value):
         """
         Returns a list of errors with the value. An empty/None return means
         that it's valid.
         """
-        if value != self.value:
-            return [
-                Error("Value is not %r" % self.value),
-            ]
+        if value not in self.values:
+            if len(self.values) == 1:
+                return [
+                    Error("Value is not %r" % (list(self.values)[0], )),
+                ]
+            else:
+                return [
+                    Error("Value is not one of: %s" % (
+                        ", ".join(sorted(repr(v) for v in self.values))
+                    )),
+                ]
+        return []
 
     def introspect(self):
         result = {
             "type": "constant",
-            "value": self.value,
+            "values": list(self.values),
         }
         if self.description is not None:
             result["description"] = self.description

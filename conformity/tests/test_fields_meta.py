@@ -126,7 +126,7 @@ class MetaFieldTests(unittest.TestCase):
                             "account": {"type": "unicode"},
                             "payment_type": {
                                 "type": "constant",
-                                "value": "bankacc",
+                                "values": ["bankacc"],
                             },
                             "routing": {
                                 "type": "unicode",
@@ -146,7 +146,7 @@ class MetaFieldTests(unittest.TestCase):
                             "number": {"type": "unicode"},
                             "payment_type": {
                                 "type": "constant",
-                                "value": "card",
+                                "values": ["card"],
                             },
                         },
                         "optional_keys": [],
