@@ -1,3 +1,10 @@
+1.6.0 (2017-08-11)
+------------------
+
+- Constant now takes multiple possible options and accepts any of them
+- Added a UnicodeDecimal type that validates decimals transported as unicode strings.
+
+
 1.5.0 (2017-05-02)
 ------------------
 
