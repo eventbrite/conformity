@@ -257,7 +257,7 @@ class FieldTests(unittest.TestCase):
                 "contents": [
                     {"type": "integer", "gt": 0},
                     {"type": "unicode"},
-                    {"type": "constant", "value": "I love tuples"},
+                    {"type": "constant", "values": ["I love tuples"]},
                 ]
             }
         )
@@ -334,4 +334,22 @@ class FieldTests(unittest.TestCase):
         self.assertEqual(
             schema.errors(-3.14159),
             [Error("Invalid decimal value (not unicode string)")],
+        )
+
+    def test_multi_constant(self):
+        """
+        Tests constants with multiple options
+        """
+        schema = Constant(42, 36, 81, 9231)
+        self.assertEqual(
+            schema.errors(9231),
+            [],
+        )
+        self.assertEqual(
+            schema.errors(81),
+            [],
+        )
+        self.assertEqual(
+            schema.errors(360000),
+            [Error("Value is not one of: 36, 42, 81, 9231")],
         )

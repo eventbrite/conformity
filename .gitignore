@@ -4,5 +4,5 @@
 *.pyc
 *.eggs
 __pycache__
-
+.cache
 *.swp
