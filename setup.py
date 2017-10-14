@@ -17,7 +17,7 @@ setup(
     include_package_data=True,
     install_requires=[
         'six',
-        'attrs>=16',
+        'attrs~=16.3',
     ],
     test_suite='conformity.tests',
     classifiers=[
