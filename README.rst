@@ -32,7 +32,7 @@ And wrap functions to validate on the way in and out::
 
     kwargs = Dictionary({
         "name": UnicodeString(),
-        "score": Integer().
+        "score": Integer(),
     }, optional_keys=["score"])
 
     @validate_call(kwargs, UnicodeString())
