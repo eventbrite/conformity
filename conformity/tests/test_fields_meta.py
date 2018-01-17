@@ -1,18 +1,18 @@
-from __future__ import unicode_literals
+from __future__ import absolute_import, unicode_literals
 
 import unittest
 
-from ..fields import (
-    Constant,
-    Dictionary,
-    UnicodeString,
-    Polymorph,
-    ObjectInstance,
+from conformity.error import Error
+from conformity.fields import (
     All,
     Any,
     BooleanValidator,
+    Constant,
+    Dictionary,
+    ObjectInstance,
+    Polymorph,
+    UnicodeString,
 )
-from ..error import Error
 
 
 class MetaFieldTests(unittest.TestCase):

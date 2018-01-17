@@ -1,1 +1,3 @@
-__version__ = "1.6.1"
+from __future__ import absolute_import
+
+from conformity.version import __version__, __version_info__  # noqa

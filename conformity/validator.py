@@ -1,5 +1,7 @@
-import types
+from __future__ import absolute_import, unicode_literals
+
 from functools import partial, wraps
+import types
 
 
 class ValidationError(ValueError):

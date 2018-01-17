@@ -1,13 +1,15 @@
-from __future__ import unicode_literals
-import attr
+from __future__ import absolute_import, unicode_literals
+
 import functools
 import re
+
+import attr
 import six
 
-from ..error import Error
-from ..utils import strip_none
-from .basic import UnicodeString
-from .meta import Any
+from conformity.error import Error
+from conformity.fields.basic import UnicodeString
+from conformity.fields.meta import Any
+from conformity.utils import strip_none
 
 
 ipv4_regex = re.compile(r'^(25[0-5]|2[0-4]\d|[0-1]?\d?\d)(\.(25[0-5]|2[0-4]\d|[0-1]?\d?\d)){3}$')

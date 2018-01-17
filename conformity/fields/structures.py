@@ -1,10 +1,15 @@
-from __future__ import unicode_literals
+from __future__ import absolute_import, unicode_literals
+
 import attr
 import six
 
-from .basic import Base, Hashable, Anything
-from ..error import Error
-from ..utils import strip_none
+from conformity.error import Error
+from conformity.fields.basic import (
+    Anything,
+    Base,
+    Hashable,
+)
+from conformity.utils import strip_none
 
 
 def _update_error_pointer(error, pointer_or_prefix):

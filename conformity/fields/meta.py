@@ -1,10 +1,11 @@
-from __future__ import unicode_literals
+from __future__ import absolute_import, unicode_literals
+
 import attr
 import six
 
-from .basic import Base
-from ..error import Error
-from ..utils import strip_none
+from conformity.error import Error
+from conformity.fields.basic import Base
+from conformity.utils import strip_none
 
 
 @attr.s

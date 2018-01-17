@@ -1,10 +1,12 @@
-from __future__ import unicode_literals
-import attr
+from __future__ import absolute_import, unicode_literals
+
 import decimal
+
+import attr
 import six
 
-from ..error import Error
-from ..utils import strip_none
+from conformity.error import Error
+from conformity.utils import strip_none
 
 
 @attr.s
