@@ -1,6 +1,10 @@
 Changelog
 =========
 
+1.7.1 (2018-01-18)
+------------------
+- Add missing deploy info to Travis file
+
 1.7.0 (2018-01-18)
 ------------------
 - Upgrade attrs to ~=17.4
