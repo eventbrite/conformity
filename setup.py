@@ -1,5 +1,16 @@
-from setuptools import setup, find_packages
+from __future__ import absolute_import, unicode_literals
+
+from setuptools import (
+    find_packages,
+    setup,
+)
+
 from conformity import __version__
+
+tests_require = [
+    'pytest',
+    'pytest-cov',
+]
 
 setup(
     name='conformity',
@@ -17,9 +28,14 @@ setup(
     include_package_data=True,
     install_requires=[
         'six',
-        'attrs~=16.3',
+        'attrs~=17.4',
     ],
     test_suite='conformity.tests',
+    tests_require=tests_require,
+    setup_requires=['pytest-runner'],
+    extras_require={
+        'testing': tests_require,
+    },
     classifiers=[
         'Development Status :: 5 - Production/Stable',
         'Intended Audience :: Developers',

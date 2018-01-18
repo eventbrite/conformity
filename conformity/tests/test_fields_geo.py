@@ -1,12 +1,12 @@
-from __future__ import unicode_literals
+from __future__ import absolute_import, unicode_literals
 
 import unittest
 
-from ..fields import (
+from conformity.error import Error
+from conformity.fields import (
     Latitude,
     Longitude,
 )
-from ..error import Error
 
 
 class GeoFieldTests(unittest.TestCase):

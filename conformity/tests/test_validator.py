@@ -1,14 +1,17 @@
-from __future__ import unicode_literals
+from __future__ import absolute_import, unicode_literals
 
 import unittest
 
-from ..fields import Dictionary, UnicodeString
-from ..validator import (
+from conformity.fields import (
+    Dictionary,
+    UnicodeString,
+)
+from conformity.validator import (
+    PositionalError,
     validate,
     validate_call,
     validate_method,
     ValidationError,
-    PositionalError
 )
 
 

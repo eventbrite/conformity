@@ -1,23 +1,23 @@
-from __future__ import unicode_literals
+from __future__ import absolute_import, unicode_literals
 
-import unittest
 import datetime
+import unittest
 
-from ..fields import (
-    UnicodeString,
-    Dictionary,
-    List,
-    Integer,
-    Float,
+from conformity.error import Error
+from conformity.fields import (
     Constant,
-    DateTime,
     Date,
-    TimeDelta,
+    DateTime,
+    Dictionary,
+    Float,
+    Integer,
+    List,
     SchemalessDictionary,
+    TimeDelta,
     Tuple,
     UnicodeDecimal,
+    UnicodeString,
 )
-from ..error import Error
 
 
 class FieldTests(unittest.TestCase):
