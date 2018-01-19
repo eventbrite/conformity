@@ -1,6 +1,11 @@
 Changelog
 =========
 
+1.7.2 (2018-01-19)
+------------------
+- Add correct deploy info to Travis file
+- Fix typo in README file
+
 1.7.1 (2018-01-18)
 ------------------
 - Add missing deploy info to Travis file
