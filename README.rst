@@ -1,4 +1,4 @@
-conformity
+Conformity
 ==========
 
 .. image:: https://api.travis-ci.org/eventbrite/conformity.svg

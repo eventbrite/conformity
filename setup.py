@@ -36,6 +36,7 @@ setup(
     extras_require={
         'testing': tests_require,
     },
+    license='Apache 2.0',
     classifiers=[
         'Development Status :: 5 - Production/Stable',
         'Intended Audience :: Developers',
