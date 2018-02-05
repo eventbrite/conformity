@@ -1,6 +1,10 @@
 Changelog
 =========
 
+1.7.5 (2018-02-05)
+------------------
+- Use Travis job stages so that deploy doesn't happen unless all tests pass
+
 1.7.4 (2018-02-05)
 ------------------
 - Fix Travis deploy step
