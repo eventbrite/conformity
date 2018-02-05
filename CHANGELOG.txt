@@ -1,6 +1,12 @@
 Changelog
 =========
 
+1.7.3 (2018-02-05)
+------------------
+- No functional changes at all
+- Add license to setup, capitalize readme title
+- Use Invoke Release for releases going forward
+
 1.7.2 (2018-01-19)
 ------------------
 - Add correct deploy info to Travis file
