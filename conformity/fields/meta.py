@@ -9,6 +9,28 @@ from conformity.utils import strip_none
 
 
 @attr.s
+class Nullable(Base):
+    """
+    Accepts the field type passed as the first positional argument or a value of null/None.
+    """
+
+    field = attr.ib()
+    description = attr.ib(default=None)
+
+    def errors(self, value):
+        if value is None:
+            return []
+
+        return self.field.errors(value)
+
+    def introspect(self):
+        return strip_none({
+            "type": "nullable({})".format(self.field.introspect()),
+            "description": self.description,
+        })
+
+
+@attr.s
 class Polymorph(Base):
     """
     A field which has one of a set of possible contents based on a field
@@ -115,7 +137,7 @@ class Any(Base):
 class All(Base):
     """
     The value must pass all of the types passed as positional arguments.
-    Inteded to be used for adding extra validation.
+    Intended to be used for adding extra validation.
     """
 
     description = None
@@ -162,7 +184,7 @@ class BooleanValidator(Base):
             ok = self.validator(value)
         except Exception:
             return [
-                Error("Validator errored (invalid type?)"),
+                Error("Validator encountered an error (invalid type?)"),
             ]
         if ok:
             return []

@@ -6,9 +6,11 @@ from conformity.error import Error
 from conformity.fields import (
     All,
     Any,
+    Boolean,
     BooleanValidator,
     Constant,
     Dictionary,
+    Nullable,
     ObjectInstance,
     Polymorph,
     UnicodeString,
@@ -19,6 +21,25 @@ class MetaFieldTests(unittest.TestCase):
     """
     Tests meta fields
     """
+
+    def test_nullable(self):
+        schema = Nullable(Constant("one", "two"))
+        self.assertEqual([], schema.errors(None))
+        self.assertEqual([], schema.errors("one"))
+        self.assertEqual([], schema.errors("two"))
+        self.assertEqual(1, len(schema.errors("three")))
+
+        schema = Nullable(Boolean())
+        self.assertEqual([], schema.errors(None))
+        self.assertIsNone(schema.errors(True))
+        self.assertIsNone(schema.errors(False))
+        self.assertEqual(1, len(schema.errors("true")))
+        self.assertEqual(1, len(schema.errors(1)))
+
+        schema = Nullable(UnicodeString())
+        self.assertEqual([], schema.errors(None))
+        self.assertIsNone(schema.errors("hello, world"))
+        self.assertEqual(1, len(schema.errors(b"hello, world")))
 
     def test_any(self):
         schema = Any(Constant("one"), Constant("two"))

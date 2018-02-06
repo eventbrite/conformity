@@ -85,11 +85,11 @@ class IPv6Address(UnicodeString):
                     return [Error("Not a valid IPv6 address (invalid hextet)")]
         return []
 
-    def expand_ipv6_address(self, value):
+    @staticmethod
+    def expand_ipv6_address(value):
         """
         Expands a potentially-shortened IPv6 address into its full length
         """
-        new_ip = []
         hextet = value.split('::')
         # If there is a ::, we need to expand it with zeroes
         # to get to 8 hextets - unless there is a dot in the last hextet,
