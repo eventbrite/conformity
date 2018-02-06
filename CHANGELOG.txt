@@ -1,6 +1,10 @@
 Changelog
 =========
 
+1.8.0 (2018-02-06)
+------------------
+- Add support for nullable fields using Nullable
+
 1.7.5 (2018-02-05)
 ------------------
 - Use Travis job stages so that deploy doesn't happen unless all tests pass
