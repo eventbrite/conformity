@@ -5,6 +5,7 @@ import unittest
 
 from conformity.error import Error
 from conformity.fields import (
+    ByteString,
     Constant,
     Date,
     DateTime,
@@ -24,6 +25,30 @@ class FieldTests(unittest.TestCase):
     """
     Tests fields
     """
+    def test_strings(self):
+        schema = UnicodeString()
+        self.assertEqual(None, schema.errors(""))
+        self.assertEqual(None, schema.errors("Foo bar baz qux foo bar baz qux foo bar baz qux foo bar baz qux foo bar"))
+        self.assertEqual([Error("Not a unicode string")], schema.errors(b"Test"))
+
+        schema = UnicodeString(min_length=5, max_length=10)
+        self.assertEqual([Error("String must have a length of at least 5")], schema.errors(""))
+        self.assertEqual([Error("String must have a length of at least 5")], schema.errors("1234"))
+        self.assertEqual(None, schema.errors("12345"))
+        self.assertEqual(None, schema.errors("1234567890"))
+        self.assertEqual([Error("String must have a length no more than 10")], schema.errors("12345678901"))
+
+        schema = ByteString()
+        self.assertEqual(None, schema.errors(b""))
+        self.assertEqual(None, schema.errors(b"Foo bar baz qux foo bar baz qux foo bar baz qux foo bar baz qux foo"))
+        self.assertEqual([Error("Not a byte string")], schema.errors("Test"))
+
+        schema = ByteString(min_length=5, max_length=10)
+        self.assertEqual([Error("String must have a length of at least 5")], schema.errors(b""))
+        self.assertEqual([Error("String must have a length of at least 5")], schema.errors(b"1234"))
+        self.assertEqual(None, schema.errors(b"12345"))
+        self.assertEqual(None, schema.errors(b"1234567890"))
+        self.assertEqual([Error("String must have a length no more than 10")], schema.errors(b"12345678901"))
 
     def test_complex(self):
 
