@@ -199,6 +199,7 @@ class UnicodeString(Base):
     valid_noun = "unicode string"
     introspect_type = "unicode"
 
+    min_length = attr.ib(default=None)
     max_length = attr.ib(default=None)
     description = attr.ib(default=None)
 
@@ -207,9 +208,13 @@ class UnicodeString(Base):
             return [
                 Error("Not a %s" % self.valid_noun),
             ]
+        elif self.min_length is not None and len(value) < self.min_length:
+            return [
+                Error("String must have a length of at least %s" % self.min_length),
+            ]
         elif self.max_length is not None and len(value) > self.max_length:
             return [
-                Error("String longer than %s" % self.max_length),
+                Error("String must have a length no more than %s" % self.max_length),
             ]
 
     def introspect(self):
