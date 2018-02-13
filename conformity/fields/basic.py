@@ -202,6 +202,7 @@ class UnicodeString(Base):
     min_length = attr.ib(default=None)
     max_length = attr.ib(default=None)
     description = attr.ib(default=None)
+    not_empty = attr.ib(default=None)
 
     def errors(self, value):
         if not isinstance(value, self.valid_type):
@@ -216,12 +217,18 @@ class UnicodeString(Base):
             return [
                 Error("String must have a length no more than %s" % self.max_length),
             ]
+        elif self.not_empty and not value:
+            return [
+                Error("String cannot be empty"),
+            ]
 
     def introspect(self):
         return strip_none({
             "type": self.introspect_type,
             "description": self.description,
+            "min_length": self.max_length,
             "max_length": self.max_length,
+            "not_empty": self.not_empty,
         })
 
 
