@@ -23,23 +23,29 @@ class MetaFieldTests(unittest.TestCase):
     """
 
     def test_nullable(self):
-        schema = Nullable(Constant("one", "two"))
+        constant = Constant("one", "two")
+        schema = Nullable(constant)
         self.assertEqual([], schema.errors(None))
         self.assertEqual([], schema.errors("one"))
         self.assertEqual([], schema.errors("two"))
         self.assertEqual(1, len(schema.errors("three")))
+        self.assertEqual({"type": "nullable", "nullable": constant.introspect()}, schema.introspect())
 
-        schema = Nullable(Boolean())
+        boolean = Boolean(description="This is a test description")
+        schema = Nullable(boolean)
         self.assertEqual([], schema.errors(None))
         self.assertIsNone(schema.errors(True))
         self.assertIsNone(schema.errors(False))
         self.assertEqual(1, len(schema.errors("true")))
         self.assertEqual(1, len(schema.errors(1)))
+        self.assertEqual({"type": "nullable", "nullable": boolean.introspect()}, schema.introspect())
 
-        schema = Nullable(UnicodeString())
+        string = UnicodeString()
+        schema = Nullable(string)
         self.assertEqual([], schema.errors(None))
         self.assertIsNone(schema.errors("hello, world"))
         self.assertEqual(1, len(schema.errors(b"hello, world")))
+        self.assertEqual({"type": "nullable", "nullable": string.introspect()}, schema.introspect())
 
     def test_any(self):
         schema = Any(Constant("one"), Constant("two"))

@@ -11,11 +11,12 @@ from conformity.utils import strip_none
 @attr.s
 class Nullable(Base):
     """
-    Accepts the field type passed as the first positional argument or a value of null/None.
+    Accepts the field type passed as the first positional argument or a value of null/None. Introspection is a
+    dictionary with "type" set to "nullable" and key "nullable" set to the introspection of the first positional
+    argument.
     """
 
     field = attr.ib()
-    description = attr.ib(default=None)
 
     def errors(self, value):
         if value is None:
@@ -24,10 +25,7 @@ class Nullable(Base):
         return self.field.errors(value)
 
     def introspect(self):
-        return strip_none({
-            "type": "nullable({})".format(self.field.introspect()),
-            "description": self.description,
-        })
+        return {"type": "nullable", "nullable": self.field.introspect()}
 
 
 @attr.s
