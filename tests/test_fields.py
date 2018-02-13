@@ -40,6 +40,8 @@ class FieldTests(unittest.TestCase):
 
         schema = UnicodeString(not_empty=True)
         self.assertEqual([Error("String cannot be empty")], schema.errors(""))
+        self.assertEqual([Error("String cannot be empty")], schema.errors(" "))
+        self.assertEqual([Error("String cannot be empty")], schema.errors(" \n "))
         self.assertEqual(None, schema.errors("foo"))
 
         schema = ByteString()

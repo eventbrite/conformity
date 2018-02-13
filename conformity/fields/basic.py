@@ -217,7 +217,7 @@ class UnicodeString(Base):
             return [
                 Error("String must have a length no more than %s" % self.max_length),
             ]
-        elif self.not_empty and not value:
+        elif self.not_empty and not value.strip():
             return [
                 Error("String cannot be empty"),
             ]
