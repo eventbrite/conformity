@@ -227,7 +227,7 @@ class UnicodeString(Base):
             "type": self.introspect_type,
             "description": self.description,
             "min_length": self.max_length,
-            "max_length": self.max_length,
+            "max_length": self.min_length,
             "not_empty": self.not_empty,
         })
 
