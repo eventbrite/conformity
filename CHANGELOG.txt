@@ -1,6 +1,12 @@
 Changelog
 =========
 
+1.9.0 (2018-02-13)
+------------------
+- Add flag to disallow empty strings
+- Fix: Nullable introspection incorrectly squashed all inner introspection into a string
+- Add support for specifying minimum required string length
+
 1.8.0 (2018-02-06)
 ------------------
 - Add support for nullable fields using Nullable
