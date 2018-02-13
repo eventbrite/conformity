@@ -38,10 +38,10 @@ class FieldTests(unittest.TestCase):
         self.assertEqual(None, schema.errors("1234567890"))
         self.assertEqual([Error("String must have a length no more than 10")], schema.errors("12345678901"))
 
-        schema = UnicodeString(not_empty=True)
-        self.assertEqual([Error("String cannot be empty")], schema.errors(""))
-        self.assertEqual([Error("String cannot be empty")], schema.errors(" "))
-        self.assertEqual([Error("String cannot be empty")], schema.errors(" \n "))
+        schema = UnicodeString(allow_blank=False)
+        self.assertEqual([Error("String cannot be blank")], schema.errors(""))
+        self.assertEqual([Error("String cannot be blank")], schema.errors(" "))
+        self.assertEqual([Error("String cannot be blank")], schema.errors(" \n "))
         self.assertEqual(None, schema.errors("foo"))
 
         schema = ByteString()
