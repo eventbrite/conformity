@@ -72,7 +72,7 @@ class Dictionary(Base):
     """
 
     contents = None
-    optional_keys = []
+    optional_keys = set()
     allow_extra_keys = False
     description = None
 
@@ -81,15 +81,17 @@ class Dictionary(Base):
         self.contents = contents
         if self.contents is None:
             self.contents = self.__class__.contents
+
         self.allow_extra_keys = allow_extra_keys
         if self.allow_extra_keys is None:
             self.allow_extra_keys = self.__class__.allow_extra_keys
-        self.optional_keys = optional_keys
-        if self.optional_keys is None:
-            self.optional_keys = self.__class__.optional_keys
+
+        self.optional_keys = set(optional_keys) if optional_keys else self.__class__.optional_keys
+
         self.description = description
         if self.description is None:
             self.description = self.__class__.description
+
         if self.contents is None:
             raise ValueError("contents is a required argument")
 
@@ -102,7 +104,7 @@ class Dictionary(Base):
         for key, field in self.contents.items():
             # Check key is present
             if key not in value:
-                if key not in (self.optional_keys or []):
+                if key not in self.optional_keys:
                     result.append(
                         Error("Key %s missing" % key, pointer=key),
                     )
@@ -127,7 +129,7 @@ class Dictionary(Base):
                 key: value.introspect()
                 for key, value in self.contents.items()
             },
-            "optional_keys": self.optional_keys,
+            "optional_keys": list(self.optional_keys),
             "allow_extra_keys": self.allow_extra_keys,
             "description": self.description,
         })

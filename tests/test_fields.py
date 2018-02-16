@@ -100,32 +100,33 @@ class FieldTests(unittest.TestCase):
             [],
         )
 
+        introspection = schema.introspect()
+        self.assertEqual("dictionary", introspection["type"])
+        self.assertFalse(introspection["allow_extra_keys"])
+        self.assertEqual([], introspection["optional_keys"])
+        self.assertEqual(2, len(introspection["contents"]))
+        self.assertIn("child_ids", introspection["contents"])
         self.assertEqual(
-            schema.introspect(),
             {
-                "type": "dictionary",
-                "allow_extra_keys": False,
-                "contents": {
-                    "address": {
-                        "type": "dictionary",
-                        "allow_extra_keys": False,
-                        "contents": {
-                            "city": {"type": "unicode"},
-                            "country": {"type": "unicode"},
-                            "line1": {"type": "unicode"},
-                            "line2": {"type": "unicode"},
-                            "postcode": {"type": "unicode"},
-                            "state": {"type": "unicode"},
-                        },
-                        "optional_keys": ["line2", "state"],
-                    },
-                    "child_ids": {
-                        "type": "list",
-                        "contents": {"gt": 0, "type": "integer"},
-                    },
-                },
-                "optional_keys": [],
+                "type": "list",
+                "contents": {"gt": 0, "type": "integer"},
             },
+            introspection["contents"]["child_ids"],
+        )
+        self.assertIn("address", introspection["contents"])
+        self.assertEqual("dictionary", introspection["contents"]["address"]["type"])
+        self.assertFalse(introspection["contents"]["address"]["allow_extra_keys"])
+        self.assertEqual({"line2", "state"}, set(introspection["contents"]["address"]["optional_keys"]))
+        self.assertEqual(
+            {
+                "city": {"type": "unicode"},
+                "country": {"type": "unicode"},
+                "line1": {"type": "unicode"},
+                "line2": {"type": "unicode"},
+                "postcode": {"type": "unicode"},
+                "state": {"type": "unicode"},
+            },
+            introspection["contents"]["address"]["contents"],
         )
 
     def test_temporal(self):
