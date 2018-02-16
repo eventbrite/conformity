@@ -1,6 +1,10 @@
 Changelog
 =========
 
+1.9.1 (2018-02-16)
+------------------
+- [PATCH] Ensure optional_keys is a set, introspects to a list
+
 1.9.0 (2018-02-13)
 ------------------
 - Add flag to disallow empty strings
