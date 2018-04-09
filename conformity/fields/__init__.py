@@ -12,6 +12,9 @@ from conformity.fields.basic import (  # noqa
     UnicodeDecimal,
     UnicodeString,
 )
+from conformity.fields.email import (  # noqa
+    EmailAddress
+)
 from conformity.fields.geo import (  # noqa
     Latitude,
     Longitude,
