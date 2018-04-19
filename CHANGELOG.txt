@@ -1,6 +1,10 @@
 Changelog
 =========
 
+1.11.0 (2018-04-19)
+-------------------
+- [MINOR] Make temporal type support more flexible
+
 1.10.0 (2018-04-10)
 -------------------
 - added email validator
