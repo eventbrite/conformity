@@ -10,6 +10,8 @@ from conformity import __version__
 tests_require = [
     'pytest',
     'pytest-cov',
+    'freezegun',
+    'pytz',
 ]
 
 setup(

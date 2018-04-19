@@ -3,6 +3,9 @@ from __future__ import absolute_import, unicode_literals
 import datetime
 import unittest
 
+import freezegun
+import pytz
+
 from conformity.error import Error
 from conformity.fields import (
     ByteString,
@@ -16,6 +19,7 @@ from conformity.fields import (
     SchemalessDictionary,
     TimeDelta,
     Tuple,
+    TZInfo,
     UnicodeDecimal,
     UnicodeString,
 )
@@ -137,11 +141,15 @@ class FieldTests(unittest.TestCase):
         date_schema = Date(gt=past1985.date())
         delta_schema = TimeDelta(gt=datetime.timedelta(0))
         negative_delta_schema = TimeDelta(lt=datetime.timedelta(0))
+        time_zone_schema = TZInfo()
 
         self.assertEqual(
             datetime_schema.errors(datetime.datetime.now()),
             None,
         )
+
+        with freezegun.freeze_time():
+            self.assertEqual(None, datetime_schema.errors(datetime.datetime.now()))
 
         # date is not a valid datetime
         self.assertEqual(
@@ -173,6 +181,15 @@ class FieldTests(unittest.TestCase):
             [Error('Not a datetime.date instance')],
         )
 
+        with freezegun.freeze_time():
+            self.assertEqual(None, date_schema.errors(datetime.date.today()))
+
+            # fake datetime is not a valid date
+            self.assertEqual(
+                [Error('Not a datetime.date instance')],
+                date_schema.errors(datetime.datetime.now()),
+            )
+
         self.assertEqual(
             date_schema.errors(past1955.date()),
             [Error('Value not > 1985-10-26')],
@@ -197,6 +214,13 @@ class FieldTests(unittest.TestCase):
             negative_delta_schema.errors(past1985 - past1955),
             [Error('Value not < 0:00:00')],
         )
+
+        self.assertEqual(
+            [Error('Not a datetime.tzinfo instance')],
+            time_zone_schema.errors(datetime.datetime.now()),
+        )
+
+        self.assertEqual(None, time_zone_schema.errors(pytz.timezone('America/Chicago')))
 
     def test_schemaless_dict_empty(self):
         """

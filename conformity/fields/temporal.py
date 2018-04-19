@@ -9,6 +9,16 @@ from conformity.fields.basic import Base
 from conformity.utils import strip_none
 
 
+try:
+    # noinspection PyUnresolvedReferences
+    from freezegun import api as _freeze
+    valid_datetime_types = frozenset({datetime.datetime, _freeze.FakeDatetime})
+    valid_date_types = frozenset({datetime.date, _freeze.FakeDate})
+except ImportError:
+    valid_datetime_types = frozenset({datetime.datetime})
+    valid_date_types = frozenset({datetime.date})
+
+
 @attr.s
 class TemporalBase(Base):
     """
@@ -21,6 +31,9 @@ class TemporalBase(Base):
     lte = attr.ib(default=None)
     description = attr.ib(default=None)
 
+    valid_types = None  # must be overridden
+    valid_isinstance = None  # may be overridden
+
     def __init__(self, gt=None, lt=None, gte=None, lte=None):
         self.gt = gt
         self.lt = lt
@@ -28,7 +41,9 @@ class TemporalBase(Base):
         self.lte = lte
 
     def errors(self, value):
-        if not type(value) == self.valid_type:
+        if type(value) not in self.valid_types and (
+            not self.valid_isinstance or not isinstance(value, self.valid_isinstance)
+        ):
             # using stricter type checking, because date is subclass of datetime, but they're not comparable
             return [
                 Error("Not a %s instance" % self.valid_noun),
@@ -66,7 +81,7 @@ class DateTime(TemporalBase):
     Datetime instances
     """
 
-    valid_type = datetime.datetime
+    valid_types = valid_datetime_types
     valid_noun = "datetime.datetime"
     introspect_type = "datetime"
 
@@ -76,7 +91,7 @@ class Date(TemporalBase):
     Date instances
     """
 
-    valid_type = datetime.date
+    valid_types = valid_date_types
     valid_noun = "datetime.date"
     introspect_type = "date"
 
@@ -86,7 +101,7 @@ class Time(TemporalBase):
     Time instances
     """
 
-    valid_type = datetime.time
+    valid_types = frozenset({datetime.time})
     valid_noun = "datetime.time"
     introspect_type = "time"
 
@@ -96,7 +111,7 @@ class TimeDelta(TemporalBase):
     Timedelta instances
     """
 
-    valid_type = datetime.timedelta
+    valid_types = frozenset({datetime.timedelta})
     valid_noun = "datetime.timedelta"
     introspect_type = "timedelta"
 
@@ -106,6 +121,7 @@ class TZInfo(TemporalBase):
     TZInfo instances
     """
 
-    valid_type = datetime.tzinfo
+    valid_types = frozenset({datetime.tzinfo})
+    valid_isinstance = datetime.tzinfo
     valid_noun = "datetime.tzinfo"
     introspect_type = "tzinfo"
