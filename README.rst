@@ -13,7 +13,9 @@ Conformity
 
 A low-level, declarative schema validation library.
 
-Declare a schema::
+Declare a schema:
+
+.. code:: python
 
     person = Dictionary({
         "name": UnicodeString(),
@@ -21,14 +23,18 @@ Declare a schema::
         "event_ids": List(Integer(gt=0)),
     })
 
-Check to see if data is valid::
+Check to see if data is valid:
+
+.. code:: python
 
     data = {"name": "Andrew", "height": 180.3, "event_ids": [1, "3"]}
-    person.errors(data)
+    errors = person.errors(data)
 
     # Key event_ids: Index 1: Not an integer
 
-And wrap functions to validate on the way in and out::
+And wrap functions to validate on the way in and out:
+
+.. code:: python
 
     kwargs = Dictionary({
         "name": UnicodeString(),
@@ -38,13 +44,26 @@ And wrap functions to validate on the way in and out::
     @validate_call(kwargs, UnicodeString())
     def greet(name, score=0):
         if score > 10:
-            return "So nice to meet you, %s!" % name
+            return "So nice to meet you, {}!".format(name)
         else:
-            return "Hello, %s." % name
+            return "Hello, {}.".format(name)
 
-There's support for basic string, numeric, geographic, temporal, networking,
-and other field types, with everything easily extensible (optionally via
-subclassing)
+There's support for basic string, numeric, geographic, temporal, networking, and other field types, with everything
+easily extensible (optionally via subclassing).
+
+
+Errors are always instances of ``conformity.error:Error``, and each error has a ``message``, a ``code``, and a
+``pointer``:
+
+- ``message`` is a plain-language (English) explanation of the problem.
+- ``code`` is a machine-readable code that, in most cases, is ``INVALID`` (using the constant
+  ``conformity.error:ERROR_CODE_INVALID``). In ``Dictionary``s, the error code is ``MISSING`` (``ERROR_CODE_MISSING``)
+  for required keys that aren't present and ``UNKNOWN`` for extra keys that aren't allowed. In ``Constant``s, the error
+  code is ``UNKNOWN`` for values that don't match the allowed value or values. In ``Polymorph``s, the error code is
+  ``UNKNOWN`` for unknown switch values when no ``__default__`` is present.
+- ``pointer`` is ``None`` for errors in most field types. However, for data structure field types (``List``,
+  ``Dictionary``, ``SchemalessDictionary``, ``Tuple``), ``pointer`` is a string representing the dotted path to the
+  offending value in the structure.
 
 
 Interface
@@ -52,15 +71,12 @@ Interface
 
 Anything can be a Conformity validator as long as it follows this interface:
 
-* An ``errors(value)`` method, that returns a list of ``confirmity.Error``
-  objects for each error or an empty list if the value is clean.
+* An ``errors(value)`` method that returns a list of ``conformity.error:Error`` objects for each error or an empty
+  list or ``None`` if the value is clean.
 
-* An ``introspect()`` method, that returns a dictionary describing the field.
-  The format of this dictionary has to vary by field, but it should reflect the
-  names of keyword arguments passed into the constructor, and provide enough
-  information to entirely re-create the field as-is. Any sub-fields declared
-  for structures should be represented using their own ``introspect()`` output.
-  The dictionary must also contain a ``type`` key that contains the name of the
-  type, but this should use lower case and underscores rather than the class
-  name. It can also contain a ``description`` key which should be interpreted
-  as the human-readable reason for the field.
+* An ``introspect()`` method, that returns a dictionary describing the field. The format of this dictionary has to vary
+  by field, but it should reflect the names of keyword arguments passed into the constructor, and provide enough
+  information to entirely re-create the field as-is. Any sub-fields declared for structures should be represented using
+  their own ``introspect()`` output. The dictionary must also contain a ``type`` key that contains the name of the
+  type, but this should use lower case and underscores rather than the class name. It can also contain a ``description``
+  key which should be interpreted as the human-readable reason for the field.
