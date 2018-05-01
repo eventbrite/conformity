@@ -57,9 +57,9 @@ Errors are always instances of ``conformity.error:Error``, and each error has a 
 
 - ``message`` is a plain-language (English) explanation of the problem.
 - ``code`` is a machine-readable code that, in most cases, is ``INVALID`` (using the constant
-  ``conformity.error:ERROR_CODE_INVALID``). In ``Dictionary``s, the error code is ``MISSING`` (``ERROR_CODE_MISSING``)
-  for required keys that aren't present and ``UNKNOWN`` for extra keys that aren't allowed. In ``Constant``s, the error
-  code is ``UNKNOWN`` for values that don't match the allowed value or values. In ``Polymorph``s, the error code is
+  ``conformity.error:ERROR_CODE_INVALID``). In ``Dictionary``, the error code is ``MISSING`` (``ERROR_CODE_MISSING``)
+  for required keys that aren't present and ``UNKNOWN`` for extra keys that aren't allowed. In ``Constant``, the error
+  code is ``UNKNOWN`` for values that don't match the allowed value or values. In ``Polymorph``, the error code is
   ``UNKNOWN`` for unknown switch values when no ``__default__`` is present.
 - ``pointer`` is ``None`` for errors in most field types. However, for data structure field types (``List``,
   ``Dictionary``, ``SchemalessDictionary``, ``Tuple``), ``pointer`` is a string representing the dotted path to the
