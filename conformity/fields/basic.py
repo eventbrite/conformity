@@ -5,7 +5,10 @@ import decimal
 import attr
 import six
 
-from conformity.error import Error
+from conformity.error import (
+    Error,
+    ERROR_CODE_UNKNOWN,
+)
 from conformity.utils import strip_none
 
 
@@ -41,7 +44,15 @@ class Constant(Base):
         self.description = kwargs.get("description", None)
         # Check they didn't pass any other kwargs
         if list(kwargs.keys()) not in ([], ["description"]):
-            raise TypeError("Invalid keyword arguments for Constant: %s" % kwargs.keys())
+            raise TypeError("Invalid keyword arguments for Constant: {}".format(kwargs.keys()))
+
+        def _repr(cv):
+            return '"{}"'.format(cv) if isinstance(cv, six.string_types) else "{}".format(cv)
+
+        if len(self.values) == 1:
+            self._error_message = "Value is not {}".format(_repr(tuple(self.values)[0]))
+        else:
+            self._error_message = "Value is not one of: {}".format(", ".join(sorted(_repr(v) for v in self.values)))
 
     def errors(self, value):
         """
@@ -49,16 +60,7 @@ class Constant(Base):
         that it's valid.
         """
         if value not in self.values:
-            if len(self.values) == 1:
-                return [
-                    Error("Value is not %r" % (list(self.values)[0], )),
-                ]
-            else:
-                return [
-                    Error("Value is not one of: %s" % (
-                        ", ".join(sorted(repr(v) for v in self.values))
-                    )),
-                ]
+            return [Error(self._error_message, code=ERROR_CODE_UNKNOWN)]
         return []
 
     def introspect(self):

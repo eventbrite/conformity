@@ -7,6 +7,12 @@ from setuptools import (
 
 from conformity import __version__
 
+
+def readme():
+    with open('README.rst') as f:
+        return f.read()
+
+
 tests_require = [
     'pytest',
     'pytest-cov',
@@ -20,21 +26,17 @@ setup(
     author='Eventbrite, Inc.',
     author_email='opensource@eventbrite.com',
     description='Cacheable schema description and validation',
-    long_description=(
-        'Conformity allows easy creation of schemas to be checked against '
-        'function calls, service calls, or other uses, designed in a manner '
-        'that allows heavy caching and is entirely deterministic.'
-        '\n\nFor more, see http://github.com/eventbrite/conformity/'
-    ),
-    packages=find_packages(),
+    long_description=readme(),
+    url='http://github.com/eventbrite/conformity',
+    packages=list(map(str, find_packages(exclude=['*.tests', '*.tests.*', 'tests.*', 'tests']))),
     include_package_data=True,
     install_requires=[
         'six',
         'attrs~=17.4',
     ],
-    test_suite='conformity.tests',
     tests_require=tests_require,
     setup_requires=['pytest-runner'],
+    test_suite='tests',
     extras_require={
         'testing': tests_require,
     },

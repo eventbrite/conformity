@@ -3,7 +3,10 @@ from __future__ import absolute_import, unicode_literals
 import attr
 import six
 
-from conformity.error import Error
+from conformity.error import (
+    Error,
+    ERROR_CODE_UNKNOWN,
+)
 from conformity.fields.basic import Base
 from conformity.utils import strip_none
 
@@ -51,7 +54,7 @@ class Polymorph(Base):
                 switch_value = "__default__"
             else:
                 return [
-                    Error("Invalid switch value %r" % switch_value),
+                    Error("Invalid switch value {}".format(switch_value), code=ERROR_CODE_UNKNOWN),
                 ]
         field = self.contents_map[switch_value]
         # Run field errors

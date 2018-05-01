@@ -6,7 +6,11 @@ import unittest
 import freezegun
 import pytz
 
-from conformity.error import Error
+from conformity.error import (
+    Error,
+    ERROR_CODE_MISSING,
+    ERROR_CODE_UNKNOWN,
+)
 from conformity.fields import (
     ByteString,
     Constant,
@@ -83,10 +87,13 @@ class FieldTests(unittest.TestCase):
         )
 
         self.assertEqual(
-            sorted(schema.errors({"child_ids": [1, 2, "ten"]})),
+            sorted(schema.errors(
+                {"child_ids": [1, 2, "ten"], "unsolicited_item": "Should not be here", "another_bad": "Also extra"},
+            )),
             sorted([
                 Error("Not a integer", pointer="child_ids.2"),
-                Error("Key address missing", pointer="address"),
+                Error("Missing key: address", code=ERROR_CODE_MISSING, pointer="address"),
+                Error("Extra keys present: another_bad, unsolicited_item", code=ERROR_CODE_UNKNOWN),
             ]),
         )
 
@@ -300,7 +307,8 @@ class FieldTests(unittest.TestCase):
                 Error('Value not > 0', pointer='0'),
                 Error('Not a unicode string', pointer='1'),
                 Error(
-                    'Value is not %r' % 'I love tuples',
+                    'Value is not "I love tuples"',
+                    code=ERROR_CODE_UNKNOWN,
                     pointer='2',
                 ),
             ]
@@ -407,5 +415,5 @@ class FieldTests(unittest.TestCase):
         )
         self.assertEqual(
             schema.errors(360000),
-            [Error("Value is not one of: 36, 42, 81, 9231")],
+            [Error("Value is not one of: 36, 42, 81, 9231", code=ERROR_CODE_UNKNOWN)],
         )

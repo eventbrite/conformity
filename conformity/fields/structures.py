@@ -3,7 +3,11 @@ from __future__ import absolute_import, unicode_literals
 import attr
 import six
 
-from conformity.error import Error
+from conformity.error import (
+    Error,
+    ERROR_CODE_MISSING,
+    ERROR_CODE_UNKNOWN,
+)
 from conformity.fields.basic import (
     Anything,
     Base,
@@ -106,7 +110,7 @@ class Dictionary(Base):
             if key not in value:
                 if key not in self.optional_keys:
                     result.append(
-                        Error("Key %s missing" % key, pointer=key),
+                        Error("Missing key: {}".format(key), code=ERROR_CODE_MISSING, pointer=key),
                     )
             else:
                 # Check key type
@@ -118,7 +122,10 @@ class Dictionary(Base):
         extra_keys = set(value.keys()) - set(self.contents.keys())
         if extra_keys and not self.allow_extra_keys:
             result.append(
-                Error("Extra keys %s present" % (", ".join(six.text_type(key) for key in extra_keys))),
+                Error(
+                    "Extra keys present: {}".format(", ".join(six.text_type(key) for key in sorted(extra_keys))),
+                    code=ERROR_CODE_UNKNOWN,
+                ),
             )
         return result
 
