@@ -129,6 +129,43 @@ class Dictionary(Base):
             )
         return result
 
+    def extend(
+        self,
+        contents=None,
+        optional_keys=None,
+        allow_extra_keys=None,
+        description=None,
+        replace_optional_keys=False,
+    ):
+        """
+        This method allows you to create a new `Dictionary` that extends the current `Dictionary` with additional
+        contents and/or optional keys, and/or replaces the `allow_extra_keys` and/or `description` attributes.
+
+        :param contents: More contents, if any, to extend the current contents
+        :type contents: dict
+        :param optional_keys: More optional keys, if any, to extend the current optional keys
+        :type optional_keys: union[set, list, tuple]
+        :param allow_extra_keys: If non-`None`, this overrides the current `allow_extra_keys` attribute
+        :type allow_extra_keys: bool
+        :param description: If non-`None`, this overrides the current `description` attribute
+        :type description: union[str, unicode]
+        :param replace_optional_keys: If `True`, then the `optional_keys` argument will completely replace, instead of
+                                      extend, the current optional keys
+        :type replace_optional_keys: bool
+
+        :return: A new `Dictionary` extended from the current `Dictionary` based on the supplied arguments
+        :rtype: Dictionary
+        """
+        optional_keys = set(optional_keys or [])
+        return Dictionary(
+            contents={
+                k: v for d in (self.contents, contents) for k, v in six.iteritems(d)
+            } if contents else self.contents,
+            optional_keys=optional_keys if replace_optional_keys else self.optional_keys | optional_keys,
+            allow_extra_keys=self.allow_extra_keys if allow_extra_keys is None else allow_extra_keys,
+            description=self.description if description is None else description,
+        )
+
     def introspect(self):
         return strip_none({
             "type": "dictionary",
