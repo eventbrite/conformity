@@ -12,6 +12,7 @@ from conformity.error import (
     ERROR_CODE_UNKNOWN,
 )
 from conformity.fields import (
+    Boolean,
     ByteString,
     Constant,
     Date,
@@ -138,6 +139,63 @@ class FieldTests(unittest.TestCase):
                 "state": {"type": "unicode"},
             },
             introspection["contents"]["address"]["contents"],
+        )
+
+    def test_dictionary_extension(self):
+        schema1 = Dictionary(
+            {
+                'foo': UnicodeString(),
+                'bar': Boolean(),
+            },
+            optional_keys=('foo', ),
+            description='Hello, world',
+        )
+
+        schema2 = schema1.extend(
+            {
+                'bar': Integer(),
+                'baz': List(Integer()),
+            },
+            optional_keys=('baz', ),
+        )
+
+        schema3 = schema1.extend(
+            {
+                'bar': Integer(),
+                'baz': List(Integer()),
+            },
+            optional_keys=('baz',),
+            allow_extra_keys=True,
+            description='Goodbye, universe',
+            replace_optional_keys=True,
+        )
+
+        self.assertEqual(
+            Dictionary(
+                {
+                    'foo': UnicodeString(),
+                    'bar': Integer(),
+                    'baz': List(Integer()),
+                },
+                optional_keys=('foo', 'baz', ),
+                allow_extra_keys=False,
+                description='Hello, world',
+            ).introspect(),
+            schema2.introspect(),
+        )
+
+        self.assertEqual(
+            Dictionary(
+                {
+                    'foo': UnicodeString(),
+                    'bar': Integer(),
+                    'baz': List(Integer()),
+                },
+                optional_keys=('baz',),
+                allow_extra_keys=True,
+                description='Goodbye, universe',
+            ).introspect(),
+            schema3.introspect(),
         )
 
     def test_temporal(self):
