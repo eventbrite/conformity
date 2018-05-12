@@ -1,6 +1,11 @@
 Changelog
 =========
 
+1.13.0 (2018-05-12)
+-------------------
+- [MINOR] Add support for extending dictionaries to simplify similar schemas
+- [PATCH] Simple fix to readme syntax
+
 1.12.0 (2018-05-01)
 -------------------
 - [MINOR] Add support for machine-readable error codes
