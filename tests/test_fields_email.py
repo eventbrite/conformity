@@ -49,23 +49,23 @@ class EmailFieldTests(unittest.TestCase):
 
         self.assertEqual(
             schema.errors('A@b@c@example.com'),
-            [Error('Not a valid email address (invalid local user field)', 'A@b@c')],
+            [Error('Not a valid email address (invalid local user field)', pointer='A@b@c')],
         )
         self.assertEqual(
             schema.errors('a"b(c)d,e:f;g<h>i[j\k]l@example.com'),
-            [Error('Not a valid email address (invalid local user field)', 'a"b(c)d,e:f;g<h>i[j\\k]l')],
+            [Error('Not a valid email address (invalid local user field)', pointer='a"b(c)d,e:f;g<h>i[j\\k]l')],
         )
         self.assertEqual(
             schema.errors('just"not"right@example.com'),
-            [Error('Not a valid email address (invalid local user field)', 'just"not"right')],
+            [Error('Not a valid email address (invalid local user field)', pointer='just"not"right')],
         )
         self.assertEqual(
             schema.errors('this is"not\allowed@example.com'),
-            [Error('Not a valid email address (invalid local user field)', 'this is"not\x07llowed')],
+            [Error('Not a valid email address (invalid local user field)', pointer='this is"not\x07llowed')],
         )
         self.assertEqual(
             schema.errors('this\ still\"not\\allowed@example.com'),
-            [Error('Not a valid email address (invalid local user field)', 'this\\ still"not\\allowed')],
+            [Error('Not a valid email address (invalid local user field)', pointer='this\\ still"not\\allowed')],
         )
         # self.assertEqual(
         #     schema.errors('1234567890123456789012345678901234567890123456789012345678901234+x@example.com'),
@@ -73,38 +73,38 @@ class EmailFieldTests(unittest.TestCase):
         # )
         self.assertEqual(
             schema.errors('john..doe@example.com'),
-            [Error('Not a valid email address (invalid local user field)', 'john..doe')]
+            [Error('Not a valid email address (invalid local user field)', pointer='john..doe')]
         )
         self.assertEqual(
             schema.errors('john.doe@example..com'),
-            [Error('Not a valid email address (invalid domain field)', 'example..com')],
+            [Error('Not a valid email address (invalid domain field)', pointer='example..com')],
         )
         self.assertEqual(
             schema.errors('" "@example.org'),
-            [Error('Not a valid email address (invalid local user field)', '" "')],
+            [Error('Not a valid email address (invalid local user field)', pointer='" "')],
         )
         # Internationalization, currently not supported
         self.assertEqual(
             schema.errors('Pelé@example.com'),
-            [Error('Not a valid email address (invalid local user field)', 'Pelé')],
+            [Error('Not a valid email address (invalid local user field)', pointer='Pelé')],
         )
         self.assertEqual(
             schema.errors('δοκιμή@παράδειγμα.δοκιμή'),
-            [Error('Not a valid email address (invalid local user field)', 'δοκιμή')],
+            [Error('Not a valid email address (invalid local user field)', pointer='δοκιμή')],
         )
         self.assertEqual(
             schema.errors('我買@屋企.香港'),
-            [Error('Not a valid email address (invalid local user field)', '我買')],
+            [Error('Not a valid email address (invalid local user field)', pointer='我買')],
         )
         self.assertEqual(
             schema.errors('甲斐@黒川.日本'),
-            [Error('Not a valid email address (invalid local user field)', '甲斐')],
+            [Error('Not a valid email address (invalid local user field)', pointer='甲斐')],
         )
         self.assertEqual(
             schema.errors('чебурашка@ящик-с-апельсинами.рф'),
-            [Error('Not a valid email address (invalid local user field)', 'чебурашка')],
+            [Error('Not a valid email address (invalid local user field)', pointer='чебурашка')],
         )
         self.assertEqual(
             schema.errors('संपर्क@डाटामेल.भारत'),
-            [Error('Not a valid email address (invalid local user field)', 'संपर्क')],
+            [Error('Not a valid email address (invalid local user field)', pointer='संपर्क')],
         )

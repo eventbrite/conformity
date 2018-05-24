@@ -17,9 +17,9 @@ class EmailAddress(UnicodeString):
     https://github.com/django/django/blob/stable/2.0.x/django/core/validators.py#L164
     UTF-8 emails are not supported in general.
     """
-    message = 'Enter a valid email address.'
-    code = 'invalid'
     ip_schema = IPAddress()
+    message = None  # unused, will be removed in version 2.0.0
+    code = None  # unused, will be removed in version 2.0.0
 
     user_regex = re.compile(
         r"(^[-!#$%&'*+/=?^_`{}|~0-9A-Z]+(\.[-!#$%&'*+/=?^_`{}|~0-9A-Z]+)*\Z"  # dot-atom
@@ -39,12 +39,16 @@ class EmailAddress(UnicodeString):
     domain_whitelist = ['localhost']
 
     def __init__(self, message=None, code=None, whitelist=None):
-        if message is not None:
-            self.message = message
-        if code is not None:
-            self.code = code
+        """
+        Construct a new email address field.
+
+        :param message: Unused, and will be removed in version 2.0.0
+        :param code: Unused, and will be removed in version 2.0.0
+        :param whitelist: If specified, an invalid domain part will be permitted if it is in this list
+        :type whitelist: iterable
+        """
         if whitelist is not None:
-            self.domain_whitelist = whitelist
+            self.domain_whitelist = set(whitelist) if whitelist else set()
 
     def errors(self, value):
         # Get any basic type errors
@@ -56,7 +60,7 @@ class EmailAddress(UnicodeString):
 
         user_part, domain_part = value.rsplit('@', 1)
         if not self.user_regex.match(user_part):
-            return [Error('Not a valid email address (invalid local user field)', user_part)]
+            return [Error('Not a valid email address (invalid local user field)', pointer=user_part)]
         if domain_part in self.domain_whitelist or self.is_domain_valid(domain_part):
             return []
         else:
@@ -66,7 +70,7 @@ class EmailAddress(UnicodeString):
                     return []
             except UnicodeError:
                 pass
-            return [Error('Not a valid email address (invalid domain field)', domain_part)]
+            return [Error('Not a valid email address (invalid domain field)', pointer=domain_part)]
 
     @classmethod
     def is_domain_valid(cls, domain_part):
