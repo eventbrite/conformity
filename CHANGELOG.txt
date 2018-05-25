@@ -1,6 +1,10 @@
 Changelog
 =========
 
+1.14.0 (2018-05-25)
+-------------------
+- [MINOR] Fix three bugs in the email field
+
 1.13.0 (2018-05-12)
 -------------------
 - [MINOR] Add support for extending dictionaries to simplify similar schemas
