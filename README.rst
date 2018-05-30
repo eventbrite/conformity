@@ -17,6 +17,8 @@ Declare a schema:
 
 .. code:: python
 
+    from conformity.fields import Dictionary, Float, List, UnicodeString
+
     person = Dictionary({
         "name": UnicodeString(),
         "height": Float(gte=0),
