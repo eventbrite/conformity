@@ -191,6 +191,15 @@ class Float(Integer):
     introspect_type = "float"
 
 
+class Decimal(Integer):
+    """
+    Accepts arbitrary-precision Decimal number objects.
+    """
+    valid_type = decimal.Decimal
+    valid_noun = "decimal"
+    introspect_type = "decimal"
+
+
 @attr.s
 class UnicodeString(Base):
     """

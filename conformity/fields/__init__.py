@@ -6,6 +6,7 @@ from conformity.fields.basic import (  # noqa
     Boolean,
     ByteString,
     Constant,
+    Decimal,
     Float,
     Hashable,
     Integer,
