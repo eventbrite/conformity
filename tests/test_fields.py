@@ -1,6 +1,7 @@
 from __future__ import absolute_import, unicode_literals
 
 import datetime
+import decimal
 import unittest
 
 import freezegun
@@ -17,6 +18,7 @@ from conformity.fields import (
     Constant,
     Date,
     DateTime,
+    Decimal,
     Dictionary,
     Float,
     Integer,
@@ -427,6 +429,46 @@ class FieldTests(unittest.TestCase):
             len(schema2d.errors({"x": 3.14, "z": 5542})),
             2,
         )
+
+    def test_decimal(self):
+        """
+        Tests decimal.Decimal object validation
+        """
+        self.assertEqual(None, Decimal().errors(decimal.Decimal("1")))
+        self.assertEqual(None, Decimal().errors(decimal.Decimal("1.4")))
+        self.assertEqual(None, Decimal().errors(decimal.Decimal("-3.14159")))
+        self.assertEqual(
+            [Error("Not a decimal")],
+            Decimal().errors("-3.14159")
+        )
+        self.assertEqual(
+            [Error("Not a decimal")],
+            Decimal().errors(-3.14159)
+        )
+        self.assertEqual(
+            [Error("Not a decimal")],
+            Decimal().errors(15)
+        )
+        self.assertEqual(
+            [Error("Value not > 6")],
+            Decimal(lt=12, gt=6).errors(decimal.Decimal("6")),
+        )
+        self.assertEqual(
+            [Error("Value not < 12")],
+            Decimal(lt=12, gt=6).errors(decimal.Decimal("12")),
+        )
+        self.assertEqual(None, Decimal(lt=12, gt=6).errors(decimal.Decimal("6.1")))
+        self.assertEqual(None, Decimal(lt=12, gt=6).errors(decimal.Decimal("11.9")))
+        self.assertEqual(
+            [Error("Value not >= 6")],
+            Decimal(lte=12, gte=6).errors(decimal.Decimal("5.9")),
+        )
+        self.assertEqual(
+            [Error("Value not <= 12")],
+            Decimal(lte=12, gte=6).errors(decimal.Decimal("12.1")),
+        )
+        self.assertEqual(None, Decimal(lte=12, gte=6).errors(decimal.Decimal("6")))
+        self.assertEqual(None, Decimal(lte=12, gte=6).errors(decimal.Decimal("12")))
 
     def test_unicode_decimal(self):
         """
