@@ -254,6 +254,7 @@ class ByteString(UnicodeString):
     introspect_type = "bytes"
 
 
+@attr.s
 class UnicodeDecimal(Base):
     """
     A decimal value represented as its base-10 unicode string.
