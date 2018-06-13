@@ -1,6 +1,10 @@
 Changelog
 =========
 
+1.15.1 (2018-06-13)
+-------------------
+- [PATCH] Field subclasses that use Attrs must use attr.s
+
 1.15.0 (2018-06-07)
 -------------------
 - [MINOR] Add support for fields of type decimal.Decimal
