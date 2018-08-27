@@ -7,10 +7,7 @@ from currint import (
     Currency,
 )
 
-from conformity.error import (
-    Error,
-    ERROR_CODE_INVALID,
-)
+from conformity.error import ERROR_CODE_INVALID
 from conformity.fields.currency import Amount as AmountField
 
 
