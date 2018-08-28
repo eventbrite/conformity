@@ -13,12 +13,16 @@ def readme():
         return f.read()
 
 
+currency_requires = [
+    'currint',
+]
+
 tests_require = [
     'pytest',
     'pytest-cov',
     'freezegun',
     'pytz',
-]
+] + currency_requires
 
 setup(
     name='conformity',
@@ -38,6 +42,7 @@ setup(
     setup_requires=['pytest-runner'],
     test_suite='tests',
     extras_require={
+        'currency': currency_requires,
         'testing': tests_require,
     },
     license='Apache 2.0',
