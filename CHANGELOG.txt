@@ -1,6 +1,10 @@
 Changelog
 =========
 
+1.16.0 (2018-08-29)
+-------------------
+- Added currency Amount and AmountDictionary field (#38)
+
 1.15.1 (2018-06-13)
 -------------------
 - [PATCH] Field subclasses that use Attrs must use attr.s
