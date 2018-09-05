@@ -39,11 +39,14 @@ class List(Base):
     min_length = attr.ib(default=None)
     description = attr.ib(default=None)
 
+    valid_types = list
+    type_noun = "list"
+    type_error = "Not a list"
+
     def errors(self, value):
-        if not isinstance(value, list):
-            return [
-                Error("Not a list"),
-            ]
+        if not isinstance(value, self.valid_types):
+            return [Error(self.type_error)]
+
         result = []
         if self.max_length is not None and len(value) > self.max_length:
             result.append(
@@ -53,21 +56,42 @@ class List(Base):
             result.append(
                 Error("List is shorter than %s" % self.min_length),
             )
-        for i, element in enumerate(value):
+        for lazy_pointer, element in self._enumerate(value):
             result.extend(
-                _update_error_pointer(error, i)
+                _update_error_pointer(error, lazy_pointer.get())
                 for error in (self.contents.errors(element) or [])
             )
         return result
 
+    @classmethod
+    def _enumerate(cls, values):
+        # We use a lazy pointer here so that we don't evaluate the pointer for every item that doesn't generate an
+        # error. We only evaluate the pointer for each item that does generate an error. This is critical in sets,
+        # where the pointer is the value converted to a string instead of an index.
+        return ((cls.LazyPointer(i, value), value) for i, value in enumerate(values))
+
     def introspect(self):
         return strip_none({
-            "type": "list",
+            "type": self.type_noun,
             "contents": self.contents.introspect(),
             "max_length": self.max_length,
             "min_length": self.min_length,
             "description": self.description,
         })
+
+    class LazyPointer(object):
+        def __init__(self, index, _):
+            self.get = lambda: index
+
+
+class Set(List):
+    valid_types = (set, frozenset)
+    type_noun = "set"
+    type_error = "Not a set or frozenset"
+
+    class LazyPointer(object):
+        def __init__(self, _, value):
+            self.get = lambda: "[{}]".format(str(value))
 
 
 class Dictionary(Base):
