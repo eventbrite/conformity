@@ -1,6 +1,10 @@
 Changelog
 =========
 
+1.17.0 (2018-09-06)
+-------------------
+- [MINOR] Add support for set and frozenset types
+
 1.16.0 (2018-08-29)
 -------------------
 - Added currency Amount and AmountDictionary field (#38)
