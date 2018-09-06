@@ -37,6 +37,7 @@ from conformity.fields.structures import (  # noqa
     Dictionary,
     List,
     SchemalessDictionary,
+    Set,
     Tuple,
 )
 from conformity.fields.temporal import (  # noqa

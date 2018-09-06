@@ -24,6 +24,7 @@ from conformity.fields import (
     Integer,
     List,
     SchemalessDictionary,
+    Set,
     TimeDelta,
     Tuple,
     TZInfo,
@@ -82,6 +83,7 @@ class FieldTests(unittest.TestCase):
                 },
                 optional_keys=["line2", "state"],
             ),
+            "unique_things": Set(UnicodeString()),
         })
 
         self.assertEqual(
@@ -91,12 +93,18 @@ class FieldTests(unittest.TestCase):
 
         self.assertEqual(
             sorted(schema.errors(
-                {"child_ids": [1, 2, "ten"], "unsolicited_item": "Should not be here", "another_bad": "Also extra"},
+                {
+                    "child_ids": [1, 2, "ten"],
+                    "unsolicited_item": "Should not be here",
+                    "another_bad": "Also extra",
+                    "unique_things": ["hello", "world"],
+                },
             )),
             sorted([
                 Error("Not a integer", pointer="child_ids.2"),
                 Error("Missing key: address", code=ERROR_CODE_MISSING, pointer="address"),
                 Error("Extra keys present: another_bad, unsolicited_item", code=ERROR_CODE_UNKNOWN),
+                Error("Not a set or frozenset", pointer="unique_things"),
             ]),
         )
 
@@ -109,7 +117,23 @@ class FieldTests(unittest.TestCase):
                     "state": "CA",
                     "country": "USA",
                     "postcode": "94103",
-                }
+                },
+                "unique_things": {"hello", b"world"},
+            }),
+            [Error("Not a unicode string", pointer="unique_things.[{}]".format(str(b"world")))],
+        )
+
+        self.assertEqual(
+            schema.errors({
+                "child_ids": [1, 2, 3, 4],
+                "address": {
+                    "line1": "115 5th Street",
+                    "city": "San Francisco",
+                    "state": "CA",
+                    "country": "USA",
+                    "postcode": "94103",
+                },
+                "unique_things": {"hello", "world"},
             }),
             [],
         )
@@ -118,7 +142,7 @@ class FieldTests(unittest.TestCase):
         self.assertEqual("dictionary", introspection["type"])
         self.assertFalse(introspection["allow_extra_keys"])
         self.assertEqual([], introspection["optional_keys"])
-        self.assertEqual(2, len(introspection["contents"]))
+        self.assertEqual(3, len(introspection["contents"]))
         self.assertIn("child_ids", introspection["contents"])
         self.assertEqual(
             {
@@ -141,6 +165,13 @@ class FieldTests(unittest.TestCase):
                 "state": {"type": "unicode"},
             },
             introspection["contents"]["address"]["contents"],
+        )
+        self.assertEqual(
+            {
+                "type": "set",
+                "contents": {"type": "unicode"},
+            },
+            introspection["contents"]["unique_things"],
         )
 
     def test_dictionary_extension(self):
