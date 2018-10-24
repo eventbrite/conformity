@@ -52,7 +52,7 @@ class EmailFieldTests(unittest.TestCase):
             [Error('Not a valid email address (invalid local user field)', pointer='A@b@c')],
         )
         self.assertEqual(
-            schema.errors('a"b(c)d,e:f;g<h>i[j\k]l@example.com'),
+            schema.errors('a"b(c)d,e:f;g<h>i[j\\k]l@example.com'),
             [Error('Not a valid email address (invalid local user field)', pointer='a"b(c)d,e:f;g<h>i[j\\k]l')],
         )
         self.assertEqual(
@@ -64,7 +64,7 @@ class EmailFieldTests(unittest.TestCase):
             [Error('Not a valid email address (invalid local user field)', pointer='this is"not\x07llowed')],
         )
         self.assertEqual(
-            schema.errors('this\ still\"not\\allowed@example.com'),
+            schema.errors('this\\ still\"not\\allowed@example.com'),
             [Error('Not a valid email address (invalid local user field)', pointer='this\\ still"not\\allowed')],
         )
         # self.assertEqual(
