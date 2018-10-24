@@ -1,6 +1,10 @@
 Changelog
 =========
 
+1.17.1 (2018-10-24)
+-------------------
+- [PATCH] Fixed a bug where booleans passed Integer validation
+
 1.17.0 (2018-09-06)
 -------------------
 - [MINOR] Add support for set and frozenset types
