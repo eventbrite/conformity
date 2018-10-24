@@ -149,7 +149,10 @@ class Integer(Base):
     description = attr.ib(default=None)
 
     def errors(self, value):
-        if not isinstance(value, self.valid_type):
+        if (
+            not isinstance(value, self.valid_type)
+            or isinstance(value, bool)
+        ):
             return [
                 Error("Not a %s" % self.valid_noun),
             ]

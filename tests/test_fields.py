@@ -37,6 +37,18 @@ class FieldTests(unittest.TestCase):
     """
     Tests fields
     """
+    def test_integers(self):
+        schema = Integer(gt=0, lt=10)
+        self.assertEqual(None, schema.errors(1))
+        self.assertEqual([Error("Not a integer")], schema.errors('one'))
+        self.assertEqual([Error("Not a integer")], schema.errors(True))
+        self.assertEqual([Error("Value not > 0")], schema.errors(0))
+        self.assertEqual([Error("Value not < 10")], schema.errors(10))
+
+        schema = Integer(gte=0, lte=10)
+        self.assertEqual([Error("Value not >= 0")], schema.errors(-1))
+        self.assertEqual([Error("Value not <= 10")], schema.errors(11))
+
     def test_strings(self):
         schema = UnicodeString()
         self.assertEqual(None, schema.errors(""))
