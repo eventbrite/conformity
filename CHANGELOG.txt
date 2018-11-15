@@ -1,6 +1,10 @@
 Changelog
 =========
 
+1.17.2 (2018-11-15)
+-------------------
+- [PATCH] Permit a newer Attrs version and confirm it works
+
 1.17.1 (2018-10-24)
 -------------------
 - [PATCH] Fixed a bug where booleans passed Integer validation
