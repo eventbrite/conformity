@@ -4,6 +4,7 @@ import unittest
 
 from conformity.fields import (
     Dictionary,
+    List,
     UnicodeString,
 )
 from conformity.validator import (
@@ -95,3 +96,17 @@ class ValidatorTests(unittest.TestCase):
 
         with self.assertRaises(PositionalError):
             Greeter.greeter("Andrew")
+
+    def test_validate_dict_base_type(self):
+        schema = Dictionary({
+            'unicode_name': UnicodeString,
+        })
+
+        with self.assertRaises(ValidationError):
+            validate(schema, {'unicode_name': 'John Smith'})
+
+    def test_validate_list_base_type(self):
+        schema = List(UnicodeString)
+
+        with self.assertRaises(ValidationError):
+            validate(schema, ['John Smith'])

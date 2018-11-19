@@ -7,6 +7,7 @@ from conformity.error import (
     Error,
     ERROR_CODE_MISSING,
     ERROR_CODE_UNKNOWN,
+    ERROR_CODE_INVALID,
 )
 from conformity.fields.basic import (
     Anything,
@@ -57,10 +58,18 @@ class List(Base):
                 Error("List is shorter than %s" % self.min_length),
             )
         for lazy_pointer, element in self._enumerate(value):
-            result.extend(
-                _update_error_pointer(error, lazy_pointer.get())
-                for error in (self.contents.errors(element) or [])
-            )
+            if not isinstance(self.contents, Base):
+                result.append(
+                    Error(
+                        "Invalid type, it must extend {}".format(Base),
+                        code=ERROR_CODE_INVALID,
+                    )
+                )
+            else:
+                result.extend(
+                    _update_error_pointer(error, lazy_pointer.get())
+                    for error in (self.contents.errors(element) or [])
+                )
         return result
 
     @classmethod
@@ -137,11 +146,20 @@ class Dictionary(Base):
                         Error("Missing key: {}".format(key), code=ERROR_CODE_MISSING, pointer=key),
                     )
             else:
-                # Check key type
-                result.extend(
-                    _update_error_pointer(error, key)
-                    for error in (field.errors(value[key]) or [])
-                )
+                if not isinstance(field, Base):
+                    result.append(
+                        Error(
+                            "Invalid type, it must extend {}".format(Base),
+                            code=ERROR_CODE_INVALID,
+                            pointer=key
+                        )
+                    )
+                else:
+                    # Check key type
+                    result.extend(
+                        _update_error_pointer(error, key)
+                        for error in (field.errors(value[key]) or [])
+                    )
         # Check for extra keys
         extra_keys = set(value.keys()) - set(self.contents.keys())
         if extra_keys and not self.allow_extra_keys:
