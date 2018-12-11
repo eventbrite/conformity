@@ -18,6 +18,8 @@ ipv4_regex = re.compile(r'^(25[0-5]|2[0-4]\d|[0-1]?\d?\d)(\.(25[0-5]|2[0-4]\d|[0
 @attr.s
 class IPv4Address(UnicodeString):
 
+    introspect_type = "ipv4_address"
+
     def errors(self, value):
         # Get any basic type errors
         result = super(IPv4Address, self).errors(value)
@@ -31,13 +33,15 @@ class IPv4Address(UnicodeString):
 
     def introspect(self):
         return strip_none({
-            "type": "ipv4_address",
+            "type": self.introspect_type,
             "description": self.description,
         })
 
 
 @attr.s
 class IPv6Address(UnicodeString):
+
+    introspect_type = "ipv6_address"
 
     def errors(self, value):
         # Get any basic type errors
@@ -115,7 +119,7 @@ class IPv6Address(UnicodeString):
 
     def introspect(self):
         return strip_none({
-            "type": "ipv6_address",
+            "type": self.introspect_type,
             "description": self.description,
         })
 

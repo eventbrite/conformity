@@ -16,6 +16,8 @@ class Amount(fields.Base):
     """
     currint.Amount instances
     """
+
+    introspect_type = "currint.Amount"
     valid_currencies = attr.ib(default=currint.currencies.keys())
     gt = attr.ib(default=None)
     gte = attr.ib(default=None)
@@ -65,7 +67,7 @@ class Amount(fields.Base):
 
     def introspect(self):
         return strip_none({
-            "type": "currint.Amount",
+            "type": self.introspect_type,
             "description": self.description,
             "valid_currencies": self.valid_currencies,
             "gt": self.gt,
