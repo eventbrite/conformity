@@ -40,7 +40,7 @@ class List(Base):
     description = attr.ib(default=None)
 
     valid_types = list
-    type_noun = "list"
+    introspect_type = "list"
     type_error = "Not a list"
 
     def errors(self, value):
@@ -72,7 +72,7 @@ class List(Base):
 
     def introspect(self):
         return strip_none({
-            "type": self.type_noun,
+            "type": self.introspect_type,
             "contents": self.contents.introspect(),
             "max_length": self.max_length,
             "min_length": self.min_length,
@@ -86,7 +86,7 @@ class List(Base):
 
 class Set(List):
     valid_types = (set, frozenset)
-    type_noun = "set"
+    introspect_type = "set"
     type_error = "Not a set or frozenset"
 
     class LazyPointer(object):
@@ -99,6 +99,7 @@ class Dictionary(Base):
     A dictionary with types per key (and requirements per key).
     """
 
+    introspect_type = "dictionary"
     contents = None
     optional_keys = set()
     allow_extra_keys = False
@@ -192,7 +193,7 @@ class Dictionary(Base):
 
     def introspect(self):
         return strip_none({
-            "type": "dictionary",
+            "type": self.introspect_type,
             "contents": {
                 key: value.introspect()
                 for key, value in self.contents.items()
@@ -209,6 +210,7 @@ class SchemalessDictionary(Base):
     Generic dictionary with requirements about key and value types, but not specific keys
     """
 
+    introspect_type = "schemaless_dictionary"
     key_type = attr.ib(default=attr.Factory(Hashable))
     value_type = attr.ib(default=attr.Factory(Anything))
     description = attr.ib(default=None)
@@ -232,7 +234,7 @@ class SchemalessDictionary(Base):
 
     def introspect(self):
         result = {
-            "type": "schemaless_dictionary",
+            "type": self.introspect_type,
             "description": self.description,
         }
         # We avoid using isinstance() here as that would also match subclass instances
@@ -247,6 +249,8 @@ class Tuple(Base):
     """
     A tuple with types per element.
     """
+
+    introspect_type = "tuple"
 
     def __init__(self, *contents, **kwargs):
         # We can't use attrs here because we need to capture all positional
@@ -278,7 +282,7 @@ class Tuple(Base):
 
     def introspect(self):
         return strip_none({
-            "type": "tuple",
+            "type": self.introspect_type,
             "contents": [value.introspect() for value in self.contents],
             "description": self.description,
         })

@@ -19,6 +19,7 @@ class Nullable(Base):
     argument.
     """
 
+    introspect_type = "nullable"
     field = attr.ib()
 
     def errors(self, value):
@@ -28,7 +29,10 @@ class Nullable(Base):
         return self.field.errors(value)
 
     def introspect(self):
-        return {"type": "nullable", "nullable": self.field.introspect()}
+        return {
+            "type": self.introspect_type,
+            "nullable": self.field.introspect()
+            }
 
 
 @attr.s
@@ -38,6 +42,7 @@ class Polymorph(Base):
     within it (which must be accessible via dictionary lookups)
     """
 
+    introspect_type = "polymorph"
     switch_field = attr.ib()
     contents_map = attr.ib()
     description = attr.ib(default=None)
@@ -62,7 +67,7 @@ class Polymorph(Base):
 
     def introspect(self):
         return strip_none({
-            "type": "polymorph",
+            "type": self.introspect_type,
             "description": self.description,
             "switch_field": self.switch_field,
             "contents_map": {
@@ -78,6 +83,7 @@ class ObjectInstance(Base):
     Accepts only instances of a given class or type
     """
 
+    introspect_type = "object_instance"
     valid_type = attr.ib()
     description = attr.ib(default=None)
 
@@ -91,7 +97,7 @@ class ObjectInstance(Base):
 
     def introspect(self):
         return strip_none({
-            "type": "object_instance",
+            "type": self.introspect_type,
             "description": self.description,
             # Unfortunately, this is the one sort of thing we can't represent
             # super well. Maybe add some dotted path stuff in here.
@@ -105,6 +111,7 @@ class Any(Base):
     Intended to be used for constants but could be used with others.
     """
 
+    introspect_type = "any"
     description = None
 
     def __init__(self, *args, **kwargs):
@@ -129,7 +136,7 @@ class Any(Base):
 
     def introspect(self):
         return strip_none({
-            "type": "any",
+            "type": self.introspect_type,
             "description": self.description,
             "options": [option.introspect() for option in self.options],
         })
@@ -141,6 +148,7 @@ class All(Base):
     Intended to be used for adding extra validation.
     """
 
+    introspect_type = "all"
     description = None
 
     def __init__(self, *args, **kwargs):
@@ -160,7 +168,7 @@ class All(Base):
 
     def introspect(self):
         return strip_none({
-            "type": "all",
+            "type": self.introspect_type,
             "description": self.description,
             "requirements": [requirement.introspect() for requirement in self.requirements],
         })
@@ -173,6 +181,7 @@ class BooleanValidator(Base):
     based on if it returns True (valid) or False (invalid).
     """
 
+    introspect_type = "boolean_validator"
     validator = attr.ib()
     validator_description = attr.ib(validator=attr.validators.instance_of(six.text_type))
     error = attr.ib(validator=attr.validators.instance_of(six.text_type))
@@ -196,7 +205,7 @@ class BooleanValidator(Base):
 
     def introspect(self):
         return strip_none({
-            "type": "boolean_validator",
+            "type": self.introspect_type,
             "description": self.description,
             "validator": self.validator_description,
         })
