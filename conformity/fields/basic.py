@@ -37,6 +37,8 @@ class Constant(Base):
     and any will be accepted.
     """
 
+    introspect_type = "constant"
+
     def __init__(self, *args, **kwargs):
         self.values = set(args)
         if not self.values:
@@ -65,7 +67,7 @@ class Constant(Base):
 
     def introspect(self):
         result = {
-            "type": "constant",
+            "type": self.introspect_type,
             "values": list(self.values),
         }
         if self.description is not None:
@@ -79,6 +81,7 @@ class Anything(Base):
     Accepts any value.
     """
 
+    introspect_type = "anything"
     description = attr.ib(default=None)
 
     def errors(self, value):
@@ -86,7 +89,7 @@ class Anything(Base):
 
     def introspect(self):
         return strip_none({
-            "type": "anything",
+            "type": self.introspect_type,
             "description": self.description,
         })
 
@@ -95,6 +98,8 @@ class Hashable(Anything):
     """
     Accepts any hashable value
     """
+
+    introspect_type = "hashable"
 
     def errors(self, value):
         try:
@@ -106,7 +111,7 @@ class Hashable(Anything):
 
     def introspect(self):
         return strip_none({
-            "type": "hashable",
+            "type": self.introspect_type,
             "description": self.description,
         })
 
@@ -116,6 +121,8 @@ class Boolean(Base):
     """
     Accepts boolean values only
     """
+
+    introspect_type = "boolean"
 
     description = attr.ib(default=None)
 
@@ -127,7 +134,7 @@ class Boolean(Base):
 
     def introspect(self):
         return strip_none({
-            "type": "boolean",
+            "type": self.introspect_type,
             "description": self.description,
         })
 
@@ -195,6 +202,7 @@ class Decimal(Integer):
     """
     Accepts arbitrary-precision Decimal number objects.
     """
+
     valid_type = decimal.Decimal
     valid_noun = "decimal"
     introspect_type = "decimal"
@@ -234,7 +242,6 @@ class UnicodeString(Base):
             ]
 
     def introspect(self):
-
         return strip_none({
             "type": self.introspect_type,
             "description": self.description,
@@ -260,6 +267,7 @@ class UnicodeDecimal(Base):
     A decimal value represented as its base-10 unicode string.
     """
 
+    introspect_type = "unicode_decimal"
     description = attr.ib(default=None)
 
     def errors(self, value):
@@ -277,6 +285,6 @@ class UnicodeDecimal(Base):
 
     def introspect(self):
         return strip_none({
-            "type": "unicode_decimal",
+            "type": self.introspect_type,
             "description": self.description,
         })
