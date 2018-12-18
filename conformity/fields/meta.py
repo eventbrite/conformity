@@ -20,6 +20,7 @@ class Nullable(Base):
     """
 
     introspect_type = "nullable"
+    conformity_type = introspect_type
     field = attr.ib()
 
     def errors(self, value):
@@ -28,11 +29,14 @@ class Nullable(Base):
 
         return self.field.errors(value)
 
-    def introspect(self):
-        return {
+    def introspect(self, include_conformity_type=False):
+        result = {
             "type": self.introspect_type,
-            "nullable": self.field.introspect(),
+            "nullable": self.field.introspect(include_conformity_type),
         }
+        if include_conformity_type:
+            result["conformity_type"] = self.conformity_type
+        return result
 
 
 @attr.s
@@ -43,6 +47,7 @@ class Polymorph(Base):
     """
 
     introspect_type = "polymorph"
+    conformity_type = introspect_type
     switch_field = attr.ib()
     contents_map = attr.ib()
     description = attr.ib(default=None)
@@ -65,16 +70,19 @@ class Polymorph(Base):
         # Run field errors
         return field.errors(value)
 
-    def introspect(self):
-        return strip_none({
+    def introspect(self, include_conformity_type=False):
+        result = strip_none({
             "type": self.introspect_type,
             "description": self.description,
             "switch_field": self.switch_field,
             "contents_map": {
-                key: value.introspect()
+                key: value.introspect(include_conformity_type)
                 for key, value in self.contents_map.items()
             },
         })
+        if include_conformity_type:
+            result["conformity_type"] = self.conformity_type
+        return result
 
 
 @attr.s
@@ -84,6 +92,7 @@ class ObjectInstance(Base):
     """
 
     introspect_type = "object_instance"
+    conformity_type = introspect_type
     valid_type = attr.ib()
     description = attr.ib(default=None)
 
@@ -95,14 +104,17 @@ class ObjectInstance(Base):
         else:
             return []
 
-    def introspect(self):
-        return strip_none({
+    def introspect(self, include_conformity_type=False):
+        result = strip_none({
             "type": self.introspect_type,
             "description": self.description,
             # Unfortunately, this is the one sort of thing we can't represent
             # super well. Maybe add some dotted path stuff in here.
             "valid_type": repr(self.valid_type),
         })
+        if include_conformity_type:
+            result["conformity_type"] = self.conformity_type
+        return result
 
 
 class Any(Base):
@@ -112,6 +124,7 @@ class Any(Base):
     """
 
     introspect_type = "any"
+    conformity_type = introspect_type
     description = None
 
     def __init__(self, *args, **kwargs):
@@ -120,6 +133,9 @@ class Any(Base):
         if "description" in kwargs:
             self.description = kwargs["description"]
             del kwargs["description"]
+        if "conformity_type" in kwargs:
+            self.conformity_type = kwargs["conformity_type"]
+            del kwargs["conformity_type"]
         if kwargs:
             raise TypeError("Unknown keyword arguments: %s" % ", ".join(kwargs.keys()))
 
@@ -134,12 +150,15 @@ class Any(Base):
             result.extend(sub_errors)
         return result
 
-    def introspect(self):
-        return strip_none({
+    def introspect(self, include_conformity_type=False):
+        result = strip_none({
             "type": self.introspect_type,
             "description": self.description,
-            "options": [option.introspect() for option in self.options],
+            "options": [option.introspect(include_conformity_type) for option in self.options],
         })
+        if include_conformity_type:
+            result["conformity_type"] = self.conformity_type
+        return result
 
 
 class All(Base):
@@ -149,6 +168,7 @@ class All(Base):
     """
 
     introspect_type = "all"
+    conformity_type = introspect_type
     description = None
 
     def __init__(self, *args, **kwargs):
@@ -166,12 +186,15 @@ class All(Base):
             result.extend(requirement.errors(value) or [])
         return result
 
-    def introspect(self):
-        return strip_none({
+    def introspect(self, include_conformity_type=False):
+        result = strip_none({
             "type": self.introspect_type,
             "description": self.description,
-            "requirements": [requirement.introspect() for requirement in self.requirements],
+            "requirements": [requirement.introspect(include_conformity_type) for requirement in self.requirements],
         })
+        if include_conformity_type:
+            result["conformity_type"] = self.conformity_type
+        return result
 
 
 @attr.s
@@ -182,6 +205,7 @@ class BooleanValidator(Base):
     """
 
     introspect_type = "boolean_validator"
+    conformity_type = introspect_type
     validator = attr.ib()
     validator_description = attr.ib(validator=attr.validators.instance_of(six.text_type))
     error = attr.ib(validator=attr.validators.instance_of(six.text_type))
@@ -203,9 +227,12 @@ class BooleanValidator(Base):
                 Error(self.error),
             ]
 
-    def introspect(self):
-        return strip_none({
+    def introspect(self, include_conformity_type=False):
+        result = strip_none({
             "type": self.introspect_type,
             "description": self.description,
             "validator": self.validator_description,
         })
+        if include_conformity_type:
+            result["conformity_type"] = self.conformity_type
+        return result

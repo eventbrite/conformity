@@ -38,6 +38,7 @@ class Constant(Base):
     """
 
     introspect_type = "constant"
+    conformity_type = introspect_type
 
     def __init__(self, *args, **kwargs):
         self.values = set(args)
@@ -65,11 +66,13 @@ class Constant(Base):
             return [Error(self._error_message, code=ERROR_CODE_UNKNOWN)]
         return []
 
-    def introspect(self):
+    def introspect(self, include_conformity_type=False):
         result = {
             "type": self.introspect_type,
             "values": list(self.values),
         }
+        if include_conformity_type:
+            result["conformity_type"] = self.conformity_type
         if self.description is not None:
             result["description"] = self.description
         return result
@@ -82,16 +85,21 @@ class Anything(Base):
     """
 
     introspect_type = "anything"
+    conformity_type = introspect_type
+
     description = attr.ib(default=None)
 
     def errors(self, value):
         pass
 
-    def introspect(self):
-        return strip_none({
+    def introspect(self, include_conformity_type=False):
+        result = strip_none({
             "type": self.introspect_type,
             "description": self.description,
         })
+        if include_conformity_type:
+            result["conformity_type"] = self.conformity_type
+        return result
 
 
 class Hashable(Anything):
@@ -100,6 +108,7 @@ class Hashable(Anything):
     """
 
     introspect_type = "hashable"
+    conformity_type = introspect_type
 
     def errors(self, value):
         try:
@@ -109,11 +118,14 @@ class Hashable(Anything):
                 Error("Value is not hashable"),
             ]
 
-    def introspect(self):
-        return strip_none({
+    def introspect(self, include_conformity_type=False):
+        result = strip_none({
             "type": self.introspect_type,
             "description": self.description,
         })
+        if include_conformity_type:
+            result["conformity_type"] = self.conformity_type
+        return result
 
 
 @attr.s
@@ -123,6 +135,7 @@ class Boolean(Base):
     """
 
     introspect_type = "boolean"
+    conformity_type = introspect_type
 
     description = attr.ib(default=None)
 
@@ -132,11 +145,14 @@ class Boolean(Base):
                 Error("Not a boolean"),
             ]
 
-    def introspect(self):
-        return strip_none({
+    def introspect(self, include_conformity_type=False):
+        result = strip_none({
             "type": self.introspect_type,
             "description": self.description,
         })
+        if include_conformity_type:
+            result["conformity_type"] = self.conformity_type
+        return result
 
 
 @attr.s
@@ -148,6 +164,7 @@ class Integer(Base):
     valid_type = six.integer_types
     valid_noun = "integer"
     introspect_type = "integer"
+    conformity_type = introspect_type
 
     gt = attr.ib(default=None)
     gte = attr.ib(default=None)
@@ -177,8 +194,8 @@ class Integer(Base):
                 Error("Value not <= %s" % self.lte),
             ]
 
-    def introspect(self):
-        return strip_none({
+    def introspect(self, include_conformity_type=False):
+        result = strip_none({
             "type": self.introspect_type,
             "description": self.description,
             "gt": self.gt,
@@ -186,6 +203,9 @@ class Integer(Base):
             "lt": self.lt,
             "lte": self.lte,
         })
+        if include_conformity_type:
+            result["conformity_type"] = self.conformity_type
+        return result
 
 
 class Float(Integer):
@@ -196,6 +216,7 @@ class Float(Integer):
     valid_type = six.integer_types + (float,)
     valid_noun = "float"
     introspect_type = "float"
+    conformity_type = introspect_type
 
 
 class Decimal(Integer):
@@ -206,6 +227,7 @@ class Decimal(Integer):
     valid_type = decimal.Decimal
     valid_noun = "decimal"
     introspect_type = "decimal"
+    conformity_type = introspect_type
 
 
 @attr.s
@@ -217,6 +239,7 @@ class UnicodeString(Base):
     valid_type = six.text_type
     valid_noun = "unicode string"
     introspect_type = "unicode"
+    conformity_type = introspect_type
 
     min_length = attr.ib(default=None)
     max_length = attr.ib(default=None)
@@ -241,14 +264,17 @@ class UnicodeString(Base):
                 Error("String cannot be blank"),
             ]
 
-    def introspect(self):
-        return strip_none({
+    def introspect(self, include_conformity_type=False):
+        result = strip_none({
             "type": self.introspect_type,
             "description": self.description,
             "min_length": self.max_length,
             "max_length": self.min_length,
             "allow_blank": self.allow_blank and None,  # if the default True, hide it from introspection
         })
+        if include_conformity_type:
+            result["conformity_type"] = self.conformity_type
+        return result
 
 
 class ByteString(UnicodeString):
@@ -259,6 +285,7 @@ class ByteString(UnicodeString):
     valid_type = six.binary_type
     valid_noun = "byte string"
     introspect_type = "bytes"
+    conformity_type = introspect_type
 
 
 @attr.s
@@ -268,6 +295,7 @@ class UnicodeDecimal(Base):
     """
 
     introspect_type = "unicode_decimal"
+    conformity_type = introspect_type
     description = attr.ib(default=None)
 
     def errors(self, value):
@@ -283,8 +311,11 @@ class UnicodeDecimal(Base):
             ]
         return []
 
-    def introspect(self):
-        return strip_none({
+    def introspect(self, include_conformity_type=False):
+        result = strip_none({
             "type": self.introspect_type,
             "description": self.description,
         })
+        if include_conformity_type:
+            result["conformity_type"] = self.conformity_type
+        return result

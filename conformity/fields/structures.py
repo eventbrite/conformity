@@ -42,6 +42,7 @@ class List(Base):
     valid_types = list
     type_noun = "list"
     introspect_type = type_noun
+    conformity_type = introspect_type
     type_error = "Not a list"
 
     def errors(self, value):
@@ -71,14 +72,17 @@ class List(Base):
         # where the pointer is the value converted to a string instead of an index.
         return ((cls.LazyPointer(i, value), value) for i, value in enumerate(values))
 
-    def introspect(self):
-        return strip_none({
+    def introspect(self, include_conformity_type=False):
+        result = strip_none({
             "type": self.introspect_type,
             "contents": self.contents.introspect(),
             "max_length": self.max_length,
             "min_length": self.min_length,
             "description": self.description,
         })
+        if include_conformity_type:
+            result["conformity_type"] = self.conformity_type
+        return result
 
     class LazyPointer(object):
         def __init__(self, index, _):
@@ -89,6 +93,7 @@ class Set(List):
     valid_types = (set, frozenset)
     type_noun = "set"
     introspect_type = type_noun
+    conformity_type = introspect_type
     type_error = "Not a set or frozenset"
 
     class LazyPointer(object):
@@ -102,6 +107,7 @@ class Dictionary(Base):
     """
 
     introspect_type = "dictionary"
+    conformity_type = introspect_type
     contents = None
     optional_keys = set()
     allow_extra_keys = False
@@ -193,8 +199,8 @@ class Dictionary(Base):
             description=self.description if description is None else description,
         )
 
-    def introspect(self):
-        return strip_none({
+    def introspect(self, include_conformity_type=False):
+        result = strip_none({
             "type": self.introspect_type,
             "contents": {
                 key: value.introspect()
@@ -204,6 +210,9 @@ class Dictionary(Base):
             "allow_extra_keys": self.allow_extra_keys,
             "description": self.description,
         })
+        if include_conformity_type:
+            result["conformity_type"] = self.conformity_type
+        return result
 
 
 @attr.s
@@ -213,6 +222,7 @@ class SchemalessDictionary(Base):
     """
 
     introspect_type = "schemaless_dictionary"
+    conformity_type = introspect_type
     key_type = attr.ib(default=attr.Factory(Hashable))
     value_type = attr.ib(default=attr.Factory(Anything))
     description = attr.ib(default=None)
@@ -234,16 +244,18 @@ class SchemalessDictionary(Base):
             )
         return result
 
-    def introspect(self):
+    def introspect(self, include_conformity_type=False):
         result = {
             "type": self.introspect_type,
             "description": self.description,
         }
         # We avoid using isinstance() here as that would also match subclass instances
         if not self.key_type.__class__ == Hashable:
-            result["key_type"] = self.key_type.introspect()
+            result["key_type"] = self.key_type.introspect(include_conformity_type)
         if not self.value_type.__class__ == Anything:
-            result["value_type"] = self.value_type.introspect()
+            result["value_type"] = self.value_type.introspect(include_conformity_type)
+        if include_conformity_type:
+            result["conformity_type"] = self.conformity_type
         return strip_none(result)
 
 
@@ -253,6 +265,7 @@ class Tuple(Base):
     """
 
     introspect_type = "tuple"
+    conformity_type = introspect_type
 
     def __init__(self, *contents, **kwargs):
         # We can't use attrs here because we need to capture all positional
@@ -282,9 +295,12 @@ class Tuple(Base):
 
         return result
 
-    def introspect(self):
-        return strip_none({
+    def introspect(self, include_conformity_type=False):
+        result = strip_none({
             "type": self.introspect_type,
             "contents": [value.introspect() for value in self.contents],
             "description": self.description,
         })
+        if include_conformity_type:
+            result["conformity_type"] = self.conformity_type
+        return result

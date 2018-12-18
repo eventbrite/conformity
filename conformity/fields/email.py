@@ -19,6 +19,7 @@ class EmailAddress(UnicodeString):
     """
 
     introspect_type = "email_address"
+    conformity_type = introspect_type
     ip_schema = IPAddress()
     message = None  # unused, will be removed in version 2.0.0
     code = None  # unused, will be removed in version 2.0.0
@@ -88,8 +89,11 @@ class EmailAddress(UnicodeString):
                 return True
         return False
 
-    def introspect(self):
-        return strip_none({
+    def introspect(self, include_conformity_type=False):
+        result = strip_none({
             "type": self.introspect_type,
             "description": self.description,
         })
+        if include_conformity_type:
+            result["conformity_type"] = self.conformity_type
+        return result

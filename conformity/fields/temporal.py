@@ -65,8 +65,8 @@ class TemporalBase(Base):
                 Error("Value not <= %s" % self.lte),
             ]
 
-    def introspect(self):
-        return strip_none({
+    def introspect(self, include_conformity_type=False):
+        result = strip_none({
             "type": self.introspect_type,
             "description": self.description,
             "gt": self.gt,
@@ -74,6 +74,9 @@ class TemporalBase(Base):
             "lt": self.lt,
             "lte": self.lte,
         })
+        if include_conformity_type:
+            result["conformity_type"] = self.conformity_type
+        return result
 
 
 class DateTime(TemporalBase):
@@ -84,6 +87,7 @@ class DateTime(TemporalBase):
     valid_types = valid_datetime_types
     valid_noun = "datetime.datetime"
     introspect_type = "datetime"
+    conformity_type = introspect_type
 
 
 class Date(TemporalBase):
@@ -94,6 +98,7 @@ class Date(TemporalBase):
     valid_types = valid_date_types
     valid_noun = "datetime.date"
     introspect_type = "date"
+    conformity_type = introspect_type
 
 
 class Time(TemporalBase):
@@ -104,6 +109,7 @@ class Time(TemporalBase):
     valid_types = frozenset({datetime.time})
     valid_noun = "datetime.time"
     introspect_type = "time"
+    conformity_type = introspect_type
 
 
 class TimeDelta(TemporalBase):
@@ -114,6 +120,7 @@ class TimeDelta(TemporalBase):
     valid_types = frozenset({datetime.timedelta})
     valid_noun = "datetime.timedelta"
     introspect_type = "timedelta"
+    conformity_type = introspect_type
 
 
 class TZInfo(TemporalBase):
@@ -125,3 +132,4 @@ class TZInfo(TemporalBase):
     valid_isinstance = datetime.tzinfo
     valid_noun = "datetime.tzinfo"
     introspect_type = "tzinfo"
+    conformity_type = introspect_type

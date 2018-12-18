@@ -19,6 +19,7 @@ ipv4_regex = re.compile(r'^(25[0-5]|2[0-4]\d|[0-1]?\d?\d)(\.(25[0-5]|2[0-4]\d|[0
 class IPv4Address(UnicodeString):
 
     introspect_type = "ipv4_address"
+    conformity_type = introspect_type
 
     def errors(self, value):
         # Get any basic type errors
@@ -31,17 +32,21 @@ class IPv4Address(UnicodeString):
         else:
             return [Error("Not a valid IPv4 address")]
 
-    def introspect(self):
-        return strip_none({
+    def introspect(self, include_conformity_type=False):
+        result = strip_none({
             "type": self.introspect_type,
             "description": self.description,
         })
+        if include_conformity_type:
+            result["conformity_type"] = self.conformity_type
+        return result
 
 
 @attr.s
 class IPv6Address(UnicodeString):
 
     introspect_type = "ipv6_address"
+    conformity_type = introspect_type
 
     def errors(self, value):
         # Get any basic type errors
@@ -117,15 +122,19 @@ class IPv6Address(UnicodeString):
             ret_ip.append(('0' * (4 - len(hextet)) + hextet).lower())
         return ':'.join(ret_ip)
 
-    def introspect(self):
-        return strip_none({
+    def introspect(self, include_conformity_type=False):
+        result = strip_none({
             "type": self.introspect_type,
             "description": self.description,
         })
+        if include_conformity_type:
+            result["conformity_type"] = self.conformity_type
+        return result
 
 
 IPAddress = functools.partial(
     Any,
     IPv4Address(),
     IPv6Address(),
+    conformity_type="ip_address",
 )

@@ -18,6 +18,7 @@ class Amount(fields.Base):
     """
 
     introspect_type = "currint.Amount"
+    conformity_type = introspect_type
     valid_currencies = attr.ib(default=currint.currencies.keys())
     gt = attr.ib(default=None)
     gte = attr.ib(default=None)
@@ -65,8 +66,8 @@ class Amount(fields.Base):
             ))
         return errors
 
-    def introspect(self):
-        return strip_none({
+    def introspect(self, include_conformity_type=False):
+        result = strip_none({
             "type": self.introspect_type,
             "description": self.description,
             "valid_currencies": self.valid_currencies,
@@ -75,12 +76,17 @@ class Amount(fields.Base):
             "lt": self.lt,
             "lte": self.lte,
         })
+        if include_conformity_type:
+            result["conformity_type"] = self.conformity_type
+        return result
 
 
 class AmountDictionary(fields.Dictionary):
     """
     Amount dictionaries
     """
+
+    conformity_type = "currint.Amount_dictionary"
 
     def __init__(self, valid_currencies=None, gt=None, gte=None, lt=None, lte=None, *args, **kwargs):
         super(AmountDictionary, self).__init__({
