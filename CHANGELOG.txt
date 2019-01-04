@@ -1,6 +1,11 @@
 Changelog
 =========
 
+1.18.0 (2019-01-04)
+-------------------
+- [MINOR] Added CountryCodeField to Conformity
+- [MINOR] Add introspect_type attribute to all fields (#43)
+
 1.17.2 (2018-11-15)
 -------------------
 - [PATCH] Permit a newer Attrs version and confirm it works
