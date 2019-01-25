@@ -40,17 +40,7 @@ class EmailAddress(UnicodeString):
     )
     domain_whitelist = ['localhost']
 
-    def __init__(self, message=None, code=None, whitelist=None):
-        """
-        Construct a new email address field.
-
-        :param message: Unused, and will be removed in version 2.0.0
-        :param code: Unused, and will be removed in version 2.0.0
-        :param whitelist: If specified, an invalid domain part will be permitted if it is in this list
-        :type whitelist: iterable
-        """
-        if whitelist is not None:
-            self.domain_whitelist = set(whitelist) if whitelist else set()
+    whitelist = attr.ib(default=[], type=list)
 
     def errors(self, value):
         # Get any basic type errors
@@ -63,7 +53,7 @@ class EmailAddress(UnicodeString):
         user_part, domain_part = value.rsplit('@', 1)
         if not self.user_regex.match(user_part):
             return [Error('Not a valid email address (invalid local user field)', pointer=user_part)]
-        if domain_part in self.domain_whitelist or self.is_domain_valid(domain_part):
+        if domain_part in self.whitelist or self.is_domain_valid(domain_part):
             return []
         else:
             try:
