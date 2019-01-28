@@ -38,9 +38,20 @@ class EmailAddress(UnicodeString):
         r'\[([A-f0-9:\.]+)\]\Z',
         re.IGNORECASE
     )
-    domain_whitelist = ['localhost']
+    whitelist = attr.ib(default=set(['localhost']), type=set)
 
-    whitelist = attr.ib(default=[], type=list)
+    def __init__(self, message=None, code=None, whitelist=None):
+        """
+        Construct a new email address field.
+
+        :param message: Unused, and will be removed in version 2.0.0
+        :param code: Unused, and will be removed in version 2.0.0
+        :param whitelist: If specified, an invalid domain part will be permitted if it is in this list
+        :type whitelist: iterable
+        """
+        super(UnicodeString, self).__init__()
+        if whitelist is not None:
+            self.whitelist = set(whitelist) if whitelist else set()
 
     def errors(self, value):
         # Get any basic type errors

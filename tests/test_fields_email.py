@@ -131,3 +131,8 @@ class EmailFieldTests(unittest.TestCase):
             schema.errors('a-name@a-whitelisted-domain'),
             [],
         )
+
+    def test_whitelist_removes_duplicates(self):
+        whitelisted_domains = ['a-repeated-whitelisted-domain', 'a-repeated-whitelisted-domain']
+        schema = EmailAddress(whitelist=whitelisted_domains)
+        self.assertEqual(1, len(schema.whitelist))
