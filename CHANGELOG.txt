@@ -1,6 +1,10 @@
 Changelog
 =========
 
+1.19.0 (2019-01-29)
+-------------------
+- [MINOR] Enhance Dictionary field to permit ordered key documentation
+
 1.18.0 (2019-01-04)
 -------------------
 - [MINOR] Added CountryCodeField to Conformity
