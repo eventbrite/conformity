@@ -94,6 +94,7 @@ class Anything(Base):
         })
 
 
+@attr.s
 class Hashable(Anything):
     """
     Accepts any hashable value
@@ -146,7 +147,7 @@ class Integer(Base):
     """
 
     valid_type = six.integer_types
-    valid_noun = "integer"
+    valid_noun = "an integer"
     introspect_type = "integer"
 
     gt = attr.ib(default=None)
@@ -158,7 +159,7 @@ class Integer(Base):
     def errors(self, value):
         if not isinstance(value, self.valid_type) or isinstance(value, bool):
             return [
-                Error("Not a %s" % self.valid_noun),
+                Error("Not %s" % self.valid_noun),
             ]
         elif self.gt is not None and value <= self.gt:
             return [
@@ -188,23 +189,25 @@ class Integer(Base):
         })
 
 
+@attr.s
 class Float(Integer):
     """
     Accepts floating point numbers as well as integers.
     """
 
     valid_type = six.integer_types + (float,)
-    valid_noun = "float"
+    valid_noun = "a float"
     introspect_type = "float"
 
 
+@attr.s
 class Decimal(Integer):
     """
     Accepts arbitrary-precision Decimal number objects.
     """
 
     valid_type = decimal.Decimal
-    valid_noun = "decimal"
+    valid_noun = "a decimal"
     introspect_type = "decimal"
 
 
@@ -251,6 +254,7 @@ class UnicodeString(Base):
         })
 
 
+@attr.s
 class ByteString(UnicodeString):
     """
     Accepts only byte strings
