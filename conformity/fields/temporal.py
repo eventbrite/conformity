@@ -76,6 +76,7 @@ class TemporalBase(Base):
         })
 
 
+@attr.s
 class DateTime(TemporalBase):
     """
     Datetime instances
@@ -86,6 +87,7 @@ class DateTime(TemporalBase):
     introspect_type = "datetime"
 
 
+@attr.s
 class Date(TemporalBase):
     """
     Date instances
@@ -96,6 +98,7 @@ class Date(TemporalBase):
     introspect_type = "date"
 
 
+@attr.s
 class Time(TemporalBase):
     """
     Time instances
@@ -106,6 +109,7 @@ class Time(TemporalBase):
     introspect_type = "time"
 
 
+@attr.s
 class TimeDelta(TemporalBase):
     """
     Timedelta instances
@@ -116,6 +120,7 @@ class TimeDelta(TemporalBase):
     introspect_type = "timedelta"
 
 
+@attr.s
 class TZInfo(TemporalBase):
     """
     TZInfo instances

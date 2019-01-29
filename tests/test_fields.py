@@ -1,5 +1,6 @@
 from __future__ import absolute_import, unicode_literals
 
+from collections import OrderedDict
 import datetime
 import decimal
 import unittest
@@ -40,8 +41,8 @@ class FieldTests(unittest.TestCase):
     def test_integers(self):
         schema = Integer(gt=0, lt=10)
         self.assertEqual(None, schema.errors(1))
-        self.assertEqual([Error("Not a integer")], schema.errors('one'))
-        self.assertEqual([Error("Not a integer")], schema.errors(True))
+        self.assertEqual([Error("Not an integer")], schema.errors('one'))
+        self.assertEqual([Error("Not an integer")], schema.errors(True))
         self.assertEqual([Error("Value not > 0")], schema.errors(0))
         self.assertEqual([Error("Value not < 10")], schema.errors(10))
 
@@ -113,7 +114,7 @@ class FieldTests(unittest.TestCase):
                 },
             )),
             sorted([
-                Error("Not a integer", pointer="child_ids.2"),
+                Error("Not an integer", pointer="child_ids.2"),
                 Error("Missing key: address", code=ERROR_CODE_MISSING, pointer="address"),
                 Error("Extra keys present: another_bad, unsolicited_item", code=ERROR_CODE_UNKNOWN),
                 Error("Not a set or frozenset", pointer="unique_things"),
@@ -243,6 +244,69 @@ class FieldTests(unittest.TestCase):
             schema3.introspect(),
         )
 
+        assert "display_order" not in schema1.introspect()
+        assert "display_order" not in schema2.introspect()
+        assert "display_order" not in schema3.introspect()
+
+    def test_dictionary_ordering(self):
+        schema1 = Dictionary(
+            OrderedDict((
+                ("foo", UnicodeString()),
+                ("bar", Boolean()),
+                ("baz", List(Integer())),
+            )),
+            optional_keys=("foo",),
+            description="Hello, world",
+        )
+
+        assert schema1.introspect()["contents"] == {
+            "baz": List(Integer()).introspect(),
+            "foo": UnicodeString().introspect(),
+            "bar": Boolean().introspect(),
+        }
+
+        assert schema1.introspect()["display_order"] == ["foo", "bar", "baz"]
+
+        schema2 = schema1.extend(OrderedDict((
+            ("bar", Integer()),
+            ("qux", Set(UnicodeString())),
+            ("moon", Tuple(Decimal(), UnicodeString())),
+        )))
+
+        assert schema2.introspect()["contents"] == {
+            "baz": List(Integer()).introspect(),
+            "foo": UnicodeString().introspect(),
+            "moon": Tuple(Decimal(), UnicodeString()).introspect(),
+            "bar": Integer().introspect(),
+            "qux": Set(UnicodeString()).introspect(),
+        }
+
+        assert schema2.introspect()["display_order"] == ["foo", "bar", "baz", "qux", "moon"]
+
+        assert not schema1.errors({"bar": True, "foo": "Hello", "baz": [15]})
+
+        errors = schema1.errors({"baz": "Nope", "foo": False, "bar": ["Heck nope"]})
+
+        assert errors == [
+            Error(code="INVALID", pointer="foo", message="Not a unicode string"),
+            Error(code="INVALID", pointer="bar", message="Not a boolean"),
+            Error(code="INVALID", pointer="baz", message="Not a list"),
+        ]
+
+        assert not schema2.errors(
+            {"bar": 91, "foo": "Hello", "qux": {"Yes"}, "baz": [15], "moon": (decimal.Decimal('15.25'), "USD")},
+        )
+
+        errors = schema2.errors({"baz": "Nope", "foo": False, "bar": ["Heck nope"], "qux": "Denied", "moon": 72})
+
+        assert errors == [
+            Error(code="INVALID", pointer="foo", message="Not a unicode string"),
+            Error(code="INVALID", pointer="bar", message="Not an integer"),
+            Error(code="INVALID", pointer="baz", message="Not a list"),
+            Error(code="INVALID", pointer="qux", message="Not a set or frozenset"),
+            Error(code="INVALID", pointer="moon", message="Not a tuple"),
+        ]
+
     def test_temporal(self):
         past1985 = datetime.datetime(1985, 10, 26, 1, 21, 0)
         past1955 = datetime.datetime(1955, 11, 12, 22, 4, 0)
@@ -370,7 +434,7 @@ class FieldTests(unittest.TestCase):
         self.assertEqual(
             schema.errors({"x": 123}),
             [
-                Error("Not a integer", pointer="x"),
+                Error("Not an integer", pointer="x"),
                 Error("Not a unicode string", pointer="x"),
             ],
         )
