@@ -1,6 +1,10 @@
 Changelog
 =========
 
+1.19.1 (2019-01-29)
+-------------------
+- [PATCH] PyPi releases now require PyOpenSSL
+
 1.19.0 (2019-01-29)
 -------------------
 - [MINOR] Enhance Dictionary field to permit ordered key documentation
