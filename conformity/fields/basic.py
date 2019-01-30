@@ -248,8 +248,8 @@ class UnicodeString(Base):
         return strip_none({
             "type": self.introspect_type,
             "description": self.description,
-            "min_length": self.max_length,
-            "max_length": self.min_length,
+            "min_length": self.min_length,
+            "max_length": self.max_length,
             "allow_blank": self.allow_blank and None,  # if the default True, hide it from introspection
         })
 
