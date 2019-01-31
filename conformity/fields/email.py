@@ -2,15 +2,12 @@ from __future__ import absolute_import, unicode_literals
 
 import re
 
-import attr
-
 from conformity.error import Error
 from conformity.fields.basic import UnicodeString
 from conformity.fields.net import IPAddress
 from conformity.utils import strip_none
 
 
-@attr.s
 class EmailAddress(UnicodeString):
     """
     On the shoulder of mighty Django (v2.0.x)
@@ -38,20 +35,36 @@ class EmailAddress(UnicodeString):
         r'\[([A-f0-9:\.]+)\]\Z',
         re.IGNORECASE
     )
-    whitelist = attr.ib(default=set(['localhost']), type=set)
+    domain_whitelist = ['localhost']
 
-    def __init__(self, message=None, code=None, whitelist=None):
+    def __init__(
+        self,
+        message=None,
+        code=None,
+        min_length=None,
+        max_length=None,
+        description=None,
+        whitelist=None
+    ):
         """
         Construct a new email address field.
 
         :param message: Unused, and will be removed in version 2.0.0
         :param code: Unused, and will be removed in version 2.0.0
+        :param min_length: If specified, minimum valid email length
+        :param max_legnth: If specified, maximum valid email length
+        :param description: If specified, user-friendly description of the field
         :param whitelist: If specified, an invalid domain part will be permitted if it is in this list
         :type whitelist: iterable
         """
+
         super(UnicodeString, self).__init__()
+        self.min_length = min_length
+        self.max_length = max_length
+        self.description = description
+        self.allow_blank = False
         if whitelist is not None:
-            self.whitelist = set(whitelist) if whitelist else set()
+            self.domain_whitelist = set(whitelist) if whitelist else set()
 
     def errors(self, value):
         # Get any basic type errors
@@ -64,7 +77,7 @@ class EmailAddress(UnicodeString):
         user_part, domain_part = value.rsplit('@', 1)
         if not self.user_regex.match(user_part):
             return [Error('Not a valid email address (invalid local user field)', pointer=user_part)]
-        if domain_part in self.whitelist or self.is_domain_valid(domain_part):
+        if domain_part in self.domain_whitelist or self.is_domain_valid(domain_part):
             return []
         else:
             try:
