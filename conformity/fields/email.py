@@ -37,32 +37,18 @@ class EmailAddress(UnicodeString):
     )
     domain_whitelist = ['localhost']
 
-    def __init__(
-        self,
-        message=None,
-        code=None,
-        min_length=None,
-        max_length=None,
-        description=None,
-        whitelist=None
-    ):
+    def __init__(self, message=None, code=None, whitelist=None, **kwargs):
         """
         Construct a new email address field.
 
         :param message: Unused, and will be removed in version 2.0.0
         :param code: Unused, and will be removed in version 2.0.0
-        :param min_length: If specified, minimum valid email length
-        :param max_legnth: If specified, maximum valid email length
-        :param description: If specified, user-friendly description of the field
         :param whitelist: If specified, an invalid domain part will be permitted if it is in this list
         :type whitelist: iterable
+        :param kwargs
         """
 
-        super(UnicodeString, self).__init__()
-        self.min_length = min_length
-        self.max_length = max_length
-        self.description = description
-        self.allow_blank = False
+        super(EmailAddress, self).__init__(**kwargs)
         if whitelist is not None:
             self.domain_whitelist = set(whitelist) if whitelist else set()
 
