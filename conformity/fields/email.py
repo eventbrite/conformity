@@ -2,15 +2,12 @@ from __future__ import absolute_import, unicode_literals
 
 import re
 
-import attr
-
 from conformity.error import Error
 from conformity.fields.basic import UnicodeString
 from conformity.fields.net import IPAddress
 from conformity.utils import strip_none
 
 
-@attr.s
 class EmailAddress(UnicodeString):
     """
     On the shoulder of mighty Django (v2.0.x)
@@ -40,7 +37,7 @@ class EmailAddress(UnicodeString):
     )
     domain_whitelist = ['localhost']
 
-    def __init__(self, message=None, code=None, whitelist=None):
+    def __init__(self, message=None, code=None, whitelist=None, **kwargs):
         """
         Construct a new email address field.
 
@@ -48,7 +45,10 @@ class EmailAddress(UnicodeString):
         :param code: Unused, and will be removed in version 2.0.0
         :param whitelist: If specified, an invalid domain part will be permitted if it is in this list
         :type whitelist: iterable
+        :param kwargs
         """
+
+        super(EmailAddress, self).__init__(**kwargs)
         if whitelist is not None:
             self.domain_whitelist = set(whitelist) if whitelist else set()
 
