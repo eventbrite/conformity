@@ -17,12 +17,16 @@ currency_requires = [
     'currint',
 ]
 
+country_requires = [
+    'pycountry',
+]
+
 tests_require = [
     'pytest',
     'pytest-cov',
     'freezegun',
     'pytz',
-] + currency_requires
+] + currency_requires + country_requires
 
 setup(
     name='conformity',
@@ -43,6 +47,7 @@ setup(
     test_suite='tests',
     extras_require={
         'currency': currency_requires,
+        'country': country_requires,
         'testing': tests_require,
     },
     license='Apache 2.0',

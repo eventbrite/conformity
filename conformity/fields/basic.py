@@ -102,6 +102,7 @@ class Anything(Base):
         return result
 
 
+@attr.s
 class Hashable(Anything):
     """
     Accepts any hashable value
@@ -162,7 +163,7 @@ class Integer(Base):
     """
 
     valid_type = six.integer_types
-    valid_noun = "integer"
+    valid_noun = "an integer"
     introspect_type = "integer"
     conformity_type = introspect_type
 
@@ -175,7 +176,7 @@ class Integer(Base):
     def errors(self, value):
         if not isinstance(value, self.valid_type) or isinstance(value, bool):
             return [
-                Error("Not a %s" % self.valid_noun),
+                Error("Not %s" % self.valid_noun),
             ]
         elif self.gt is not None and value <= self.gt:
             return [
@@ -208,24 +209,26 @@ class Integer(Base):
         return result
 
 
+@attr.s
 class Float(Integer):
     """
     Accepts floating point numbers as well as integers.
     """
 
     valid_type = six.integer_types + (float,)
-    valid_noun = "float"
+    valid_noun = "a float"
     introspect_type = "float"
     conformity_type = introspect_type
 
 
+@attr.s
 class Decimal(Integer):
     """
     Accepts arbitrary-precision Decimal number objects.
     """
 
     valid_type = decimal.Decimal
-    valid_noun = "decimal"
+    valid_noun = "a decimal"
     introspect_type = "decimal"
     conformity_type = introspect_type
 
@@ -268,8 +271,8 @@ class UnicodeString(Base):
         result = strip_none({
             "type": self.introspect_type,
             "description": self.description,
-            "min_length": self.max_length,
-            "max_length": self.min_length,
+            "min_length": self.min_length,
+            "max_length": self.max_length,
             "allow_blank": self.allow_blank and None,  # if the default True, hide it from introspection
         })
         if include_conformity_type:
@@ -277,6 +280,7 @@ class UnicodeString(Base):
         return result
 
 
+@attr.s
 class ByteString(UnicodeString):
     """
     Accepts only byte strings

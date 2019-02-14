@@ -1,6 +1,7 @@
 from __future__ import absolute_import, unicode_literals
 
 import attr
+from collections import OrderedDict
 import six
 
 from conformity.error import (
@@ -89,6 +90,7 @@ class List(Base):
             self.get = lambda: index
 
 
+@attr.s
 class Set(List):
     valid_types = (set, frozenset)
     type_noun = "set"
@@ -103,7 +105,12 @@ class Set(List):
 
 class Dictionary(Base):
     """
-    A dictionary with types per key (and requirements per key).
+    A dictionary with types per key (and requirements per key). If the `contents` argument is an instance of
+    `OrderedDict`, the field introspection will include a `display_order` list of keys matching the order they exist
+    in the `OrderedDict`, and errors will be reported in the order the keys exist in the `OrderedDict`. Order will be
+    maintained for any calls to `extend` as long as those calls also use `OrderedDict`. Ordering behavior is undefined
+    otherwise. This field does NOT enforce that the value it validates presents keys in the same order. `OrderedDict`
+    is used strictly for documentation and error-object-ordering purposes only.
     """
 
     introspect_type = "dictionary"
@@ -191,15 +198,19 @@ class Dictionary(Base):
         """
         optional_keys = set(optional_keys or [])
         return Dictionary(
-            contents={
-                k: v for d in (self.contents, contents) for k, v in six.iteritems(d)
-            } if contents else self.contents,
+            contents=type(self.contents)(
+                (k, v) for d in (self.contents, contents) for k, v in six.iteritems(d)
+            ) if contents else self.contents,
             optional_keys=optional_keys if replace_optional_keys else self.optional_keys | optional_keys,
             allow_extra_keys=self.allow_extra_keys if allow_extra_keys is None else allow_extra_keys,
             description=self.description if description is None else description,
         )
 
     def introspect(self, include_conformity_type=False):
+        display_order = None
+        if isinstance(self.contents, OrderedDict):
+            display_order = list(self.contents.keys())
+
         result = strip_none({
             "type": self.introspect_type,
             "contents": {
@@ -209,6 +220,7 @@ class Dictionary(Base):
             "optional_keys": list(self.optional_keys),
             "allow_extra_keys": self.allow_extra_keys,
             "description": self.description,
+            "display_order": display_order,
         })
         if include_conformity_type:
             result["conformity_type"] = self.conformity_type

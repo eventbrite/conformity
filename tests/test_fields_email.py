@@ -108,3 +108,31 @@ class EmailFieldTests(unittest.TestCase):
             schema.errors('संपर्क@डाटामेल.भारत'),
             [Error('Not a valid email address (invalid local user field)', pointer='संपर्क')],
         )
+
+    def test_non_whitelisted_address(self):
+        whitelisted_domains = ['a-whitelisted-domain']
+        schema = EmailAddress(whitelist=whitelisted_domains)
+        self.assertEqual(
+            schema.errors('a-name@non-whitelisted-domain'),
+            [Error('Not a valid email address (invalid domain field)', pointer='non-whitelisted-domain')],
+        )
+
+    def test_valid_non_whitelisted_address(self):
+        schema = EmailAddress()
+        self.assertEqual(
+            schema.errors('a-name@a-valid-domain.test'),
+            [],
+        )
+
+    def test_whitelisted_address_via_constructor(self):
+        whitelisted_domains = ['a-whitelisted-domain']
+        schema = EmailAddress(whitelist=whitelisted_domains)
+        self.assertEqual(
+            schema.errors('a-name@a-whitelisted-domain'),
+            [],
+        )
+
+    def test_whitelist_removes_duplicates(self):
+        whitelisted_domains = ['a-repeated-whitelisted-domain', 'a-repeated-whitelisted-domain']
+        schema = EmailAddress(whitelist=whitelisted_domains)
+        self.assertEqual(1, len(schema.domain_whitelist))

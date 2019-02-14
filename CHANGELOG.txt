@@ -1,6 +1,24 @@
 Changelog
 =========
 
+1.19.2 (2019-01-30)
+-------------------
+- [PATCH] Fix bug with string length restrictions and introspection
+- [PATCH] Minor fixes to CountryCodeField
+
+1.19.1 (2019-01-29)
+-------------------
+- [PATCH] PyPi releases now require PyOpenSSL
+
+1.19.0 (2019-01-29)
+-------------------
+- [MINOR] Enhance Dictionary field to permit ordered key documentation
+
+1.18.0 (2019-01-04)
+-------------------
+- [MINOR] Added CountryCodeField to Conformity
+- [MINOR] Add introspect_type attribute to all fields (#43)
+
 1.17.2 (2018-11-15)
 -------------------
 - [PATCH] Permit a newer Attrs version and confirm it works
