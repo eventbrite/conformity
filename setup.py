@@ -40,7 +40,7 @@ setup(
     include_package_data=True,
     install_requires=[
         'six',
-        'attrs>=17.4,<19',
+        'attrs>=17.4,<20',
     ],
     tests_require=tests_require,
     setup_requires=['pytest-runner'],

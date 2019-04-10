@@ -12,3 +12,4 @@ __pycache__
 coverage.xml
 pytests.xml
 .pytest_cache
+.tox
