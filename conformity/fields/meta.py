@@ -22,7 +22,7 @@ class Nullable(Base):
     argument.
     """
 
-    introspect_type = "nullable"
+    introspect_type = 'nullable'
     field = attr.ib()
 
     def errors(self, value):
@@ -33,8 +33,8 @@ class Nullable(Base):
 
     def introspect(self):
         return {
-            "type": self.introspect_type,
-            "nullable": self.field.introspect(),
+            'type': self.introspect_type,
+            'nullable': self.field.introspect(),
         }
 
 
@@ -45,24 +45,24 @@ class Polymorph(Base):
     within it (which must be accessible via dictionary lookups)
     """
 
-    introspect_type = "polymorph"
+    introspect_type = 'polymorph'
     switch_field = attr.ib()
     contents_map = attr.ib()
     description = attr.ib(default=None)
 
     def errors(self, value):
         # Get switch field value
-        bits = self.switch_field.split(".")
+        bits = self.switch_field.split('.')
         switch_value = value
         for bit in bits:
             switch_value = switch_value[bit]
         # Get field
         if switch_value not in self.contents_map:
-            if "__default__" in self.contents_map:
-                switch_value = "__default__"
+            if '__default__' in self.contents_map:
+                switch_value = '__default__'
             else:
                 return [
-                    Error("Invalid switch value {}".format(switch_value), code=ERROR_CODE_UNKNOWN),
+                    Error('Invalid switch value {}'.format(switch_value), code=ERROR_CODE_UNKNOWN),
                 ]
         field = self.contents_map[switch_value]
         # Run field errors
@@ -70,10 +70,10 @@ class Polymorph(Base):
 
     def introspect(self):
         return strip_none({
-            "type": self.introspect_type,
-            "description": self.description,
-            "switch_field": self.switch_field,
-            "contents_map": {
+            'type': self.introspect_type,
+            'description': self.description,
+            'switch_field': self.switch_field,
+            'contents_map': {
                 key: value.introspect()
                 for key, value in self.contents_map.items()
             },
@@ -86,25 +86,25 @@ class ObjectInstance(Base):
     Accepts only instances of a given class or type
     """
 
-    introspect_type = "object_instance"
+    introspect_type = 'object_instance'
     valid_type = attr.ib()
     description = attr.ib(default=None)
 
     def errors(self, value):
         if not isinstance(value, self.valid_type):
             return [
-                Error("Not an instance of %s" % self.valid_type.__name__),
+                Error('Not an instance of %s' % self.valid_type.__name__),
             ]
         else:
             return []
 
     def introspect(self):
         return strip_none({
-            "type": self.introspect_type,
-            "description": self.description,
+            'type': self.introspect_type,
+            'description': self.description,
             # Unfortunately, this is the one sort of thing we can't represent
             # super well. Maybe add some dotted path stuff in here.
-            "valid_type": repr(self.valid_type),
+            'valid_type': repr(self.valid_type),
         })
 
 
@@ -114,17 +114,17 @@ class Any(Base):
     Intended to be used for constants but could be used with others.
     """
 
-    introspect_type = "any"
+    introspect_type = 'any'
     description = None
 
     def __init__(self, *args, **kwargs):
         self.options = args
         # We can't put a keyword argument after *args in Python 2, so we need this
-        if "description" in kwargs:
-            self.description = kwargs["description"]
-            del kwargs["description"]
+        if 'description' in kwargs:
+            self.description = kwargs['description']
+            del kwargs['description']
         if kwargs:
-            raise TypeError("Unknown keyword arguments: %s" % ", ".join(kwargs.keys()))
+            raise TypeError('Unknown keyword arguments: %s' % ', '.join(kwargs.keys()))
 
     def errors(self, value):
         result = []
@@ -139,9 +139,9 @@ class Any(Base):
 
     def introspect(self):
         return strip_none({
-            "type": self.introspect_type,
-            "description": self.description,
-            "options": [option.introspect() for option in self.options],
+            'type': self.introspect_type,
+            'description': self.description,
+            'options': [option.introspect() for option in self.options],
         })
 
 
@@ -151,17 +151,17 @@ class All(Base):
     Intended to be used for adding extra validation.
     """
 
-    introspect_type = "all"
+    introspect_type = 'all'
     description = None
 
     def __init__(self, *args, **kwargs):
         self.requirements = args
         # We can't put a keyword argument after *args in Python 2, so we need this
-        if "description" in kwargs:
-            self.description = kwargs["description"]
-            del kwargs["description"]
+        if 'description' in kwargs:
+            self.description = kwargs['description']
+            del kwargs['description']
         if kwargs:
-            raise TypeError("Unknown keyword arguments: %s" % ", ".join(kwargs.keys()))
+            raise TypeError('Unknown keyword arguments: %s' % ', '.join(kwargs.keys()))
 
     def errors(self, value):
         result = []
@@ -171,9 +171,9 @@ class All(Base):
 
     def introspect(self):
         return strip_none({
-            "type": self.introspect_type,
-            "description": self.description,
-            "requirements": [requirement.introspect() for requirement in self.requirements],
+            'type': self.introspect_type,
+            'description': self.description,
+            'requirements': [requirement.introspect() for requirement in self.requirements],
         })
 
 
@@ -184,7 +184,7 @@ class BooleanValidator(Base):
     based on if it returns True (valid) or False (invalid).
     """
 
-    introspect_type = "boolean_validator"
+    introspect_type = 'boolean_validator'
     validator = attr.ib()
     validator_description = attr.ib(validator=attr.validators.instance_of(six.text_type))
     error = attr.ib(validator=attr.validators.instance_of(six.text_type))
@@ -197,7 +197,7 @@ class BooleanValidator(Base):
             ok = self.validator(value)
         except Exception:
             return [
-                Error("Validator encountered an error (invalid type?)"),
+                Error('Validator encountered an error (invalid type?)'),
             ]
         if ok:
             return []
@@ -208,7 +208,7 @@ class BooleanValidator(Base):
 
     def introspect(self):
         return strip_none({
-            "type": self.introspect_type,
-            "description": self.description,
-            "validator": self.validator_description,
+            'type': self.introspect_type,
+            'description': self.description,
+            'validator': self.validator_description,
         })

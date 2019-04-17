@@ -33,7 +33,7 @@ class PositionalError(TypeError):
     pass
 
 
-def validate(schema, value, noun="value"):
+def validate(schema, value, noun='value'):
     """
     Checks the value against the schema, and raises ValidationError if validation
     fails.
@@ -46,7 +46,7 @@ def validate(schema, value, noun="value"):
                 error_details += '  - %s: %s\n' % (error.pointer, error.message)
             else:
                 error_details += '  - %s\n' % error.message
-        raise ValidationError("Invalid %s:\n%s" % (noun, error_details))
+        raise ValidationError('Invalid %s:\n%s' % (noun, error_details))
 
 
 def validate_call(kwargs, returns, is_method=False):
@@ -67,13 +67,13 @@ def validate_call(kwargs, returns, is_method=False):
                 max_allowed_passed_args_len = 1
 
             if len(passed_args) > max_allowed_passed_args_len:
-                raise PositionalError("You cannot call this with positional arguments.")
+                raise PositionalError('You cannot call this with positional arguments.')
             # Validate keyword arguments
-            validate(kwargs, passed_kwargs, "keyword arguments")
+            validate(kwargs, passed_kwargs, 'keyword arguments')
             # Call callable
             return_value = func(*passed_args, **passed_kwargs)
             # Validate return value
-            validate(returns, return_value, "return value")
+            validate(returns, return_value, 'return value')
             return return_value
         inner.__wrapped__ = func
         # caveat: checking for f.__validated__ will only work if @validate_call

@@ -18,7 +18,7 @@ class EmailAddress(UnicodeString):
     UTF-8 emails are not supported in general.
     """
 
-    introspect_type = "email_address"
+    introspect_type = 'email_address'
     ip_schema = IPAddress()
     message = None  # unused, will be removed in version 2.0.0
     code = None  # unused, will be removed in version 2.0.0
@@ -93,6 +93,6 @@ class EmailAddress(UnicodeString):
 
     def introspect(self):
         return strip_none({
-            "type": self.introspect_type,
-            "description": self.description,
+            'type': self.introspect_type,
+            'description': self.description,
         })
