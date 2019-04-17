@@ -24,7 +24,7 @@ class CountryCodeField(Constant):
     Permits only current countries and uses the ISO 3166 alpha-2 codes.
     """
 
-    introspect_type = "country_code_field"
+    introspect_type = 'country_code_field'
 
     def __init__(self, code_filter=lambda x: True, **kwargs):
         """
@@ -33,9 +33,9 @@ class CountryCodeField(Constant):
         """
         valid_country_codes = (code for code in _countries_a2 if code_filter(code))
         super(CountryCodeField, self).__init__(*valid_country_codes, **kwargs)
-        self._error_message = "Not a valid country code"
+        self._error_message = 'Not a valid country code'
 
     def errors(self, value):
         if not isinstance(value, six.text_type):
-            return [Error("Not a unicode string")]
+            return [Error('Not a unicode string')]
         return super(CountryCodeField, self).errors(value)

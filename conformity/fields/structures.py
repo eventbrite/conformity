@@ -45,9 +45,9 @@ class List(Base):
     description = attr.ib(default=None)
 
     valid_types = list
-    type_noun = "list"
+    type_noun = 'list'
     introspect_type = type_noun
-    type_error = "Not a list"
+    type_error = 'Not a list'
 
     def errors(self, value):
         if not isinstance(value, self.valid_types):
@@ -56,11 +56,11 @@ class List(Base):
         result = []
         if self.max_length is not None and len(value) > self.max_length:
             result.append(
-                Error("List longer than %s" % self.max_length),
+                Error('List longer than %s' % self.max_length),
             )
         elif self.min_length is not None and len(value) < self.min_length:
             result.append(
-                Error("List is shorter than %s" % self.min_length),
+                Error('List is shorter than %s' % self.min_length),
             )
         for lazy_pointer, element in self._enumerate(value):
             result.extend(
@@ -78,11 +78,11 @@ class List(Base):
 
     def introspect(self):
         return strip_none({
-            "type": self.introspect_type,
-            "contents": self.contents.introspect(),
-            "max_length": self.max_length,
-            "min_length": self.min_length,
-            "description": self.description,
+            'type': self.introspect_type,
+            'contents': self.contents.introspect(),
+            'max_length': self.max_length,
+            'min_length': self.min_length,
+            'description': self.description,
         })
 
     class LazyPointer(object):
@@ -93,13 +93,13 @@ class List(Base):
 @attr.s
 class Set(List):
     valid_types = (set, frozenset)
-    type_noun = "set"
+    type_noun = 'set'
     introspect_type = type_noun
-    type_error = "Not a set or frozenset"
+    type_error = 'Not a set or frozenset'
 
     class LazyPointer(object):
         def __init__(self, _, value):
-            self.get = lambda: "[{}]".format(str(value))
+            self.get = lambda: '[{}]'.format(str(value))
 
 
 class Dictionary(Base):
@@ -112,7 +112,7 @@ class Dictionary(Base):
     is used strictly for documentation and error-object-ordering purposes only.
     """
 
-    introspect_type = "dictionary"
+    introspect_type = 'dictionary'
     contents = None
     optional_keys = set()
     allow_extra_keys = False
@@ -135,12 +135,12 @@ class Dictionary(Base):
             self.description = self.__class__.description
 
         if self.contents is None:
-            raise ValueError("contents is a required argument")
+            raise ValueError('contents is a required argument')
 
     def errors(self, value):
         if not isinstance(value, dict):
             return [
-                Error("Not a dict"),
+                Error('Not a dict'),
             ]
         result = []
         for key, field in self.contents.items():
@@ -148,7 +148,7 @@ class Dictionary(Base):
             if key not in value:
                 if key not in self.optional_keys:
                     result.append(
-                        Error("Missing key: {}".format(key), code=ERROR_CODE_MISSING, pointer=key),
+                        Error('Missing key: {}'.format(key), code=ERROR_CODE_MISSING, pointer=key),
                     )
             else:
                 # Check key type
@@ -161,7 +161,7 @@ class Dictionary(Base):
         if extra_keys and not self.allow_extra_keys:
             result.append(
                 Error(
-                    "Extra keys present: {}".format(", ".join(six.text_type(key) for key in sorted(extra_keys))),
+                    'Extra keys present: {}'.format(', '.join(six.text_type(key) for key in sorted(extra_keys))),
                     code=ERROR_CODE_UNKNOWN,
                 ),
             )
@@ -210,15 +210,15 @@ class Dictionary(Base):
             display_order = list(self.contents.keys())
 
         return strip_none({
-            "type": self.introspect_type,
-            "contents": {
+            'type': self.introspect_type,
+            'contents': {
                 key: value.introspect()
                 for key, value in self.contents.items()
             },
-            "optional_keys": list(self.optional_keys),
-            "allow_extra_keys": self.allow_extra_keys,
-            "description": self.description,
-            "display_order": display_order,
+            'optional_keys': list(self.optional_keys),
+            'allow_extra_keys': self.allow_extra_keys,
+            'description': self.description,
+            'display_order': display_order,
         })
 
 
@@ -228,7 +228,7 @@ class SchemalessDictionary(Base):
     Generic dictionary with requirements about key and value types, but not specific keys
     """
 
-    introspect_type = "schemaless_dictionary"
+    introspect_type = 'schemaless_dictionary'
     key_type = attr.ib(default=attr.Factory(Hashable))
     value_type = attr.ib(default=attr.Factory(Anything))
     description = attr.ib(default=None)
@@ -236,7 +236,7 @@ class SchemalessDictionary(Base):
     def errors(self, value):
         if not isinstance(value, dict):
             return [
-                Error("Not a dict"),
+                Error('Not a dict'),
             ]
         result = []
         for key, field in value.items():
@@ -252,14 +252,14 @@ class SchemalessDictionary(Base):
 
     def introspect(self):
         result = {
-            "type": self.introspect_type,
-            "description": self.description,
+            'type': self.introspect_type,
+            'description': self.description,
         }
         # We avoid using isinstance() here as that would also match subclass instances
         if not self.key_type.__class__ == Hashable:
-            result["key_type"] = self.key_type.introspect()
+            result['key_type'] = self.key_type.introspect()
         if not self.value_type.__class__ == Anything:
-            result["value_type"] = self.value_type.introspect()
+            result['value_type'] = self.value_type.introspect()
         return strip_none(result)
 
 
@@ -268,26 +268,26 @@ class Tuple(Base):
     A tuple with types per element.
     """
 
-    introspect_type = "tuple"
+    introspect_type = 'tuple'
 
     def __init__(self, *contents, **kwargs):
         # We can't use attrs here because we need to capture all positional
         # arguments, but also extract the description kwarg if provided.
         self.contents = contents
-        self.description = kwargs.get("description", None)
-        if list(kwargs.keys()) not in ([], ["description"]):
-            raise ValueError("Unknown keyword arguments %s" % kwargs.keys())
+        self.description = kwargs.get('description', None)
+        if list(kwargs.keys()) not in ([], ['description']):
+            raise ValueError('Unknown keyword arguments %s' % kwargs.keys())
 
     def errors(self, value):
         if not isinstance(value, tuple):
             return [
-                Error("Not a tuple"),
+                Error('Not a tuple'),
             ]
 
         result = []
         if len(value) != len(self.contents):
             result.append(
-                Error("Number of elements %d doesn't match expected %d" % (len(value), len(self.contents)))
+                Error('Number of elements %d does not match expected %d' % (len(value), len(self.contents)))
             )
 
         for i, (c_elem, v_elem) in enumerate(zip(self.contents, value)):
@@ -300,7 +300,7 @@ class Tuple(Base):
 
     def introspect(self):
         return strip_none({
-            "type": self.introspect_type,
-            "contents": [value.introspect() for value in self.contents],
-            "description": self.description,
+            'type': self.introspect_type,
+            'contents': [value.introspect() for value in self.contents],
+            'description': self.description,
         })

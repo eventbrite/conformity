@@ -29,11 +29,11 @@ class GeoFieldTests(unittest.TestCase):
         )
         self.assertEqual(
             schema.errors(180),
-            [Error("Value not <= 90")],
+            [Error('Value not <= 90')],
         )
         self.assertEqual(
             schema.errors(-91),
-            [Error("Value not >= -90")],
+            [Error('Value not >= -90')],
         )
 
     def test_longitude(self):
@@ -44,11 +44,11 @@ class GeoFieldTests(unittest.TestCase):
         )
         self.assertEqual(
             schema.errors(186) or [],
-            [Error("Value not <= 180")],
+            [Error('Value not <= 180')],
         )
         self.assertEqual(
             schema.errors(-181.3412) or [],
-            [Error("Value not >= -180")],
+            [Error('Value not >= -180')],
         )
 
     def test_limited_longitude(self):
@@ -59,5 +59,5 @@ class GeoFieldTests(unittest.TestCase):
         )
         self.assertEqual(
             schema.errors(-49.32) or [],
-            [Error("Value not <= -50")],
+            [Error('Value not <= -50')],
         )

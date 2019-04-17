@@ -21,7 +21,7 @@ ipv4_regex = re.compile(r'^(25[0-5]|2[0-4]\d|[0-1]?\d?\d)(\.(25[0-5]|2[0-4]\d|[0
 @attr.s
 class IPv4Address(UnicodeString):
 
-    introspect_type = "ipv4_address"
+    introspect_type = 'ipv4_address'
 
     def errors(self, value):
         # Get any basic type errors
@@ -32,19 +32,19 @@ class IPv4Address(UnicodeString):
         if ipv4_regex.match(value):
             return []
         else:
-            return [Error("Not a valid IPv4 address")]
+            return [Error('Not a valid IPv4 address')]
 
     def introspect(self):
         return strip_none({
-            "type": self.introspect_type,
-            "description": self.description,
+            'type': self.introspect_type,
+            'description': self.description,
         })
 
 
 @attr.s
 class IPv6Address(UnicodeString):
 
-    introspect_type = "ipv6_address"
+    introspect_type = 'ipv6_address'
 
     def errors(self, value):
         # Get any basic type errors
@@ -53,25 +53,25 @@ class IPv6Address(UnicodeString):
             return result
         # It must have at least one :
         if ':' not in value:
-            return [Error("Not a valid IPv6 address (no colons)")]
+            return [Error('Not a valid IPv6 address (no colons)')]
         # We can only have one '::' shortener.
         if value.count('::') > 1:
-            return [Error("Not a valid IPv6 address (multiple shorteners)")]
+            return [Error('Not a valid IPv6 address (multiple shorteners)')]
         # '::' should be encompassed by start, digits or end.
         if ':::' in value:
-            return [Error("Not a valid IPv6 address (shortener not bounded)")]
+            return [Error('Not a valid IPv6 address (shortener not bounded)')]
         # A single colon can neither start nor end an address.
         if ((value.startswith(':') and not value.startswith('::')) or
                 (value.endswith(':') and not value.endswith('::'))):
-            return [Error("Not a valid IPv6 address (colon at start or end)")]
+            return [Error('Not a valid IPv6 address (colon at start or end)')]
         # We can never have more than 7 ':' (1::2:3:4:5:6:7:8 is invalid)
         if value.count(':') > 7:
-            return [Error("Not a valid IPv6 address (too many colons)")]
+            return [Error('Not a valid IPv6 address (too many colons)')]
         # If we have no concatenation, we need to have 8 fields with 7 ':'.
         if '::' not in value and value.count(':') != 7:
             # We might have an IPv4 mapped address.
             if value.count('.') != 3:
-                return [Error("Not a valid IPv6 address (v4 section not valid address)")]
+                return [Error('Not a valid IPv6 address (v4 section not valid address)')]
         value = self.expand_ipv6_address(value)
         # Check that each of the hextets are between 0x0 and 0xFFFF.
         for hextet in value.split(':'):
@@ -79,17 +79,17 @@ class IPv6Address(UnicodeString):
                 # If we have an IPv4 mapped address, the IPv4 portion has to
                 # be at the end of the IPv6 portion.
                 if not value.split(':')[-1] == hextet:
-                    return [Error("Not a valid IPv6 address (v4 section not at end)")]
+                    return [Error('Not a valid IPv6 address (v4 section not at end)')]
                 if not ipv4_regex.match(hextet):
-                    return [Error("Not a valid IPv6 address (v4 section not valid address)")]
+                    return [Error('Not a valid IPv6 address (v4 section not valid address)')]
             else:
                 try:
                     # a value error here means that we got a bad hextet,
                     # something like 0xzzzz
                     if int(hextet, 16) < 0x0 or int(hextet, 16) > 0xFFFF:
-                        return [Error("Not a valid IPv6 address (invalid hextet)")]
+                        return [Error('Not a valid IPv6 address (invalid hextet)')]
                 except ValueError:
-                    return [Error("Not a valid IPv6 address (invalid hextet)")]
+                    return [Error('Not a valid IPv6 address (invalid hextet)')]
         return []
 
     @staticmethod
@@ -122,8 +122,8 @@ class IPv6Address(UnicodeString):
 
     def introspect(self):
         return strip_none({
-            "type": self.introspect_type,
-            "description": self.description,
+            'type': self.introspect_type,
+            'description': self.description,
         })
 
 

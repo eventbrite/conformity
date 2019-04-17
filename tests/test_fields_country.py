@@ -29,15 +29,15 @@ class CountryCodeTest(unittest.TestCase):
         errors = self.field.errors(country)
         self.assertEqual(len(errors), 1)
         self.assertEqual(errors[0].code, ERROR_CODE_UNKNOWN)
-        self.assertEqual(errors[0].message, "Not a valid country code")
+        self.assertEqual(errors[0].message, 'Not a valid country code')
 
     def test_not_unicode_string(self):
         country = b'US'
         errors = self.field.errors(country)
         self.assertEqual(len(errors), 1)
         self.assertEqual(errors[0].code, ERROR_CODE_INVALID)
-        self.assertEqual(errors[0].message, "Not a unicode string")
+        self.assertEqual(errors[0].message, 'Not a unicode string')
 
     def test_introspect(self):
         introspection = self.field.introspect()
-        self.assertEqual("country_code_field", introspection["type"])
+        self.assertEqual('country_code_field', introspection['type'])
