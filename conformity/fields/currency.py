@@ -1,13 +1,16 @@
-from __future__ import absolute_import, unicode_literals
+from __future__ import (
+    absolute_import,
+    unicode_literals,
+)
 
 import attr
 import currint
 
-from conformity.error import (
-    Error,
-    ERROR_CODE_INVALID,
-)
 from conformity import fields
+from conformity.error import (
+    ERROR_CODE_INVALID,
+    Error,
+)
 from conformity.utils import strip_none
 
 

@@ -13,6 +13,11 @@ from conformity.fields.basic import Constant
 _countries_a2 = sorted(c.alpha_2 for c in pycountry.countries)
 
 
+__all__ = (
+    'CountryCodeField',
+)
+
+
 class CountryCodeField(Constant):
     """
     An enum field for restricting values to valid ISO 3166 country codes.

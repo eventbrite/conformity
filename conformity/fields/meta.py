@@ -1,11 +1,14 @@
-from __future__ import absolute_import, unicode_literals
+from __future__ import (
+    absolute_import,
+    unicode_literals,
+)
 
 import attr
 import six
 
 from conformity.error import (
-    Error,
     ERROR_CODE_UNKNOWN,
+    Error,
 )
 from conformity.fields.basic import Base
 from conformity.utils import strip_none
