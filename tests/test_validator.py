@@ -1,4 +1,7 @@
-from __future__ import absolute_import, unicode_literals
+from __future__ import (
+    absolute_import,
+    unicode_literals,
+)
 
 import unittest
 
@@ -8,10 +11,10 @@ from conformity.fields import (
 )
 from conformity.validator import (
     PositionalError,
+    ValidationError,
     validate,
     validate_call,
     validate_method,
-    ValidationError,
 )
 
 

@@ -1,4 +1,7 @@
-from __future__ import unicode_literals
+from __future__ import (
+    absolute_import,
+    unicode_literals,
+)
 
 
 __version_info__ = (1, 20, 0)

@@ -1,4 +1,7 @@
-from __future__ import absolute_import, unicode_literals
+from __future__ import (
+    absolute_import,
+    unicode_literals,
+)
 
 import decimal
 
@@ -6,8 +9,8 @@ import attr
 import six
 
 from conformity.error import (
-    Error,
     ERROR_CODE_UNKNOWN,
+    Error,
 )
 from conformity.utils import strip_none
 

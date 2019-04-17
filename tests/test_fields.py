@@ -1,4 +1,7 @@
-from __future__ import absolute_import, unicode_literals
+from __future__ import (
+    absolute_import,
+    unicode_literals,
+)
 
 from collections import OrderedDict
 import datetime
@@ -9,9 +12,9 @@ import freezegun
 import pytz
 
 from conformity.error import (
-    Error,
     ERROR_CODE_MISSING,
     ERROR_CODE_UNKNOWN,
+    Error,
 )
 from conformity.fields import (
     Boolean,

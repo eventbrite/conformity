@@ -1,13 +1,17 @@
-from __future__ import absolute_import, unicode_literals
+from __future__ import (
+    absolute_import,
+    unicode_literals,
+)
+
+from collections import OrderedDict
 
 import attr
-from collections import OrderedDict
 import six
 
 from conformity.error import (
-    Error,
     ERROR_CODE_MISSING,
     ERROR_CODE_UNKNOWN,
+    Error,
 )
 from conformity.fields.basic import (
     Anything,

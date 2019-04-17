@@ -1,3 +1,9 @@
+from __future__ import (
+    absolute_import,
+    unicode_literals,
+)
+
+
 def strip_none(value):
     """
     Takes a dict and removes all keys that have None values, used mainly for
