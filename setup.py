@@ -27,6 +27,7 @@ country_requires = [
 tests_require = [
     'pytest',
     'pytest-cov',
+    'pytest-runner',
     'freezegun',
     'pytz',
 ] + currency_requires + country_requires
@@ -42,8 +43,9 @@ setup(
     packages=list(map(str, find_packages(exclude=['*.tests', '*.tests.*', 'tests.*', 'tests']))),
     include_package_data=True,
     install_requires=[
-        'six',
         'attrs>=17.4,<20',
+        'six',
+        'typing;python_version<"3.5"',
     ],
     tests_require=tests_require,
     setup_requires=['pytest-runner'],
