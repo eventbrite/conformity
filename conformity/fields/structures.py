@@ -231,14 +231,21 @@ class SchemalessDictionary(Base):
     introspect_type = 'schemaless_dictionary'
     key_type = attr.ib(default=attr.Factory(Hashable))
     value_type = attr.ib(default=attr.Factory(Anything))
+    max_length = attr.ib(default=None)
+    min_length = attr.ib(default=None)
     description = attr.ib(default=None)
 
     def errors(self, value):
         if not isinstance(value, dict):
-            return [
-                Error('Not a dict'),
-            ]
+            return [Error('Not a dict')]
+
         result = []
+
+        if self.max_length is not None and len(value) > self.max_length:
+            result.append(Error('Dict contains more than {} value(s)'.format(self.max_length)))
+        elif self.min_length is not None and len(value) < self.min_length:
+            result.append(Error('Dict contains fewer than {} value(s)'.format(self.min_length)))
+
         for key, field in value.items():
             result.extend(
                 _update_error_pointer(error, key)
@@ -248,11 +255,14 @@ class SchemalessDictionary(Base):
                 _update_error_pointer(error, key)
                 for error in (self.value_type.errors(field) or [])
             )
+
         return result
 
     def introspect(self):
         result = {
             'type': self.introspect_type,
+            'max_length': self.max_length,
+            'min_length': self.min_length,
             'description': self.description,
         }
         # We avoid using isinstance() here as that would also match subclass instances
