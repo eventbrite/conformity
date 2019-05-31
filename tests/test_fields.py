@@ -427,16 +427,19 @@ class FieldTests(unittest.TestCase):
         """
         Tests the schemaless dict with some schema
         """
-        schema = SchemalessDictionary(Integer(), UnicodeString())
+        schema = SchemalessDictionary(Integer(), UnicodeString(), min_length=1, max_length=5)
 
         self.assertEqual(
-            schema.errors({1: u'value'}),
+            schema.errors({1: 'value'}),
             []
         )
 
+        assert schema.errors({}) == [Error('Dict contains fewer than 1 value(s)')]
+
         self.assertEqual(
-            schema.errors({'x': 123}),
+            schema.errors({'x': 123, 2: 'foo', 3: 'bar', 4: 'baz', 5: 'qux', 6: 'too many'}),
             [
+                Error('Dict contains more than 5 value(s)'),
                 Error('Not an integer', pointer='x'),
                 Error('Not a unicode string', pointer='x'),
             ],
@@ -448,6 +451,8 @@ class FieldTests(unittest.TestCase):
                 'type': 'schemaless_dictionary',
                 'key_type': {'type': 'integer'},
                 'value_type': {'type': 'unicode'},
+                'max_length': 5,
+                'min_length': 1,
             }
         )
 
