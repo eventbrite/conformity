@@ -5,6 +5,8 @@ from __future__ import (
 
 import unittest
 
+import six
+
 from conformity.error import Error
 from conformity.fields import (
     All,
@@ -16,6 +18,8 @@ from conformity.fields import (
     Nullable,
     ObjectInstance,
     Polymorph,
+    TypePath,
+    TypeReference,
     UnicodeString,
 )
 
@@ -223,3 +227,88 @@ class MetaFieldTests(unittest.TestCase):
                 'validator': 'str.isdigit()',
             },
         )
+
+    def test_type_reference(self):
+        schema = TypeReference(description='This is a test')
+        assert schema.errors(Foo) == []
+        assert schema.errors(Bar) == []
+        assert schema.errors(Baz) == []
+        assert schema.errors(Qux) == []
+        assert schema.errors(Foo()) == [Error('Not a type')]
+        assert schema.introspect() == {'type': 'type_reference', 'description': 'This is a test'}
+
+        schema = TypeReference(base_classes=Foo)
+        assert schema.errors(Foo) == []
+        assert schema.errors(Bar) == []
+        assert schema.errors(Baz) == [Error('Type {} is not one of or a subclass of one of: {}'.format(Baz, Foo))]
+        assert schema.errors(Qux) == [Error('Type {} is not one of or a subclass of one of: {}'.format(Qux, Foo))]
+        assert schema.introspect() == {'type': 'type_reference', 'base_classes': [six.text_type(Foo)]}
+
+        schema = TypeReference(base_classes=(Foo, Baz))
+        assert schema.errors(Foo) == []
+        assert schema.errors(Bar) == []
+        assert schema.errors(Baz) == []
+        assert schema.errors(Qux) == [
+            Error('Type {} is not one of or a subclass of one of: ({}, {})'.format(Qux, Foo, Baz)),
+        ]
+        assert schema.introspect() == {
+            'type': 'type_reference',
+            'base_classes': [six.text_type(Foo), six.text_type(Baz)],
+        }
+
+    def test_type_path(self):
+        schema = TypePath(description='This is another test')
+        assert schema.errors(b'Nope nope nope') == [Error('Not a unicode string')]
+        assert schema.errors('Nope nope nope') == [Error('Value "Nope nope nope" is not a valid Python import path')]
+        assert schema.errors('foo.bar:Hello') == [
+            Error('No module named foo.bar' if six.PY2 else "No module named 'foo'")
+        ]
+        assert schema.errors('conformity.fields:NotARealField') == [
+            Error(
+                "'module' object has no attribute 'NotARealField'" if six.PY2 else
+                "module 'conformity.fields' has no attribute 'NotARealField'"
+            )
+        ]
+        assert schema.errors('conformity.fields:UnicodeString') == []
+        assert schema.errors('conformity.fields.UnicodeString') == []
+        assert schema.errors('conformity.fields.ByteString') == []
+        assert schema.errors('conformity.fields:ByteString') == []
+        assert schema.errors('tests.test_fields_meta.Foo') == []
+        assert schema.errors('tests.test_fields_meta.Bar') == []
+        assert schema.errors('tests.test_fields_meta.Baz') == []
+        assert schema.errors('tests.test_fields_meta.Qux') == []
+        assert schema.errors('tests.test_fields_meta:Qux.InnerQux') == []
+
+        schema = TypePath(base_classes=Foo)
+        assert schema.errors('tests.test_fields_meta.Foo') == []
+        assert schema.errors('tests.test_fields_meta.Bar') == []
+        assert schema.errors('tests.test_fields_meta.Baz') == [
+            Error('Type {} is not one of or a subclass of one of: {}'.format(Baz, Foo)),
+        ]
+        assert schema.errors('conformity.fields.UnicodeString') == [
+            Error('Type {} is not one of or a subclass of one of: {}'.format(
+                TypePath.resolve_python_path('conformity.fields.UnicodeString'),
+                Foo,
+            )),
+        ]
+        assert schema.introspect() == {'type': 'type_path', 'base_classes': [six.text_type(Foo)]}
+
+        assert TypePath.resolve_python_path('tests.test_fields_meta.Qux') == Qux
+        assert TypePath.resolve_python_path('tests.test_fields_meta:Qux.InnerQux') == Qux.InnerQux
+
+
+class Foo(object):
+    pass
+
+
+class Bar(Foo):
+    pass
+
+
+class Baz(object):
+    pass
+
+
+class Qux(object):
+    class InnerQux(object):
+        pass

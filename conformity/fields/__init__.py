@@ -28,6 +28,8 @@ from conformity.fields.meta import (
     Nullable,
     ObjectInstance,
     Polymorph,
+    TypePath,
+    TypeReference,
 )
 from conformity.fields.net import (
     IPAddress,
@@ -81,6 +83,8 @@ __all__ = (
     'Time',
     'TimeDelta',
     'Tuple',
+    'TypePath',
+    'TypeReference',
     'TZInfo',
     'UnicodeDecimal',
     'UnicodeString',
