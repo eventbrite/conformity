@@ -46,6 +46,18 @@ class Nullable(Base):
         }
 
 
+class Null(Base):
+    introspect_type = 'null'
+
+    def errors(self, value):
+        if value is not None:
+            return [Error('Value is not null')]
+        return []
+
+    def introspect(self):
+        return {'type': self.introspect_type}
+
+
 @attr.s
 class Polymorph(Base):
     """
