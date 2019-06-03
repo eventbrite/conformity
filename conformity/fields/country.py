@@ -3,6 +3,11 @@ from __future__ import (
     unicode_literals,
 )
 
+from typing import (  # noqa: F401 TODO Python 3
+    AnyStr,
+    Callable,
+)
+
 import pycountry
 import six
 
@@ -26,11 +31,17 @@ class CountryCodeField(Constant):
 
     introspect_type = 'country_code_field'
 
-    def __init__(self, code_filter=lambda x: True, **kwargs):
+    def __init__(
+        self,
+        code_filter=lambda x: True,  # type: Callable[[AnyStr], bool]
+        **kwargs
+    ):
         """
         :param code_filter: If specified, will be called to further filter the available country codes
         :type code_filter: lambda x: bool
         """
+        if not callable(code_filter):
+            raise TypeError('Argument code_filter must be a callable that accepts a country code and returns a bool')
         valid_country_codes = (code for code in _countries_a2 if code_filter(code))
         super(CountryCodeField, self).__init__(*valid_country_codes, **kwargs)
         self._error_message = 'Not a valid country code'

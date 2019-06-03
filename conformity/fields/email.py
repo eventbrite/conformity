@@ -4,6 +4,12 @@ from __future__ import (
 )
 
 import re
+from typing import (  # noqa: F401  TODO Python 3
+    Any,
+    Iterable,
+)
+
+import six
 
 from conformity.error import Error
 from conformity.fields.basic import UnicodeString
@@ -20,8 +26,10 @@ class EmailAddress(UnicodeString):
 
     introspect_type = 'email_address'
     ip_schema = IPAddress()
-    message = None  # unused, will be removed in version 2.0.0
-    code = None  # unused, will be removed in version 2.0.0
+
+    # unused, will be removed in version 2.0.0
+    message = None  # type: ignore
+    code = None  # type: ignore
 
     user_regex = re.compile(
         r"(^[-!#$%&'*+/=?^_`{}|~0-9A-Z]+(\.[-!#$%&'*+/=?^_`{}|~0-9A-Z]+)*\Z"  # dot-atom
@@ -35,25 +43,29 @@ class EmailAddress(UnicodeString):
     )
     literal_regex = re.compile(
         # literal form, ipv4 or ipv6 address (SMTP 4.1.3)
-        r'\[([A-f0-9:\.]+)\]\Z',
+        r'\[([A-f0-9:.]+)\]\Z',
         re.IGNORECASE
     )
-    domain_whitelist = ['localhost']
+    domain_whitelist = frozenset({'localhost'})
 
     def __init__(self, message=None, code=None, whitelist=None, **kwargs):
+        # type: (None, None, Iterable[six.text_type], Any) -> None
         """
         Construct a new email address field.
 
         :param message: Unused, and will be removed in version 2.0.0
         :param code: Unused, and will be removed in version 2.0.0
         :param whitelist: If specified, an invalid domain part will be permitted if it is in this list
-        :type whitelist: iterable
-        :param kwargs
         """
+        if whitelist is not None and (
+            not hasattr(whitelist, '__iter__') or
+            not all(isinstance(c, six.text_type) for c in whitelist)
+        ):
+            raise TypeError("'whitelist' must be an iterable of unicode strings")
 
         super(EmailAddress, self).__init__(**kwargs)
         if whitelist is not None:
-            self.domain_whitelist = set(whitelist) if whitelist else set()
+            self.domain_whitelist = whitelist if isinstance(whitelist, frozenset) else frozenset(whitelist)
 
     def errors(self, value):
         # Get any basic type errors
@@ -95,4 +107,9 @@ class EmailAddress(UnicodeString):
         return strip_none({
             'type': self.introspect_type,
             'description': self.description,
+            'domain_whitelist': (
+                sorted(self.domain_whitelist)
+                if self.domain_whitelist and self.domain_whitelist is not self.__class__.domain_whitelist
+                else None
+            ),
         })

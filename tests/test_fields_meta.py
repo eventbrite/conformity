@@ -5,6 +5,7 @@ from __future__ import (
 
 import unittest
 
+import pytest
 import six
 
 from conformity.error import Error
@@ -15,6 +16,7 @@ from conformity.fields import (
     BooleanValidator,
     Constant,
     Dictionary,
+    Null,
     Nullable,
     ObjectInstance,
     Polymorph,
@@ -41,8 +43,8 @@ class MetaFieldTests(unittest.TestCase):
         boolean = Boolean(description='This is a test description')
         schema = Nullable(boolean)
         self.assertEqual([], schema.errors(None))
-        self.assertIsNone(schema.errors(True))
-        self.assertIsNone(schema.errors(False))
+        self.assertEqual([], schema.errors(True))
+        self.assertEqual([], schema.errors(False))
         self.assertEqual(1, len(schema.errors('true')))
         self.assertEqual(1, len(schema.errors(1)))
         self.assertEqual({'type': 'nullable', 'nullable': boolean.introspect()}, schema.introspect())
@@ -50,9 +52,15 @@ class MetaFieldTests(unittest.TestCase):
         string = UnicodeString()
         schema = Nullable(string)
         self.assertEqual([], schema.errors(None))
-        self.assertIsNone(schema.errors('hello, world'))
+        self.assertEqual([], schema.errors('hello, world'))
         self.assertEqual(1, len(schema.errors(b'hello, world')))
         self.assertEqual({'type': 'nullable', 'nullable': string.introspect()}, schema.introspect())
+
+    def test_null(self):
+        null = Null()
+        assert null.errors(None) == []
+        assert null.errors('something') == [Error('Value is not null')]
+        assert null.introspect() == {'type': 'null'}
 
     def test_any(self):
         schema = Any(Constant('one'), Constant('two'))
@@ -69,6 +77,23 @@ class MetaFieldTests(unittest.TestCase):
             2,
         )
 
+        assert schema.introspect() == {
+            'type': 'any',
+            'options': [
+                {'type': 'constant', 'values': ['one']},
+                {'type': 'constant', 'values': ['two']},
+            ]
+        }
+
+        with pytest.raises(TypeError):
+            Any('not a field')
+
+        with pytest.raises(TypeError):
+            Any(Constant('one'), Constant('two'), description=b'Not unicode')
+
+        with pytest.raises(TypeError):
+            Any(Constant('one'), Constant('two'), unsupported='argument')
+
     def test_all(self):
         schema = All(Constant('one'), UnicodeString())
         self.assertEqual(
@@ -80,7 +105,24 @@ class MetaFieldTests(unittest.TestCase):
             1,
         )
 
-    def test_objectinstance(self):
+        assert schema.introspect() == {
+            'type': 'all',
+            'requirements': [
+                {'type': 'constant', 'values': ['one']},
+                {'type': 'unicode'},
+            ]
+        }
+
+        with pytest.raises(TypeError):
+            All('not a field')
+
+        with pytest.raises(TypeError):
+            All(Constant('one'), UnicodeString(), description=b'Not unicode')
+
+        with pytest.raises(TypeError):
+            All(Constant('one'), UnicodeString(), unsupported='argument')
+
+    def test_object_instance(self):
         class Thing(object):
             pass
 
@@ -90,7 +132,7 @@ class MetaFieldTests(unittest.TestCase):
         class SomethingElse(object):
             pass
 
-        schema = ObjectInstance(Thing)
+        schema = ObjectInstance(Thing, description='Yessiree')
 
         self.assertEqual(
             schema.errors(Thing()),
@@ -108,10 +150,29 @@ class MetaFieldTests(unittest.TestCase):
             [Error('Not an instance of Thing')]
         )
 
+        assert schema.introspect() == {
+            'type': 'object_instance',
+            'description': 'Yessiree',
+            'valid_type': repr(Thing),
+        }
+
+        schema = ObjectInstance((Thing, SomethingElse))
+        assert schema.errors(Thing()) == []
+        assert schema.errors(Thingy()) == []
+        assert schema.errors(SomethingElse()) == []
+
+        with pytest.raises(TypeError):
+            # noinspection PyTypeChecker
+            ObjectInstance('not a type')
+
+        with pytest.raises(TypeError):
+            # noinspection PyTypeChecker
+            ObjectInstance((Thing, SomethingElse, 'also not a type'))
+
     def test_polymorph(self):
 
         card = Dictionary({
-            'payment_type': Constant('card'),
+            'payment_type': Constant('card', 'credit'),
             'number': UnicodeString(),
             'cvc': UnicodeString(description='Card Verification Code'),
         })
@@ -148,6 +209,15 @@ class MetaFieldTests(unittest.TestCase):
             [],
         )
 
+        assert schema.errors(
+            {
+                'payment_type': 'credit',
+                'number': '1234567890123456',
+                'cvc': '000',
+            }
+        ) == [Error("Invalid switch value 'credit'", code='UNKNOWN')]
+
+        self.maxDiff = 2000
         self.assertEqual(
             schema.introspect(),
             {
@@ -180,7 +250,7 @@ class MetaFieldTests(unittest.TestCase):
                             'number': {'type': 'unicode'},
                             'payment_type': {
                                 'type': 'constant',
-                                'values': ['card'],
+                                'values': ['card', 'credit'],
                             },
                         },
                         'optional_keys': [],
@@ -189,6 +259,22 @@ class MetaFieldTests(unittest.TestCase):
                 'switch_field': 'payment_type',
             },
         )
+
+        schema = Polymorph(
+            'payment_type',
+            {
+                'card': card,
+                'bankacc': bankacc,
+                '__default__': card,
+            },
+        )
+        assert schema.errors(
+            {
+                'payment_type': 'credit',
+                'number': '1234567890123456',
+                'cvc': '000',
+            }
+        ) == []
 
     def test_boolean_validator(self):
         schema = BooleanValidator(
@@ -255,6 +341,14 @@ class MetaFieldTests(unittest.TestCase):
             'type': 'type_reference',
             'base_classes': [six.text_type(Foo), six.text_type(Baz)],
         }
+
+        with pytest.raises(TypeError):
+            # noinspection PyTypeChecker
+            TypeReference(base_classes='not a type')
+
+        with pytest.raises(TypeError):
+            # noinspection PyTypeChecker
+            TypeReference(base_classes=(Foo, Baz, 'not a type'))
 
     def test_type_path(self):
         schema = TypePath(description='This is another test')

@@ -6,13 +6,15 @@ from __future__ import (
 
 import unittest
 
+import pytest
+
 from conformity.error import Error
 from conformity.fields import EmailAddress
 
 
 class EmailFieldTests(unittest.TestCase):
     """
-    Tests emailaddress fields
+    Tests email address field
     """
     # Common valid and invalid patterns excerpted from
     # https://en.wikipedia.org/wiki/Email_address
@@ -33,7 +35,31 @@ class EmailFieldTests(unittest.TestCase):
         # 'user@localserver',
         'user@[2001:DB8::1]',
         'customized@192.168.33.195',
+        'nick@alliancefrançaise.nu',  # IDNA
     ]
+
+    def test_constructor(self):
+        with pytest.raises(TypeError):
+            # noinspection PyTypeChecker
+            EmailAddress(whitelist=1234)
+
+        with pytest.raises(TypeError):
+            # noinspection PyTypeChecker
+            EmailAddress(whitelist=[1, 2, 3, 4])
+
+        assert EmailAddress(description='This is a test').introspect() == {
+            'type': 'email_address',
+            'description': 'This is a test',
+        }
+
+        assert EmailAddress(whitelist=['green.org']).introspect() == {
+            'type': 'email_address',
+            'domain_whitelist': ['green.org'],
+        }
+
+    def test_not_unicode(self):
+        schema = EmailAddress()
+        assert schema.errors(self.valid_emails[0].encode('utf-8')) == [Error('Not a unicode string')]
 
     def test_valid_email_address(self):
         schema = EmailAddress()
@@ -110,6 +136,10 @@ class EmailFieldTests(unittest.TestCase):
         self.assertEqual(
             schema.errors('संपर्क@डाटामेल.भारत'),
             [Error('Not a valid email address (invalid local user field)', pointer='संपर्क')],
+        )
+        self.assertEqual(
+            schema.errors('nick@[1.2.3.4:56]'),
+            [Error('Not a valid email address (invalid domain field)', pointer='[1.2.3.4:56]')]
         )
 
     def test_non_whitelisted_address(self):

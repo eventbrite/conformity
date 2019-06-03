@@ -67,7 +67,7 @@ class ValidatorTests(unittest.TestCase):
             # Special case to check return value stuff
             if name == 'error':
                 return 5
-            return '%s, %s!' % (greeting, name)
+            return '{}, {}!'.format(greeting, name)
 
         self.assertEqual(greeter(name='Andrew'), 'Hello, Andrew!')
         self.assertEqual(greeter(name='Andrew', greeting='Ahoy'), 'Ahoy, Andrew!')
@@ -135,7 +135,7 @@ class ValidatorTests(unittest.TestCase):
                 # Special case to check return value stuff
                 if name == 'error':
                     return 5
-                return '%s, %s!' % (greeting, name)
+                return '{}, {}!'.format(greeting, name)
 
             @staticmethod
             @validate_call(args=Tuple(Integer(), Integer()), kwargs=None, returns=Integer())

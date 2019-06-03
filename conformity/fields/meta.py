@@ -5,7 +5,12 @@ from __future__ import (
 
 import importlib
 from typing import (  # noqa: F401 TODO Python 3
+    Any as AnyType,
+    Callable,
     Dict,
+    Hashable,
+    Mapping,
+    Optional,
     Tuple,
     Type,
     Union,
@@ -18,8 +23,17 @@ from conformity.error import (
     ERROR_CODE_UNKNOWN,
     Error,
 )
-from conformity.fields.basic import Base
-from conformity.utils import strip_none
+from conformity.fields.basic import (
+    Base,
+    attr_is_conformity_field,
+)
+from conformity.utils import (
+    attr_is_instance,
+    attr_is_optional,
+    attr_is_string,
+    attr_is_instance_or_instance_tuple,
+    strip_none,
+)
 
 
 @attr.s
@@ -31,7 +45,8 @@ class Nullable(Base):
     """
 
     introspect_type = 'nullable'
-    field = attr.ib()
+
+    field = attr.ib(validator=attr_is_conformity_field())  # type: Base
 
     def errors(self, value):
         if value is None:
@@ -47,6 +62,10 @@ class Nullable(Base):
 
 
 class Null(Base):
+    """
+    Useful as a return type, to indicate that a function returns nothing, for example.
+    """
+
     introspect_type = 'null'
 
     def errors(self, value):
@@ -66,9 +85,10 @@ class Polymorph(Base):
     """
 
     introspect_type = 'polymorph'
-    switch_field = attr.ib()
-    contents_map = attr.ib()
-    description = attr.ib(default=None)
+
+    switch_field = attr.ib(validator=attr_is_string())  # type: six.text_type
+    contents_map = attr.ib(validator=attr_is_instance(dict))  # type: Mapping[Hashable, Base]
+    description = attr.ib(default=None, validator=attr_is_optional(attr_is_string()))  # type: Optional[six.text_type]
 
     def errors(self, value):
         # Get switch field value
@@ -81,9 +101,7 @@ class Polymorph(Base):
             if '__default__' in self.contents_map:
                 switch_value = '__default__'
             else:
-                return [
-                    Error('Invalid switch value {}'.format(switch_value), code=ERROR_CODE_UNKNOWN),
-                ]
+                return [Error("Invalid switch value '{}'".format(switch_value), code=ERROR_CODE_UNKNOWN)]
         field = self.contents_map[switch_value]
         # Run field errors
         return field.errors(value)
@@ -107,16 +125,14 @@ class ObjectInstance(Base):
     """
 
     introspect_type = 'object_instance'
-    valid_type = attr.ib()
-    description = attr.ib(default=None)
+
+    valid_type = attr.ib(validator=attr_is_instance_or_instance_tuple(type))  # type: Union[Type, Tuple[Type, ...]]
+    description = attr.ib(default=None, validator=attr_is_optional(attr_is_string()))  # type: Optional[six.text_type]
 
     def errors(self, value):
         if not isinstance(value, self.valid_type):
-            return [
-                Error('Not an instance of %s' % self.valid_type.__name__),
-            ]
-        else:
-            return []
+            return [Error('Not an instance of {}'.format(self.valid_type.__name__))]
+        return []
 
     def introspect(self):
         return strip_none({
@@ -134,8 +150,12 @@ class TypeReference(Base):
     Accepts only type references, optionally types that must be a subclass of a given type or types.
     """
     introspect_type = 'type_reference'
-    base_classes = attr.ib(default=None)  # type: Union[Type, Tuple[Type, ...]]
-    description = attr.ib(default=None)  # type: six.text_type
+
+    base_classes = attr.ib(
+        default=None,
+        validator=attr_is_optional(attr_is_instance_or_instance_tuple(type)),
+    )  # type: Optional[Union[Type, Tuple[Type, ...]]]
+    description = attr.ib(default=None, validator=attr_is_optional(attr_is_string()))  # type: Optional[six.text_type]
 
     def errors(self, value):
         if not isinstance(value, type):
@@ -178,7 +198,7 @@ class TypePath(TypeReference):
     """
     introspect_type = 'type_path'
 
-    import_cache = {}  # type: Dict[Tuple[six.text_type, six.text_type], Type]
+    import_cache = {}  # type: Dict[Tuple[six.text_type, six.text_type], AnyType]
 
     def errors(self, value):
         if not isinstance(value, six.text_type):
@@ -189,14 +209,14 @@ class TypePath(TypeReference):
         except ValueError:
             return [Error('Value "{}" is not a valid Python import path'.format(value))]
         except ImportError as e:
-            return [Error(e.args[0])]
+            return [Error(six.text_type(e.args[0]))]
         except AttributeError as e:
-            return [Error(e.args[0])]
+            return [Error(six.text_type(e.args[0]))]
 
         return super(TypePath, self).errors(thing)
 
     @classmethod
-    def resolve_python_path(cls, type_path):  # type: (six.text_type) -> Type
+    def resolve_python_path(cls, type_path):  # type: (six.text_type) -> AnyType
         if ':' in type_path:
             module_name, local_path = type_path.split(':', 1)
         else:
@@ -206,7 +226,7 @@ class TypePath(TypeReference):
         if cache_key in cls.import_cache:
             return cls.import_cache[cache_key]
 
-        thing = importlib.import_module(module_name)
+        thing = importlib.import_module(module_name)  # type: AnyType
         for bit in local_path.split('.'):
             thing = getattr(thing, bit)
 
@@ -222,16 +242,22 @@ class Any(Base):
     """
 
     introspect_type = 'any'
-    description = None
+
+    description = None  # type: Optional[six.text_type]
 
     def __init__(self, *args, **kwargs):
+        # We can't use attrs here because we need to capture all positional arguments and support keyword arguments
         self.options = args
+        for i, r in enumerate(self.options):
+            if not isinstance(r, Base):
+                raise TypeError('Argument {} must be a Conformity field instance, is actually: {!r}'.format(i, r))
+
         # We can't put a keyword argument after *args in Python 2, so we need this
-        if 'description' in kwargs:
-            self.description = kwargs['description']
-            del kwargs['description']
+        self.description = kwargs.pop('description', None)  # type: Optional[six.text_type]
+        if self.description and not isinstance(self.description, six.text_type):
+            raise TypeError("'description' must be a unicode string")
         if kwargs:
-            raise TypeError('Unknown keyword arguments: %s' % ', '.join(kwargs.keys()))
+            raise TypeError('Unknown keyword arguments: {}'.format(', '.join(kwargs.keys())))
 
     def errors(self, value):
         result = []
@@ -259,16 +285,22 @@ class All(Base):
     """
 
     introspect_type = 'all'
-    description = None
+
+    description = None  # type: Optional[six.text_type]
 
     def __init__(self, *args, **kwargs):
+        # We can't use attrs here because we need to capture all positional arguments and support keyword arguments
         self.requirements = args
+        for i, r in enumerate(self.requirements):
+            if not isinstance(r, Base):
+                raise TypeError('Argument {} must be a Conformity field instance, is actually: {!r}'.format(i, r))
+
         # We can't put a keyword argument after *args in Python 2, so we need this
-        if 'description' in kwargs:
-            self.description = kwargs['description']
-            del kwargs['description']
+        self.description = kwargs.pop('description', None)  # type: Optional[six.text_type]
+        if self.description and not isinstance(self.description, six.text_type):
+            raise TypeError("'description' must be a unicode string")
         if kwargs:
-            raise TypeError('Unknown keyword arguments: %s' % ', '.join(kwargs.keys()))
+            raise TypeError('Unknown keyword arguments: {}'.format(', '.join(kwargs.keys())))
 
     def errors(self, value):
         result = []
@@ -292,26 +324,23 @@ class BooleanValidator(Base):
     """
 
     introspect_type = 'boolean_validator'
-    validator = attr.ib()
-    validator_description = attr.ib(validator=attr.validators.instance_of(six.text_type))
-    error = attr.ib(validator=attr.validators.instance_of(six.text_type))
-    description = attr.ib(default=None)
+
+    validator = attr.ib()  # type: Callable[[AnyType], bool]
+    validator_description = attr.ib(validator=attr_is_string())  # type: six.text_type
+    error = attr.ib(validator=attr_is_string())  # type: six.text_type
+    description = attr.ib(default=None, validator=attr_is_optional(attr_is_string()))  # type: Optional[six.text_type]
 
     def errors(self, value):
-        # Run the validator, but catch any errors and return them as an error
-        # as this is maybe in an All next to a type-checker.
+        # Run the validator, but catch any errors and return them as an error.
         try:
             ok = self.validator(value)
-        except Exception:
-            return [
-                Error('Validator encountered an error (invalid type?)'),
-            ]
+        except Exception as e:
+            return [Error('Validator encountered an error (invalid type?): {!r}'.format(e))]
+
         if ok:
             return []
         else:
-            return [
-                Error(self.error),
-            ]
+            return [Error(self.error)]
 
     def introspect(self):
         return strip_none({

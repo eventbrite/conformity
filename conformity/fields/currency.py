@@ -3,30 +3,52 @@ from __future__ import (
     unicode_literals,
 )
 
+from typing import (  # noqa: F401 TODO Python 3
+    AbstractSet,
+    Iterable,
+    Optional,
+)
+
 import attr
 import currint
+import six
 
-from conformity import fields
 from conformity.error import (
     ERROR_CODE_INVALID,
     Error,
 )
-from conformity.utils import strip_none
+from conformity.fields.basic import (
+    Base,
+    Constant,
+    Integer,
+)
+from conformity.fields.structures import Dictionary
+from conformity.utils import (
+    attr_is_int,
+    attr_is_iterable,
+    attr_is_optional,
+    attr_is_set,
+    attr_is_string,
+    strip_none,
+)
 
 
 @attr.s
-class Amount(fields.Base):
+class Amount(Base):
     """
     currint.Amount instances
     """
 
     introspect_type = 'currint.Amount'
-    valid_currencies = attr.ib(default=currint.currencies.keys())
-    gt = attr.ib(default=None)
-    gte = attr.ib(default=None)
-    lt = attr.ib(default=None)
-    lte = attr.ib(default=None)
-    description = attr.ib(default=None)
+    valid_currencies = attr.ib(
+        default=frozenset(currint.currencies.keys()),
+        validator=attr_is_iterable(attr_is_string(), attr_is_set()),
+    )  # type: AbstractSet[six.text_type]
+    gt = attr.ib(default=None, validator=attr_is_optional(attr_is_int()))  # type: Optional[int]
+    gte = attr.ib(default=None, validator=attr_is_optional(attr_is_int()))  # type: Optional[int]
+    lt = attr.ib(default=None, validator=attr_is_optional(attr_is_int()))  # type: Optional[int]
+    lte = attr.ib(default=None, validator=attr_is_optional(attr_is_int()))  # type: Optional[int]
+    description = attr.ib(default=None, validator=attr_is_optional(attr_is_string()))  # type: Optional[six.text_type]
 
     def errors(self, value):
         if not isinstance(value, currint.Amount):
@@ -44,25 +66,25 @@ class Amount(fields.Base):
             ))
         if self.gt is not None and value.value <= self.gt:
             errors.append(Error(
-                'Value not > %s' % self.gt,
+                'Value not > {}'.format(self.gt),
                 code=ERROR_CODE_INVALID,
                 pointer='value',
             ))
         if self.lt is not None and value.value >= self.lt:
             errors.append(Error(
-                'Value not < %s' % self.lt,
+                'Value not < {}'.format(self.lt),
                 code=ERROR_CODE_INVALID,
                 pointer='value',
             ))
         if self.gte is not None and value.value < self.gte:
             errors.append(Error(
-                'Value not >= %s' % self.gte,
+                'Value not >= {}'.format(self.gte),
                 code=ERROR_CODE_INVALID,
                 pointer='value',
             ))
         if self.lte is not None and value.value > self.lte:
             errors.append(Error(
-                'Value not <= %s' % self.lte,
+                'Value not <= {}'.format(self.lte),
                 code=ERROR_CODE_INVALID,
                 pointer='value',
             ))
@@ -80,13 +102,37 @@ class Amount(fields.Base):
         })
 
 
-class AmountDictionary(fields.Dictionary):
+class AmountDictionary(Dictionary):
     """
     Amount dictionaries
     """
 
-    def __init__(self, valid_currencies=None, gt=None, gte=None, lt=None, lte=None, *args, **kwargs):
+    def __init__(
+        self,
+        valid_currencies=None,  # type: Iterable[six.text_type]
+        gt=None,  # type: int
+        gte=None,  # type: int
+        lt=None,  # type: int
+        lte=None,  # type: int
+        *args,
+        **kwargs
+    ):
+        if valid_currencies is not None and (
+            not hasattr(valid_currencies, '__iter__') or
+            not all(isinstance(c, six.text_type) for c in valid_currencies)
+        ):
+            raise TypeError("'valid_currencies' must be an iterable of unicode strings")
+
+        if gt is not None and not isinstance(gt, int):
+            raise TypeError("'gt' must be an int")
+        if gte is not None and not isinstance(gte, int):
+            raise TypeError("'gte' must be an int")
+        if lt is not None and not isinstance(lt, int):
+            raise TypeError("'lt' must be an int")
+        if lte is not None and not isinstance(lte, int):
+            raise TypeError("'lte' must be an int")
+
         super(AmountDictionary, self).__init__({
-            'currency': fields.Constant(*(valid_currencies or currint.currencies.keys())),
-            'value': fields.Integer(gt=gt, gte=gte, lt=lt, lte=lte),
+            'currency': Constant(*(valid_currencies or currint.currencies.keys())),
+            'value': Integer(gt=gt, gte=gte, lt=lt, lte=lte),
         }, *args, **kwargs)
