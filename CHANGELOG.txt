@@ -1,6 +1,12 @@
 Changelog
 =========
 
+1.22.0 (2019-06-04)
+-------------------
+- [MINOR] Rewrite validate_call and validate_method to handle positional args
+- [MINOR] Add minimum and maximum length to SchemalessDictionary
+- [MINOR] Add TypeReference and TypeName fields
+
 1.21.0 (2019-04-17)
 -------------------
 - [PATCH] Switch from inconsistent-quotes to consistent single-quotes
