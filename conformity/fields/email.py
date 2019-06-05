@@ -5,7 +5,7 @@ from __future__ import (
 
 import re
 from typing import (  # noqa: F401  TODO Python 3
-    Any,
+    Any as AnyType,
     Iterable,
 )
 
@@ -49,7 +49,7 @@ class EmailAddress(UnicodeString):
     domain_whitelist = frozenset({'localhost'})
 
     def __init__(self, message=None, code=None, whitelist=None, **kwargs):
-        # type: (None, None, Iterable[six.text_type], Any) -> None
+        # type: (None, None, Iterable[six.text_type], **AnyType) -> None
         """
         Construct a new email address field.
 

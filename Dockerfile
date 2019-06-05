@@ -2,11 +2,10 @@ FROM ubuntu:16.04
 
 RUN apt-get update && \
 	apt-get install -y \
-		software-properties-common \
-		wget \
+	    git \
 		pkg-config \
-		lua5.1 \
-		liblua5.1-0-dev
+		software-properties-common \
+		wget
 RUN add-apt-repository ppa:deadsnakes/ppa && \
 	apt-get update && \
 	apt-get install -y \

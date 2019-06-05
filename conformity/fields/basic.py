@@ -5,11 +5,11 @@ from __future__ import (
 
 import decimal
 from typing import (  # noqa: F401 TODO Python 3
-    Any,
+    Any as AnyType,
     Dict,
-    List,
+    List as ListType,
     Optional,
-    Tuple,
+    Tuple as TupleType,
     Type,
     Union,
 )
@@ -38,13 +38,13 @@ class Base(object):
     Base field type.
     """
 
-    def errors(self, value):  # type: (Any) -> List[Error]
+    def errors(self, value):  # type: (AnyType) -> ListType[Error]
         """
         Returns a list of errors with the value. An empty return means that it's valid.
         """
         return [Error('Validation not implemented on base type')]
 
-    def introspect(self):  # type: () -> Dict[six.text_type, Any]
+    def introspect(self):  # type: () -> Dict[six.text_type, AnyType]
         """
         Returns a JSON-serializable dictionary containing introspection data that can be used to document the schema.
         """
@@ -62,11 +62,11 @@ class Constant(Base):
 
     introspect_type = 'constant'
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, **kwargs):  # type: (*AnyType, **AnyType) -> None
         self.values = frozenset(args)
         if not self.values:
             raise ValueError('You must provide at least one constant value')
-        self.description = kwargs.pop('description', None)  # type: Optional[six.text_type]
+        self.description = kwargs.pop(str('description'), None)  # type: Optional[six.text_type]
         if self.description and not isinstance(self.description, six.text_type):
             raise TypeError("'description' must be a unicode string")
         # Check they didn't pass any other kwargs
@@ -168,7 +168,7 @@ class Integer(Base):
     Accepts valid integers, with optional range limits.
     """
 
-    valid_type = six.integer_types  # type: Union[Type, Tuple[Type, ...]]
+    valid_type = six.integer_types  # type: Union[Type, TupleType[Type, ...]]
     valid_noun = 'an integer'  # type: six.text_type
     introspect_type = 'integer'  # type: six.text_type
 
