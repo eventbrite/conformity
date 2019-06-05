@@ -1,6 +1,10 @@
 Changelog
 =========
 
+1.23.0 (2019-06-05)
+-------------------
+- [MINOR] Support eager argument validation and type hints
+
 1.22.0 (2019-06-04)
 -------------------
 - [MINOR] Rewrite validate_call and validate_method to handle positional args
