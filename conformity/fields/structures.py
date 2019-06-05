@@ -4,6 +4,16 @@ from __future__ import (
 )
 
 from collections import OrderedDict
+from typing import (  # noqa: F401 TODO Python 3
+    FrozenSet,
+    Hashable as HashableType,
+    Mapping,
+    Optional,
+    Sized,
+    Tuple as TupleType,
+    Type,
+    Union,
+)
 
 import attr
 import six
@@ -18,7 +28,14 @@ from conformity.fields.basic import (
     Base,
     Hashable,
 )
-from conformity.utils import strip_none
+from conformity.utils import (
+    attr_is_instance,
+    attr_is_int,
+    attr_is_iterable,
+    attr_is_optional,
+    attr_is_string,
+    strip_none,
+)
 
 
 def _update_error_pointer(error, pointer_or_prefix):
@@ -40,14 +57,18 @@ class List(Base):
     """
 
     contents = attr.ib()
-    max_length = attr.ib(default=None)
-    min_length = attr.ib(default=None)
-    description = attr.ib(default=None)
+    max_length = attr.ib(default=None, validator=attr_is_optional(attr_is_int()))  # type: Optional[int]
+    min_length = attr.ib(default=None, validator=attr_is_optional(attr_is_int()))  # type: Optional[int]
+    description = attr.ib(default=None, validator=attr_is_optional(attr_is_string()))  # type: Optional[six.text_type]
 
-    valid_types = list
-    type_noun = 'list'
-    introspect_type = type_noun
-    type_error = 'Not a list'
+    valid_types = list  # type: Union[Type[Sized], TupleType[Type[Sized], ...]]
+    type_noun = 'list'  # type: six.text_type
+    introspect_type = type_noun  # type: six.text_type
+    type_error = 'Not a list'  # type: six.text_type
+
+    def __attrs_post_init__(self):
+        if self.min_length is not None and self.max_length is not None and self.min_length > self.max_length:
+            raise ValueError('min_length cannot be greater than max_length in UnicodeString')
 
     def errors(self, value):
         if not isinstance(value, self.valid_types):
@@ -56,11 +77,11 @@ class List(Base):
         result = []
         if self.max_length is not None and len(value) > self.max_length:
             result.append(
-                Error('List longer than %s' % self.max_length),
+                Error('List is longer than {}'.format(self.max_length)),
             )
         elif self.min_length is not None and len(value) < self.min_length:
             result.append(
-                Error('List is shorter than %s' % self.min_length),
+                Error('List is shorter than {}'.format(self.min_length)),
             )
         for lazy_pointer, element in self._enumerate(value):
             result.extend(
@@ -102,6 +123,7 @@ class Set(List):
             self.get = lambda: '[{}]'.format(str(value))
 
 
+@attr.s
 class Dictionary(Base):
     """
     A dictionary with types per key (and requirements per key). If the `contents` argument is an instance of
@@ -113,29 +135,44 @@ class Dictionary(Base):
     """
 
     introspect_type = 'dictionary'
-    contents = None
-    optional_keys = set()
-    allow_extra_keys = False
-    description = None
 
-    def __init__(self, contents=None, optional_keys=None, allow_extra_keys=None, description=None):
-        # Set values, falling back to class values
-        self.contents = contents
-        if self.contents is None:
+    # Makes MyPy allow optional_keys to have this type
+    _optional_keys_default = frozenset()  # type: Union[TupleType[HashableType, ...], FrozenSet[HashableType]]
+
+    contents = attr.ib(
+        default=None,
+        validator=attr_is_optional(attr_is_instance(dict)),
+    )  # type: Mapping[six.text_type, Base]
+    optional_keys = attr.ib(
+        default=_optional_keys_default,
+        converter=frozenset,
+        validator=attr_is_iterable(attr_is_instance(object)),
+    )  # type: Union[TupleType[HashableType, ...], FrozenSet[HashableType]]
+    allow_extra_keys = attr.ib(default=None)  # type: bool
+    description = attr.ib(default=None, validator=attr_is_optional(attr_is_string()))  # type: Optional[six.text_type]
+
+    def __attrs_post_init__(self):
+        if self.contents is None and getattr(self.__class__, 'contents', None):
+            # If no contents were provided but a subclass has hard-coded contents, use those
             self.contents = self.__class__.contents
-
-        self.allow_extra_keys = allow_extra_keys
-        if self.allow_extra_keys is None:
-            self.allow_extra_keys = self.__class__.allow_extra_keys
-
-        self.optional_keys = set(optional_keys) if optional_keys else self.__class__.optional_keys
-
-        self.description = description
-        if self.description is None:
-            self.description = self.__class__.description
-
         if self.contents is None:
-            raise ValueError('contents is a required argument')
+            # If there are still no contents, raise an error
+            raise ValueError("'contents' is a required argument")
+
+        if self.optional_keys is self._optional_keys_default and getattr(self.__class__, 'optional_keys', None):
+            # If the optional_keys argument was defaulted (not specified) but a subclass has it hard-coded, use that
+            self.optional_keys = self.__class__.optional_keys
+
+        if self.allow_extra_keys is None and getattr(self.__class__, 'allow_extra_keys', None):
+            # If the allow_extra_keys argument was not specified but a subclass has it hard-coded, use that value
+            self.allow_extra_keys = self.__class__.allow_extra_keys
+        if self.allow_extra_keys is None:
+            # If no value is found, default to False
+            self.allow_extra_keys = False
+
+        if self.description is None and getattr(self.__class__, 'description', None):
+            # If the description was not specified but a subclass has it hard-coded, use that value
+            self.description = self.__class__.description
 
     def errors(self, value):
         if not isinstance(value, dict):
@@ -215,7 +252,7 @@ class Dictionary(Base):
                 key: value.introspect()
                 for key, value in self.contents.items()
             },
-            'optional_keys': list(self.optional_keys),
+            'optional_keys': sorted(self.optional_keys),
             'allow_extra_keys': self.allow_extra_keys,
             'description': self.description,
             'display_order': display_order,
@@ -229,11 +266,20 @@ class SchemalessDictionary(Base):
     """
 
     introspect_type = 'schemaless_dictionary'
-    key_type = attr.ib(default=attr.Factory(Hashable))
-    value_type = attr.ib(default=attr.Factory(Anything))
-    max_length = attr.ib(default=None)
-    min_length = attr.ib(default=None)
-    description = attr.ib(default=None)
+
+    # Makes MyPy allow key_type and value_type have type Base
+    _default_key_type = attr.Factory(Hashable)  # type: Base
+    _default_value_type = attr.Factory(Anything)  # type: Base
+
+    key_type = attr.ib(default=_default_key_type, validator=attr_is_instance(Base))  # type: Base
+    value_type = attr.ib(default=_default_value_type, validator=attr_is_instance(Base))  # type: Base
+    max_length = attr.ib(default=None, validator=attr_is_optional(attr_is_int()))  # type: Optional[int]
+    min_length = attr.ib(default=None, validator=attr_is_optional(attr_is_int()))  # type: Optional[int]
+    description = attr.ib(default=None, validator=attr_is_optional(attr_is_string()))  # type: Optional[six.text_type]
+
+    def __attrs_post_init__(self):
+        if self.min_length is not None and self.max_length is not None and self.min_length > self.max_length:
+            raise ValueError('min_length cannot be greater than max_length in UnicodeString')
 
     def errors(self, value):
         if not isinstance(value, dict):
@@ -281,23 +327,27 @@ class Tuple(Base):
     introspect_type = 'tuple'
 
     def __init__(self, *contents, **kwargs):
-        # We can't use attrs here because we need to capture all positional
-        # arguments, but also extract the description kwarg if provided.
+        # We can't use attrs here because we need to capture all positional arguments and support keyword arguments
         self.contents = contents
-        self.description = kwargs.get('description', None)
-        if list(kwargs.keys()) not in ([], ['description']):
-            raise ValueError('Unknown keyword arguments %s' % kwargs.keys())
+        for i, c in enumerate(self.contents):
+            if not isinstance(c, Base):
+                raise TypeError('Argument {} must be a Conformity field instance, is actually: {!r}'.format(i, c))
+
+        # We can't put a keyword argument after *args in Python 2, so we need this
+        self.description = kwargs.pop('description', None)  # type: Optional[six.text_type]
+        if self.description and not isinstance(self.description, six.text_type):
+            raise TypeError("'description' must be a unicode string")
+        if kwargs:
+            raise TypeError('Unknown keyword arguments: {}'.format(', '.join(kwargs.keys())))
 
     def errors(self, value):
         if not isinstance(value, tuple):
-            return [
-                Error('Not a tuple'),
-            ]
+            return [Error('Not a tuple')]
 
         result = []
         if len(value) != len(self.contents):
             result.append(
-                Error('Number of elements %d does not match expected %d' % (len(value), len(self.contents)))
+                Error('Number of elements {} does not match expected {}'.format(len(value), len(self.contents)))
             )
 
         for i, (c_elem, v_elem) in enumerate(zip(self.contents, value)):

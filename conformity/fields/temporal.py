@@ -4,12 +4,24 @@ from __future__ import (
 )
 
 import datetime
+from typing import (  # noqa: F401 TODO Python 3
+    FrozenSet,
+    Optional,
+    Tuple,
+    Type,
+    Union,
+)
 
 import attr
+import six  # noqa: F401 TODO Python 3
 
 from conformity.error import Error
 from conformity.fields.basic import Base
-from conformity.utils import strip_none
+from conformity.utils import (
+    attr_is_optional,
+    attr_is_string,
+    strip_none,
+)
 
 
 try:
@@ -28,41 +40,49 @@ class TemporalBase(Base):
     Common base class for all temporal types.
     """
 
-    gt = attr.ib(default=None)
-    gte = attr.ib(default=None)
-    lt = attr.ib(default=None)
-    lte = attr.ib(default=None)
-    description = attr.ib(default=None)
+    # These four must be overridden
+    introspect_type = None  # type: six.text_type
+    valid_isinstance = None  # type: Optional[Union[Type, Tuple[Type, ...]]]
+    valid_noun = None  # type: six.text_type
+    valid_types = None  # type: FrozenSet[Type]
 
-    introspect_type = None  # must be overridden
-    valid_isinstance = None  # may be overridden
-    valid_noun = None  # must be overridden
-    valid_types = None  # must be overridden
+    gt = attr.ib(default=None)  # type: Union[datetime.date, datetime.time, datetime.datetime, datetime.timedelta]
+    gte = attr.ib(default=None)  # type: Union[datetime.date, datetime.time, datetime.datetime, datetime.timedelta]
+    lt = attr.ib(default=None)  # type: Union[datetime.date, datetime.time, datetime.datetime, datetime.timedelta]
+    lte = attr.ib(default=None)  # type: Union[datetime.date, datetime.time, datetime.datetime, datetime.timedelta]
+    description = attr.ib(default=None, validator=attr_is_optional(attr_is_string()))  # type: Optional[six.text_type]
+
+    def __attrs_post_init__(self):
+        if self.gt is not None and self._invalid(self.gt):
+            raise TypeError("'gt' value {!r} cannot be used for comparisons in this type".format(self.gt))
+        if self.gte is not None and self._invalid(self.gte):
+            raise TypeError("'gte' value {!r} cannot be used for comparisons in this type".format(self.gte))
+        if self.lt is not None and self._invalid(self.lt):
+            raise TypeError("'lt' value {!r} cannot be used for comparisons in this type".format(self.lt))
+        if self.lte is not None and self._invalid(self.lte):
+            raise TypeError("'lte' value {!r} cannot be used for comparisons in this type".format(self.lte))
+
+    @classmethod
+    def _invalid(cls, value):
+        return type(value) not in cls.valid_types and (
+            not cls.valid_isinstance or not isinstance(value, cls.valid_isinstance)
+        )
 
     def errors(self, value):
-        if type(value) not in self.valid_types and (
-            not self.valid_isinstance or not isinstance(value, self.valid_isinstance)
-        ):
+        if self._invalid(value):
             # using stricter type checking, because date is subclass of datetime, but they're not comparable
-            return [
-                Error('Not a %s instance' % self.valid_noun),
-            ]
-        elif self.gt is not None and value <= self.gt:
-            return [
-                Error('Value not > %s' % self.gt),
-            ]
-        elif self.lt is not None and value >= self.lt:
-            return [
-                Error('Value not < %s' % self.lt),
-            ]
-        elif self.gte is not None and value < self.gte:
-            return [
-                Error('Value not >= %s' % self.gte),
-            ]
+            return [Error('Not a {} instance'.format(self.valid_noun))]
+
+        errors = []
+        if self.gt is not None and value <= self.gt:
+            errors.append(Error('Value not > {}'.format(self.gt)))
+        if self.lt is not None and value >= self.lt:
+            errors.append(Error('Value not < {}'.format(self.lt)))
+        if self.gte is not None and value < self.gte:
+            errors.append(Error('Value not >= {}'.format(self.gte)))
         elif self.lte is not None and value > self.lte:
-            return [
-                Error('Value not <= %s' % self.lte),
-            ]
+            errors.append(Error('Value not <= {}'.format(self.lte)))
+        return errors
 
     def introspect(self):
         return strip_none({

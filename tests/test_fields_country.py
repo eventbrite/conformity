@@ -5,6 +5,8 @@ from __future__ import (
 
 import unittest
 
+import pytest
+
 from conformity.error import (
     ERROR_CODE_INVALID,
     ERROR_CODE_UNKNOWN,
@@ -20,6 +22,11 @@ class CountryCodeTest(unittest.TestCase):
     def setUp(self):
         self.country = 'US'
         self.field = CountryCodeField()
+
+    def test_constructor(self):
+        with pytest.raises(TypeError):
+            # noinspection PyTypeChecker
+            CountryCodeField(code_filter='not a callable')
 
     def test_valid(self):
         self.assertEqual(self.field.errors(self.country), [])

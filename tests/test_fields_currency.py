@@ -9,6 +9,7 @@ from currint import (
     Amount,
     Currency,
 )
+import pytest
 
 from conformity.error import (
     ERROR_CODE_INVALID,
@@ -30,6 +31,19 @@ class AmountFieldTests(unittest.TestCase):
         self.field = currency_fields.Amount(
             description='An amount',
         )
+
+    def test_constructor(self):
+        with pytest.raises(TypeError):
+            # noinspection PyTypeChecker
+            currency_fields.Amount(valid_currencies=1234)  # not iterable
+
+        with pytest.raises(TypeError):
+            # noinspection PyTypeChecker
+            currency_fields.Amount(valid_currencies=['1', '2', '3'])  # not a set
+
+        with pytest.raises(TypeError):
+            # noinspection PyTypeChecker
+            currency_fields.Amount(valid_currencies={1, 2, 3})  # not strings
 
     def test_valid(self):
         self.assertEqual(self.field.errors(self.value), [])
@@ -171,6 +185,31 @@ class AmountDictionaryFieldTests(unittest.TestCase):
             description='An amount',
             valid_currencies=['JPY', 'USD'],
         )
+
+    def test_constructor(self):
+        with pytest.raises(TypeError):
+            # noinspection PyTypeChecker
+            currency_fields.AmountDictionary(valid_currencies=1234)
+
+        with pytest.raises(TypeError):
+            # noinspection PyTypeChecker
+            currency_fields.AmountDictionary(valid_currencies=[1, 2, 3, 4])
+
+        with pytest.raises(TypeError):
+            # noinspection PyTypeChecker
+            currency_fields.AmountDictionary(gt='not an int')
+
+        with pytest.raises(TypeError):
+            # noinspection PyTypeChecker
+            currency_fields.AmountDictionary(gte='not an int')
+
+        with pytest.raises(TypeError):
+            # noinspection PyTypeChecker
+            currency_fields.AmountDictionary(lt='not an int')
+
+        with pytest.raises(TypeError):
+            # noinspection PyTypeChecker
+            currency_fields.AmountDictionary(lte='not an int')
 
     def test_valid(self):
         self.assertEqual(self.field.errors(self.value), [])

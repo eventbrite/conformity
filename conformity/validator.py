@@ -54,10 +54,10 @@ def validate(schema, value, noun='value'):
         error_details = ''
         for error in errors:
             if error.pointer:
-                error_details += '  - %s: %s\n' % (error.pointer, error.message)
+                error_details += '  - {}: {}\n'.format(error.pointer, error.message)
             else:
-                error_details += '  - %s\n' % error.message
-        raise ValidationError('Invalid %s:\n%s' % (noun, error_details))
+                error_details += '  - {}\n'.format(error.message)
+        raise ValidationError('Invalid {}:\n{}'.format(noun, error_details))
 
 
 def validate_call(

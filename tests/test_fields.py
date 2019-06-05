@@ -9,6 +9,7 @@ import decimal
 import unittest
 
 import freezegun
+import pytest
 import pytz
 
 from conformity.error import (
@@ -17,6 +18,8 @@ from conformity.error import (
     Error,
 )
 from conformity.fields import (
+    Anything,
+    Base,
     Boolean,
     ByteString,
     Constant,
@@ -25,10 +28,12 @@ from conformity.fields import (
     Decimal,
     Dictionary,
     Float,
+    Hashable,
     Integer,
     List,
     SchemalessDictionary,
     Set,
+    Time,
     TimeDelta,
     Tuple,
     TZInfo,
@@ -43,7 +48,7 @@ class FieldTests(unittest.TestCase):
     """
     def test_integers(self):
         schema = Integer(gt=0, lt=10)
-        self.assertEqual(None, schema.errors(1))
+        self.assertEqual([], schema.errors(1))
         self.assertEqual([Error('Not an integer')], schema.errors('one'))
         self.assertEqual([Error('Not an integer')], schema.errors(True))
         self.assertEqual([Error('Value not > 0')], schema.errors(0))
@@ -55,34 +60,37 @@ class FieldTests(unittest.TestCase):
 
     def test_strings(self):
         schema = UnicodeString()
-        self.assertEqual(None, schema.errors(''))
-        self.assertEqual(None, schema.errors('Foo bar baz qux foo bar baz qux foo bar baz qux foo bar baz qux foo bar'))
+        self.assertEqual([], schema.errors(''))
+        self.assertEqual([], schema.errors('Foo bar baz qux foo bar baz qux foo bar baz qux foo bar baz qux foo bar'))
         self.assertEqual([Error('Not a unicode string')], schema.errors(b'Test'))
 
         schema = UnicodeString(min_length=5, max_length=10)
         self.assertEqual([Error('String must have a length of at least 5')], schema.errors(''))
         self.assertEqual([Error('String must have a length of at least 5')], schema.errors('1234'))
-        self.assertEqual(None, schema.errors('12345'))
-        self.assertEqual(None, schema.errors('1234567890'))
+        self.assertEqual([], schema.errors('12345'))
+        self.assertEqual([], schema.errors('1234567890'))
         self.assertEqual([Error('String must have a length no more than 10')], schema.errors('12345678901'))
 
         schema = UnicodeString(allow_blank=False)
         self.assertEqual([Error('String cannot be blank')], schema.errors(''))
         self.assertEqual([Error('String cannot be blank')], schema.errors(' '))
         self.assertEqual([Error('String cannot be blank')], schema.errors(' \n '))
-        self.assertEqual(None, schema.errors('foo'))
+        self.assertEqual([], schema.errors('foo'))
 
         schema = ByteString()
-        self.assertEqual(None, schema.errors(b''))
-        self.assertEqual(None, schema.errors(b'Foo bar baz qux foo bar baz qux foo bar baz qux foo bar baz qux foo'))
+        self.assertEqual([], schema.errors(b''))
+        self.assertEqual([], schema.errors(b'Foo bar baz qux foo bar baz qux foo bar baz qux foo bar baz qux foo'))
         self.assertEqual([Error('Not a byte string')], schema.errors('Test'))
 
         schema = ByteString(min_length=5, max_length=10)
         self.assertEqual([Error('String must have a length of at least 5')], schema.errors(b''))
         self.assertEqual([Error('String must have a length of at least 5')], schema.errors(b'1234'))
-        self.assertEqual(None, schema.errors(b'12345'))
-        self.assertEqual(None, schema.errors(b'1234567890'))
+        self.assertEqual([], schema.errors(b'12345'))
+        self.assertEqual([], schema.errors(b'1234567890'))
         self.assertEqual([Error('String must have a length no more than 10')], schema.errors(b'12345678901'))
+
+        with pytest.raises(ValueError):
+            UnicodeString(min_length=6, max_length=5)
 
     def test_complex(self):
 
@@ -310,23 +318,36 @@ class FieldTests(unittest.TestCase):
             Error(code='INVALID', pointer='moon', message='Not a tuple'),
         ]
 
+    def test_list(self):
+        schema = List(UnicodeString(), min_length=4, max_length=8)
+
+        assert schema.errors(['foo', 'bar', 'baz', 'qux']) == []
+        assert schema.errors(['foo', 'bar', 'baz']) == [Error('List is shorter than 4')]
+        assert schema.errors(
+            ['foo', 'bar', 'baz', 'qux', 'foo', 'bar', 'baz', 'qux', 'foo'],
+        ) == [Error('List is longer than 8')]
+
+        with pytest.raises(ValueError):
+            List(UnicodeString(), min_length=21, max_length=20)
+
     def test_temporal(self):
         past1985 = datetime.datetime(1985, 10, 26, 1, 21, 0)
         past1955 = datetime.datetime(1955, 11, 12, 22, 4, 0)
 
         datetime_schema = DateTime(gt=past1985)
         date_schema = Date(gt=past1985.date())
+        time_schema = Time(gte=datetime.time(8, 0, 0), lte=datetime.time(17, 0, 0))  # "business hours"
         delta_schema = TimeDelta(gt=datetime.timedelta(0))
         negative_delta_schema = TimeDelta(lt=datetime.timedelta(0))
         time_zone_schema = TZInfo()
 
         self.assertEqual(
             datetime_schema.errors(datetime.datetime.now()),
-            None,
+            [],
         )
 
         with freezegun.freeze_time():
-            self.assertEqual(None, datetime_schema.errors(datetime.datetime.now()))
+            self.assertEqual([], datetime_schema.errors(datetime.datetime.now()))
 
         # date is not a valid datetime
         self.assertEqual(
@@ -349,7 +370,7 @@ class FieldTests(unittest.TestCase):
 
         self.assertEqual(
             date_schema.errors(datetime.date.today()),
-            None,
+            [],
         )
 
         # datetime is not a valid date
@@ -359,7 +380,7 @@ class FieldTests(unittest.TestCase):
         )
 
         with freezegun.freeze_time():
-            self.assertEqual(None, date_schema.errors(datetime.date.today()))
+            self.assertEqual([], date_schema.errors(datetime.date.today()))
 
             # fake datetime is not a valid date
             self.assertEqual(
@@ -374,7 +395,7 @@ class FieldTests(unittest.TestCase):
 
         self.assertEqual(
             delta_schema.errors(past1985 - past1955),
-            None,
+            [],
         )
 
         self.assertEqual(
@@ -384,7 +405,7 @@ class FieldTests(unittest.TestCase):
 
         self.assertEqual(
             negative_delta_schema.errors(past1955 - past1985),
-            None,
+            [],
         )
 
         self.assertEqual(
@@ -397,7 +418,41 @@ class FieldTests(unittest.TestCase):
             time_zone_schema.errors(datetime.datetime.now()),
         )
 
-        self.assertEqual(None, time_zone_schema.errors(pytz.timezone('America/Chicago')))
+        self.assertEqual([], time_zone_schema.errors(pytz.timezone('America/Chicago')))
+
+        assert time_schema.errors(datetime.time(12, 0, 0)) == []
+        assert time_schema.errors(datetime.time(7, 0, 0)) == [Error('Value not >= 08:00:00')]
+        assert time_schema.errors(datetime.time(18, 0, 0)) == [Error('Value not <= 17:00:00')]
+
+        with pytest.raises(TypeError):
+            Date(gt=datetime.datetime(2019, 1, 12, 12, 15, 0))
+
+        with pytest.raises(TypeError):
+            DateTime(lt=datetime.date(2019, 1, 12))
+
+        with pytest.raises(TypeError):
+            Time(gte=datetime.datetime(2019, 1, 12, 12, 15, 0))
+
+        with pytest.raises(TypeError):
+            Date(lte=datetime.time(12, 15, 0))
+
+    def test_anything(self):
+        with pytest.raises(TypeError):
+            Anything(b'Not unicode')
+
+        assert Anything('Test description 1').introspect() == {
+            'type': 'anything',
+            'description': 'Test description 1',
+        }
+
+    def test_hashable(self):
+        assert Hashable('Another description 2').introspect() == {
+            'type': 'hashable',
+            'description': 'Another description 2',
+        }
+
+        assert Hashable().errors('this is hashable') == []
+        assert Hashable().errors({'this', 'is', 'not', 'hashable'}) == [Error('Value is not hashable')]
 
     def test_schemaless_dict_empty(self):
         """
@@ -456,6 +511,9 @@ class FieldTests(unittest.TestCase):
             }
         )
 
+        with pytest.raises(ValueError):
+            SchemalessDictionary(Integer(), UnicodeString(), min_length=12, max_length=11)
+
     def test_tuple(self):
         schema = Tuple(Integer(gt=0), UnicodeString(), Constant('I love tuples'))
 
@@ -501,6 +559,15 @@ class FieldTests(unittest.TestCase):
             }
         )
 
+        with pytest.raises(TypeError):
+            Tuple('not a field')
+
+        with pytest.raises(TypeError):
+            Tuple(Integer(gt=0), UnicodeString(), Constant('I love tuples'), description=b'Not a unicode string')
+
+        with pytest.raises(TypeError):
+            Tuple(Integer(gt=0), UnicodeString(), Constant('I love tuples'), unsupported='argument')
+
     def test_dictionary_subclass(self):
         """
         Tests that subclassing a Dictionary allows you to provide the
@@ -545,13 +612,34 @@ class FieldTests(unittest.TestCase):
             2,
         )
 
+        class Another(Dictionary):
+            allow_extra_keys = True
+            description = 'Yep'
+
+        schema = Another({'foo': UnicodeString()})
+        assert schema.introspect() == {
+            'type': 'dictionary',
+            'contents': {
+                'foo': {
+                    'type': 'unicode',
+                }
+            },
+            'description': 'Yep',
+            'allow_extra_keys': True,
+            'optional_keys': [],
+        }
+
+        with pytest.raises(TypeError):
+            # noinspection PyTypeChecker
+            Another({'foo': UnicodeString()}, optional_keys=1234)  # not iterable
+
     def test_decimal(self):
         """
         Tests decimal.Decimal object validation
         """
-        self.assertEqual(None, Decimal().errors(decimal.Decimal('1')))
-        self.assertEqual(None, Decimal().errors(decimal.Decimal('1.4')))
-        self.assertEqual(None, Decimal().errors(decimal.Decimal('-3.14159')))
+        self.assertEqual([], Decimal().errors(decimal.Decimal('1')))
+        self.assertEqual([], Decimal().errors(decimal.Decimal('1.4')))
+        self.assertEqual([], Decimal().errors(decimal.Decimal('-3.14159')))
         self.assertEqual(
             [Error('Not a decimal')],
             Decimal().errors('-3.14159')
@@ -572,8 +660,8 @@ class FieldTests(unittest.TestCase):
             [Error('Value not < 12')],
             Decimal(lt=12, gt=6).errors(decimal.Decimal('12')),
         )
-        self.assertEqual(None, Decimal(lt=12, gt=6).errors(decimal.Decimal('6.1')))
-        self.assertEqual(None, Decimal(lt=12, gt=6).errors(decimal.Decimal('11.9')))
+        self.assertEqual([], Decimal(lt=12, gt=6).errors(decimal.Decimal('6.1')))
+        self.assertEqual([], Decimal(lt=12, gt=6).errors(decimal.Decimal('11.9')))
         self.assertEqual(
             [Error('Value not >= 6')],
             Decimal(lte=12, gte=6).errors(decimal.Decimal('5.9')),
@@ -582,14 +670,14 @@ class FieldTests(unittest.TestCase):
             [Error('Value not <= 12')],
             Decimal(lte=12, gte=6).errors(decimal.Decimal('12.1')),
         )
-        self.assertEqual(None, Decimal(lte=12, gte=6).errors(decimal.Decimal('6')))
-        self.assertEqual(None, Decimal(lte=12, gte=6).errors(decimal.Decimal('12')))
+        self.assertEqual([], Decimal(lte=12, gte=6).errors(decimal.Decimal('6')))
+        self.assertEqual([], Decimal(lte=12, gte=6).errors(decimal.Decimal('12')))
 
     def test_unicode_decimal(self):
         """
         Tests unicode decimal parsing
         """
-        schema = UnicodeDecimal()
+        schema = UnicodeDecimal(description='Foo description')
         self.assertEqual(
             schema.errors('1.4'),
             [],
@@ -615,6 +703,11 @@ class FieldTests(unittest.TestCase):
             [Error('Invalid decimal value (not unicode string)')],
         )
 
+        assert schema.introspect() == {
+            'type': 'unicode_decimal',
+            'description': 'Foo description',
+        }
+
     def test_multi_constant(self):
         """
         Tests constants with multiple options
@@ -632,3 +725,18 @@ class FieldTests(unittest.TestCase):
             schema.errors(360000),
             [Error('Value is not one of: 36, 42, 81, 9231', code=ERROR_CODE_UNKNOWN)],
         )
+
+        with pytest.raises(TypeError):
+            Constant(42, 36, 81, 9231, description='foo', unsupported='bar')
+
+        with pytest.raises(ValueError):
+            Constant()
+
+        with pytest.raises(TypeError):
+            Constant(42, 36, 81, 9231, description=b'not unicode')
+
+    def test_base(self):
+        schema = Base()
+        assert schema.errors('foo') == [Error('Validation not implemented on base type')]
+        with pytest.raises(NotImplementedError):
+            schema.introspect()
