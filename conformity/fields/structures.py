@@ -5,6 +5,7 @@ from __future__ import (
 
 from collections import OrderedDict
 from typing import (  # noqa: F401 TODO Python 3
+    Any as AnyType,
     FrozenSet,
     Hashable as HashableType,
     Mapping,
@@ -35,19 +36,8 @@ from conformity.utils import (
     attr_is_optional,
     attr_is_string,
     strip_none,
+    update_error_pointer,
 )
-
-
-def _update_error_pointer(error, pointer_or_prefix):
-    """
-    Helper function to update an Error's pointer attribute with a (potentially
-    prefixed) dictionary key or list index.
-    """
-    if error.pointer:
-        error.pointer = '{}.{}'.format(pointer_or_prefix, error.pointer)
-    else:
-        error.pointer = '{}'.format(pointer_or_prefix)
-    return error
 
 
 @attr.s
@@ -85,7 +75,7 @@ class List(Base):
             )
         for lazy_pointer, element in self._enumerate(value):
             result.extend(
-                _update_error_pointer(error, lazy_pointer.get())
+                update_error_pointer(error, lazy_pointer.get())
                 for error in (self.contents.errors(element) or [])
             )
         return result
@@ -145,7 +135,6 @@ class Dictionary(Base):
     )  # type: Mapping[six.text_type, Base]
     optional_keys = attr.ib(
         default=_optional_keys_default,
-        converter=frozenset,
         validator=attr_is_iterable(attr_is_instance(object)),
     )  # type: Union[TupleType[HashableType, ...], FrozenSet[HashableType]]
     allow_extra_keys = attr.ib(default=None)  # type: bool
@@ -162,6 +151,8 @@ class Dictionary(Base):
         if self.optional_keys is self._optional_keys_default and getattr(self.__class__, 'optional_keys', None):
             # If the optional_keys argument was defaulted (not specified) but a subclass has it hard-coded, use that
             self.optional_keys = self.__class__.optional_keys
+        if not isinstance(self.optional_keys, frozenset):
+            self.optional_keys = frozenset(self.optional_keys)
 
         if self.allow_extra_keys is None and getattr(self.__class__, 'allow_extra_keys', None):
             # If the allow_extra_keys argument was not specified but a subclass has it hard-coded, use that value
@@ -176,9 +167,8 @@ class Dictionary(Base):
 
     def errors(self, value):
         if not isinstance(value, dict):
-            return [
-                Error('Not a dict'),
-            ]
+            return [Error('Not a dict')]
+
         result = []
         for key, field in self.contents.items():
             # Check key is present
@@ -190,7 +180,7 @@ class Dictionary(Base):
             else:
                 # Check key type
                 result.extend(
-                    _update_error_pointer(error, key)
+                    update_error_pointer(error, key)
                     for error in (field.errors(value[key]) or [])
                 )
         # Check for extra keys
@@ -294,11 +284,11 @@ class SchemalessDictionary(Base):
 
         for key, field in value.items():
             result.extend(
-                _update_error_pointer(error, key)
+                update_error_pointer(error, key)
                 for error in (self.key_type.errors(key) or [])
             )
             result.extend(
-                _update_error_pointer(error, key)
+                update_error_pointer(error, key)
                 for error in (self.value_type.errors(field) or [])
             )
 
@@ -326,7 +316,7 @@ class Tuple(Base):
 
     introspect_type = 'tuple'
 
-    def __init__(self, *contents, **kwargs):
+    def __init__(self, *contents, **kwargs):  # type: (*Base, **AnyType) -> None
         # We can't use attrs here because we need to capture all positional arguments and support keyword arguments
         self.contents = contents
         for i, c in enumerate(self.contents):
@@ -334,7 +324,7 @@ class Tuple(Base):
                 raise TypeError('Argument {} must be a Conformity field instance, is actually: {!r}'.format(i, c))
 
         # We can't put a keyword argument after *args in Python 2, so we need this
-        self.description = kwargs.pop('description', None)  # type: Optional[six.text_type]
+        self.description = kwargs.pop(str('description'), None)  # type: Optional[six.text_type]
         if self.description and not isinstance(self.description, six.text_type):
             raise TypeError("'description' must be a unicode string")
         if kwargs:
@@ -352,7 +342,7 @@ class Tuple(Base):
 
         for i, (c_elem, v_elem) in enumerate(zip(self.contents, value)):
             result.extend(
-                _update_error_pointer(error, i)
+                update_error_pointer(error, i)
                 for error in (c_elem.errors(v_elem) or [])
             )
 

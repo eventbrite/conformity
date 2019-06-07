@@ -3,17 +3,22 @@ from __future__ import (
     unicode_literals,
 )
 
+from typing import Mapping
 import unittest
 
 import pytest
 import six
 
-from conformity.error import Error
+from conformity.error import (
+    Error,
+    ValidationError,
+)
 from conformity.fields import (
     All,
     Any,
     Boolean,
     BooleanValidator,
+    ClassConfigurationSchema,
     Constant,
     Dictionary,
     Null,
@@ -406,3 +411,276 @@ class Baz(object):
 class Qux(object):
     class InnerQux(object):
         pass
+
+
+class TestClassConfigurationSchema(object):
+    def test_provider_decorator(self):
+        with pytest.raises(TypeError):
+            # noinspection PyTypeChecker
+            ClassConfigurationSchema.provider(Boolean())
+
+        schema = Dictionary({})
+
+        decorator = ClassConfigurationSchema.provider(schema)
+
+        class IsAClass(object):
+            pass
+
+        def is_not_a_class():
+            pass
+
+        with pytest.raises(TypeError):
+            decorator(is_not_a_class)
+
+        cls = decorator(IsAClass)
+        assert cls is IsAClass
+        assert getattr(cls, '_conformity_initialization_schema') is schema
+
+        another_schema = Dictionary({})
+
+        @ClassConfigurationSchema.provider(another_schema)
+        class Sample(object):
+            pass
+
+        assert getattr(Sample, '_conformity_initialization_schema') is another_schema
+
+    def test_inline_definition_no_default_or_base_class(self):
+        schema = ClassConfigurationSchema()
+
+        assert schema.errors('Not a dict') == [Error('Not a mapping (dictionary)')]
+        assert schema.errors(
+            {'foo': 'bar', 'baz': 'qux', 'path': 'unprocessed', 'kwargs': {}, 'object': Foo}
+        ) == [Error('Extra keys present: baz, foo', code='UNKNOWN')]
+        assert schema.errors({}) == [
+            Error('Missing key (and no default specified): path', code='MISSING', pointer='path'),
+        ]
+        assert schema.errors({'path': 'foo.bar:Hello'}) == [Error(
+            'No module named foo.bar' if six.PY2 else "No module named 'foo'",
+            pointer='path',
+        )]
+        assert schema.errors({'path': 'tests.test_fields_meta.Foo'}) == [Error(
+            "Neither class 'tests.test_fields_meta.Foo' nor one of its superclasses was decorated with "
+            "@ClassConfigurationSchema.provider",
+            pointer='path',
+        )]
+        assert schema.errors({'path': 'tests.test_fields_meta:InvalidProvider'}) == [Error(
+            "Class 'tests.test_fields_meta:InvalidProvider' attribute '_conformity_initialization_schema' should be a "
+            "Dictionary Conformity field or one of its subclasses",
+            pointer='path',
+        )]
+
+        config = {'path': 'tests.test_fields_meta:BasicProvider'}
+        assert sorted(schema.errors(config)) == [
+            Error('Missing key: bar', code='MISSING', pointer='kwargs.bar'),
+            Error('Missing key: foo', code='MISSING', pointer='kwargs.foo'),
+        ]
+        assert config['object'] == BasicProvider
+
+        with pytest.raises(ValidationError) as error_context:
+            # noinspection PyTypeChecker
+            schema.instantiate_from('Not a dict')
+        assert error_context.value.args[0] == [Error('Not a mutable mapping (dictionary)')]
+
+        config = {'path': 'tests.test_fields_meta:BasicProvider'}
+        with pytest.raises(ValidationError) as error_context:
+            schema.instantiate_from(config)
+        assert sorted(error_context.value.args[0]) == [
+            Error('Missing key: bar', code='MISSING', pointer='kwargs.bar'),
+            Error('Missing key: foo', code='MISSING', pointer='kwargs.foo'),
+        ]
+        assert config['object'] == BasicProvider
+
+        config = {'path': 'tests.test_fields_meta:BasicProvider', 'kwargs': {'foo': 'Fine', 'bar': 'Bad'}}
+        assert schema.errors(config) == [Error('Not a boolean', pointer='kwargs.bar')]
+        assert config['object'] == BasicProvider
+
+        config = {'path': 'tests.test_fields_meta:BasicProvider', 'kwargs': {'foo': 'Fine', 'bar': 'Bad'}}
+        with pytest.raises(ValidationError) as error_context:
+            schema.instantiate_from(config)
+        assert error_context.value.args[0] == [Error('Not a boolean', pointer='kwargs.bar')]
+        assert config['object'] == BasicProvider
+
+        config = {'path': 'tests.test_fields_meta:BasicProvider', 'kwargs': {'foo': 'Fine', 'bar': True}}
+        assert schema.errors(config) == []
+        assert config['object'] == BasicProvider
+
+        config = {'path': 'tests.test_fields_meta:BasicProvider', 'kwargs': {'foo': 'Fine', 'bar': True}}
+        value = schema.instantiate_from(config)
+        assert isinstance(value, BasicProvider)
+        assert value.foo == 'Fine'
+        assert value.bar is True
+        assert config['object'] == BasicProvider
+
+        schema = ClassConfigurationSchema()
+        with pytest.raises(ValidationError):
+            schema.initiate_cache_for('foo.bar:Hello')
+        schema.initiate_cache_for('tests.test_fields_meta.BasicProvider')
+        schema.initiate_cache_for('tests.test_fields_meta:BasicProvider')
+        assert schema.introspect() == {
+            'type': 'class_config_dictionary',
+            'base_class': 'object',
+            'switch_field': 'path',
+            'switch_field_schema': TypePath(base_classes=object).introspect(),
+            'kwargs_field': 'kwargs',
+            'kwargs_contents_map': {
+                'tests.test_fields_meta.BasicProvider': Dictionary(
+                    {'foo': UnicodeString(), 'bar': Boolean()},
+                ).introspect(),
+                'tests.test_fields_meta:BasicProvider': Dictionary(
+                    {'foo': UnicodeString(), 'bar': Boolean()},
+                ).introspect(),
+            },
+        }
+
+        schema = ClassConfigurationSchema(add_class_object_to_dict=False)
+        config = {'path': 'tests.test_fields_meta:BasicProvider', 'kwargs': {'foo': 'Fine', 'bar': True}}
+        value = schema.instantiate_from(config)
+        assert isinstance(value, BasicProvider)
+        assert value.foo == 'Fine'
+        assert value.bar is True
+        assert 'object' not in config
+
+    def test_inline_definition_with_default_and_base_class(self):
+        schema = ClassConfigurationSchema(
+            base_class=BaseSomething,
+            default_path='tests.test_fields_meta:SpecificSomething',
+        )
+
+        config = {}
+        with pytest.raises(ValidationError) as error_context:
+            schema.instantiate_from(config)
+        assert sorted(error_context.value.args[0]) == [
+            Error('Missing key: bar', code='MISSING', pointer='kwargs.bar'),
+            Error('Missing key: foo', code='MISSING', pointer='kwargs.foo'),
+        ]
+        assert config['path'] == 'tests.test_fields_meta:SpecificSomething'
+        assert config['object'] == SpecificSomething
+
+        value = schema.instantiate_from({'kwargs': {'foo': True, 'bar': 'walk'}})
+        assert isinstance(value, SpecificSomething)
+        assert value.foo is True
+        assert value.bar == 'walk'
+
+        config = {'path': 'tests.test_fields_meta.AnotherSomething'}
+        with pytest.raises(ValidationError) as error_context:
+            schema.instantiate_from(config)
+        assert error_context.value.args[0] == [
+            Error('Missing key: baz', code='MISSING', pointer='kwargs.baz'),
+        ]
+        assert config['object'] == AnotherSomething
+
+        config = {'path': 'tests.test_fields_meta.AnotherSomething', 'kwargs': {'baz': None}}
+        value = schema.instantiate_from(config)
+        assert isinstance(value, AnotherSomething)
+        assert value.baz is None
+        assert value.qux == 'unset'
+        assert config['object'] == AnotherSomething
+
+        config = {'path': 'tests.test_fields_meta.AnotherSomething', 'kwargs': {'baz': 'cool', 'qux': False}}
+        value = schema.instantiate_from(config)
+        assert isinstance(value, AnotherSomething)
+        assert value.baz == 'cool'
+        assert value.qux is False
+        assert config['object'] == AnotherSomething
+
+    def test_subclass_definition(self):
+        class ImmutableDict(Mapping):
+            def __init__(self, underlying):
+                self.underlying = underlying
+
+            def __contains__(self, item):
+                return item in self.underlying
+
+            def __getitem__(self, k):
+                return self.underlying[k]
+
+            def get(self, k, default):
+                return self.underlying.get(k, default)
+
+            def __iter__(self):
+                return iter(self.underlying)
+
+            def __len__(self):
+                return len(self.underlying)
+
+            def keys(self):
+                return self.underlying.keys()
+
+            def items(self):
+                return self.underlying.items()
+
+            def values(self):
+                return self.underlying.values()
+
+        class ExtendedSchema(ClassConfigurationSchema):
+            base_class = BaseSomething
+            default_path = 'tests.test_fields_meta.AnotherSomething'
+            description = 'Neat-o schema thing'
+
+        schema = ExtendedSchema()
+
+        config = {}
+        with pytest.raises(ValidationError) as error_context:
+            schema.instantiate_from(config)
+        assert error_context.value.args[0] == [
+            Error('Missing key: baz', code='MISSING', pointer='kwargs.baz'),
+        ]
+        assert config['object'] == AnotherSomething
+
+        config = {'kwargs': {'baz': None}}
+        value = schema.instantiate_from(config)
+        assert isinstance(value, AnotherSomething)
+        assert value.baz is None
+        assert value.qux == 'unset'
+        assert config['object'] == AnotherSomething
+
+        config = ImmutableDict({'kwargs': {'baz': None}})
+        assert schema.errors(config) == []
+        assert 'object' not in config
+
+        assert schema.introspect() == {
+            'type': 'class_config_dictionary',
+            'description': 'Neat-o schema thing',
+            'default_path': 'tests.test_fields_meta.AnotherSomething',
+            'base_class': 'BaseSomething',
+            'switch_field': 'path',
+            'switch_field_schema': TypePath(base_classes=BaseSomething).introspect(),
+            'kwargs_field': 'kwargs',
+            'kwargs_contents_map': {
+                'tests.test_fields_meta.AnotherSomething': Dictionary(
+                    {'baz': Nullable(UnicodeString()), 'qux': Boolean()},
+                    optional_keys=('qux', ),
+                ).introspect(),
+            },
+        }
+
+
+class InvalidProvider(object):
+    _conformity_initialization_schema = Boolean()
+
+
+@ClassConfigurationSchema.provider(Dictionary({'foo': UnicodeString(), 'bar': Boolean()}))
+class BasicProvider(object):
+    def __init__(self, foo, bar):
+        self.foo = foo
+        self.bar = bar
+
+
+class BaseSomething(object):
+    pass
+
+
+@ClassConfigurationSchema.provider(Dictionary({'foo': Boolean(), 'bar': Constant('walk', 'run')}))
+class SpecificSomething(BaseSomething):
+    def __init__(self, foo, bar):
+        self.foo = foo
+        self.bar = bar
+
+
+@ClassConfigurationSchema.provider(
+    Dictionary({'baz': Nullable(UnicodeString()), 'qux': Boolean()}, optional_keys=('qux', )),
+)
+class AnotherSomething(BaseSomething):
+    def __init__(self, baz, qux='unset'):
+        self.baz = baz
+        self.qux = qux

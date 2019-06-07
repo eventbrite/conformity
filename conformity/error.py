@@ -19,6 +19,9 @@ __all__ = (
     'ERROR_CODE_MISSING',
     'ERROR_CODE_UNKNOWN',
     'Error',
+    'KeywordError',
+    'PositionalError',
+    'ValidationError',
 )
 
 
@@ -35,3 +38,21 @@ class Error(object):
     message = attr.ib(validator=attr_is_string())  # type: six.text_type
     code = attr.ib(default=ERROR_CODE_INVALID, validator=attr_is_string())  # type: six.text_type
     pointer = attr.ib(default=None, validator=attr_is_optional(attr_is_string()))  # type: Optional[six.text_type]
+
+
+class ValidationError(ValueError):
+    """
+    Error raised when a value fails to validate.
+    """
+
+
+class PositionalError(TypeError):
+    """
+    Error raised when you pass positional arguments into a validated function that doesn't support them.
+    """
+
+
+class KeywordError(TypeError):
+    """
+    Error raised when you pass keyword arguments into a validated function that doesn't support them.
+    """

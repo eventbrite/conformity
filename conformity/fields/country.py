@@ -4,6 +4,7 @@ from __future__ import (
 )
 
 from typing import (  # noqa: F401 TODO Python 3
+    Any as AnyType,
     AnyStr,
     Callable,
 )
@@ -34,7 +35,7 @@ class CountryCodeField(Constant):
     def __init__(
         self,
         code_filter=lambda x: True,  # type: Callable[[AnyStr], bool]
-        **kwargs
+        **kwargs  # type: AnyType
     ):
         """
         :param code_filter: If specified, will be called to further filter the available country codes

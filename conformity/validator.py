@@ -13,6 +13,11 @@ from typing import (  # noqa: F401 TODO Python 3
 import six  # noqa: F401 TODO Python 3
 
 from conformity import fields
+from conformity.error import (
+    KeywordError,
+    PositionalError,
+    ValidationError,
+)
 
 
 __all__ = (
@@ -23,24 +28,6 @@ __all__ = (
     'validate_call',
     'validate_method',
 )
-
-
-class ValidationError(ValueError):
-    """
-    Error raised when a value fails to validate.
-    """
-
-
-class PositionalError(TypeError):
-    """
-    Error raised when you pass positional arguments into a validated function that doesn't support them.
-    """
-
-
-class KeywordError(TypeError):
-    """
-    Error raised when you pass keyword arguments into a validated function that doesn't support them.
-    """
 
 
 def validate(schema, value, noun='value'):

@@ -7,7 +7,7 @@ import datetime
 from typing import (  # noqa: F401 TODO Python 3
     FrozenSet,
     Optional,
-    Tuple,
+    Tuple as TupleType,
     Type,
     Union,
 )
@@ -42,7 +42,7 @@ class TemporalBase(Base):
 
     # These four must be overridden
     introspect_type = None  # type: six.text_type
-    valid_isinstance = None  # type: Optional[Union[Type, Tuple[Type, ...]]]
+    valid_isinstance = None  # type: Optional[Union[Type, TupleType[Type, ...]]]
     valid_noun = None  # type: six.text_type
     valid_types = None  # type: FrozenSet[Type]
 

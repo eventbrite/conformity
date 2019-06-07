@@ -9,9 +9,11 @@ from typing import (  # noqa: F401 TODO Python 3
     Callable,
     Dict,
     Hashable,
+    List as ListType,
     Mapping,
+    MutableMapping,
     Optional,
-    Tuple,
+    Tuple as TupleType,
     Type,
     Union,
 )
@@ -20,19 +22,24 @@ import attr
 import six
 
 from conformity.error import (
+    ERROR_CODE_MISSING,
     ERROR_CODE_UNKNOWN,
     Error,
+    ValidationError,
 )
 from conformity.fields.basic import (
     Base,
     attr_is_conformity_field,
 )
+from conformity.fields.structures import Dictionary
 from conformity.utils import (
+    attr_is_bool,
     attr_is_instance,
+    attr_is_instance_or_instance_tuple,
     attr_is_optional,
     attr_is_string,
-    attr_is_instance_or_instance_tuple,
     strip_none,
+    update_error_pointer,
 )
 
 
@@ -126,7 +133,7 @@ class ObjectInstance(Base):
 
     introspect_type = 'object_instance'
 
-    valid_type = attr.ib(validator=attr_is_instance_or_instance_tuple(type))  # type: Union[Type, Tuple[Type, ...]]
+    valid_type = attr.ib(validator=attr_is_instance_or_instance_tuple(type))  # type: Union[Type, TupleType[Type, ...]]
     description = attr.ib(default=None, validator=attr_is_optional(attr_is_string()))  # type: Optional[six.text_type]
 
     def errors(self, value):
@@ -154,7 +161,7 @@ class TypeReference(Base):
     base_classes = attr.ib(
         default=None,
         validator=attr_is_optional(attr_is_instance_or_instance_tuple(type)),
-    )  # type: Optional[Union[Type, Tuple[Type, ...]]]
+    )  # type: Optional[Union[Type, TupleType[Type, ...]]]
     description = attr.ib(default=None, validator=attr_is_optional(attr_is_string()))  # type: Optional[six.text_type]
 
     def errors(self, value):
@@ -198,7 +205,7 @@ class TypePath(TypeReference):
     """
     introspect_type = 'type_path'
 
-    import_cache = {}  # type: Dict[Tuple[six.text_type, six.text_type], AnyType]
+    import_cache = {}  # type: Dict[TupleType[six.text_type, six.text_type], AnyType]
 
     def errors(self, value):
         if not isinstance(value, six.text_type):
@@ -235,6 +242,187 @@ class TypePath(TypeReference):
         return thing
 
 
+@attr.s
+class ClassConfigurationSchema(Base):
+    """
+    A special-case dictionary field that accepts exactly two keys: `path` (a `TypePath`-validated string) and `kwargs`
+    (a `Dictionary`-or-subclass-validated dict) that can discover initialization schema from classes and validate that
+    schema prior to instantiation. By default, the dictionary is mutated to add an `object` key containing the resolved
+    class, but this behavior can be disabled by specifying `add_class_object_to_dict=False` to the field arguments. If
+    you experience circular dependency errors when using this field, you can mitigate this by specifying
+    `eager_default_validation=False` to the field arguments.
+
+    Typical usage would be as follows, in Python pseudocode:
+
+    class BaseThing:
+        ...
+
+    @ClassConfigurationSchema.provider(fields.Dictionary({...}, ...))
+    class Thing1(BaseThing):
+        ...
+
+    @ClassConfigurationSchema.provider(fields.Dictionary({...}, ...))
+    class Thing2(BaseThing):
+        ...
+
+    settings = get_settings_from_something()
+    schema = ClassConfigurationSchema(base_class=BaseThing)
+    errors = schema.errors(**settings[kwargs])
+    if errors:
+        ... handle errors ...
+
+    thing = settings['object'](settings)
+
+    Another approach, using the helper method on the schema, simplifies that last part:
+
+    schema = ClassConfigurationSchema(base_class=BaseThing)
+    thing = schema.instantiate_from(get_settings_from_something())  # raises ValidationError
+
+    However, note that, in both cases, instantiation is not nested. If the settings schema Dictionary on some class has
+    a key (or further down) whose value is another ClassConfigurationSchema, code that consumes those settings will
+    also have to instantiate objects from those settings. Validation, however, will be nested as it all other things
+    Conformity.
+    """
+    introspect_type = 'class_config_dictionary'
+    switch_field_schema = TypePath(base_classes=object)
+    _init_schema_attribute = '_conformity_initialization_schema'
+
+    base_class = attr.ib(default=None, validator=attr_is_optional(attr_is_instance(type)))  # type: Optional[Type]
+    default_path = attr.ib(default=None, validator=attr_is_optional(attr_is_string()))  # type: Optional[six.text_type]
+    description = attr.ib(default=None, validator=attr_is_optional(attr_is_string()))  # type: Optional[six.text_type]
+    eager_default_validation = attr.ib(default=True, validator=attr_is_bool())  # type: bool
+    add_class_object_to_dict = attr.ib(default=True, validator=attr_is_bool())  # type: bool
+
+    def __attrs_post_init__(self):
+        self._schema_cache = {}  # type: Dict[six.text_type, Dictionary]
+
+        if not self.base_class:
+            if getattr(self.__class__, 'base_class', None):
+                # If the base class was defaulted but a subclass has hard-coded a base class, use that.
+                self.base_class = self.__class__.base_class
+            else:
+                self.base_class = object
+        if self.base_class is not object:
+            # If the base class is not the default, create a new schema instance to validate paths.
+            self.switch_field_schema = TypePath(base_classes=self.base_class)
+        else:
+            self.switch_field_schema = self.__class__.switch_field_schema
+
+        if not self.description and getattr(self.__class__, 'description', None):
+            # If the description is not specified but a subclass has hard-coded a base class, use that.
+            self.description = self.__class__.description
+
+        if not self.default_path and getattr(self.__class__, 'default_path', None):
+            # If the default path is not specified but a subclass has hard-coded a default path, use that.
+            self.default_path = self.__class__.default_path
+        if self.default_path and self.eager_default_validation:
+            # If the default path is specified and eager validation is not disabled, validate the default path.
+            self.initiate_cache_for(self.default_path)
+
+    def errors(self, value):
+        if not isinstance(value, Mapping):
+            return [Error('Not a mapping (dictionary)')]
+
+        # check for extra keys (object is allowed in case this gets validated twice)
+        extra_keys = [k for k in six.iterkeys(value) if k not in ('path', 'kwargs', 'object')]
+        if extra_keys:
+            return [Error(
+                'Extra keys present: {}'.format(', '.join(six.text_type(k) for k in sorted(extra_keys))),
+                code=ERROR_CODE_UNKNOWN,
+            )]
+
+        sentinel = object()
+        path = value.get('path', sentinel)
+        if path is sentinel and not self.default_path:
+            return [Error('Missing key (and no default specified): path', code=ERROR_CODE_MISSING, pointer='path')]
+
+        if not path or path is sentinel:
+            path = self.default_path
+
+        errors = self._populate_schema_cache_if_necessary(path)
+        if errors:
+            return [update_error_pointer(e, 'path') for e in errors]
+
+        if isinstance(value, MutableMapping):
+            value['path'] = path  # in case it was defaulted
+            if self.add_class_object_to_dict:
+                value['object'] = TypePath.resolve_python_path(path)
+
+        return [update_error_pointer(e, 'kwargs') for e in self._schema_cache[path].errors(value.get('kwargs', {}))]
+
+    def initiate_cache_for(self, path):  # type: (six.text_type) -> None
+        errors = self._populate_schema_cache_if_necessary(path)
+        if errors:
+            raise ValidationError(errors)
+
+    def _populate_schema_cache_if_necessary(self, path):  # type: (six.text_type) -> ListType[Error]
+        if path in self._schema_cache:
+            return []
+
+        errors = self.switch_field_schema.errors(path)
+        if errors:
+            return errors
+
+        clazz = TypePath.resolve_python_path(path)
+        if not hasattr(clazz, self._init_schema_attribute):
+            return [Error(
+                "Neither class '{}' nor one of its superclasses was decorated with "
+                "@ClassConfigurationSchema.provider".format(path),
+            )]
+
+        schema = getattr(clazz, self._init_schema_attribute)
+        if not isinstance(schema, Dictionary):
+            return [Error(
+                "Class '{}' attribute '{}' should be a Dictionary Conformity field or one of its subclasses".format(
+                    path,
+                    self._init_schema_attribute,
+                ),
+            )]
+
+        self._schema_cache[path] = schema
+
+        return []
+
+    def instantiate_from(self, configuration):  # type: (MutableMapping) -> AnyType
+        if not isinstance(configuration, MutableMapping):
+            raise ValidationError([Error('Not a mutable mapping (dictionary)')])
+
+        errors = self.errors(configuration)
+        if errors:
+            raise ValidationError(errors)
+
+        thing = configuration.get('object')
+        if not thing:
+            thing = TypePath.resolve_python_path(configuration['path'])
+
+        return thing(**configuration.get('kwargs', {}))
+
+    def introspect(self):
+        return strip_none({
+            'type': self.introspect_type,
+            'description': self.description,
+            'base_class': six.text_type(self.base_class.__name__),
+            'default_path': self.default_path,
+            'switch_field': 'path',
+            'switch_field_schema': self.switch_field_schema.introspect(),
+            'kwargs_field': 'kwargs',
+            'kwargs_contents_map': {k: v.introspect() for k, v in six.iteritems(self._schema_cache)},
+        })
+
+    @staticmethod
+    def provider(schema):  # type: (Dictionary) -> Callable[[Type], Type]
+        if not isinstance(schema, Dictionary):
+            raise TypeError("'schema' must be an instance of the Dictionary Conformity field or one of its subclasses")
+
+        def wrapper(cls):  # type: (Type) -> Type
+            if not isinstance(cls, type):
+                raise TypeError("ClassConfigurationSchema.provider can only decorate classes")
+            setattr(cls, ClassConfigurationSchema._init_schema_attribute, schema)
+            return cls
+
+        return wrapper
+
+
 class Any(Base):
     """
     Accepts any one of the types passed as positional arguments.
@@ -245,7 +433,7 @@ class Any(Base):
 
     description = None  # type: Optional[six.text_type]
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, **kwargs):  # type: (*Base, **AnyType) -> None
         # We can't use attrs here because we need to capture all positional arguments and support keyword arguments
         self.options = args
         for i, r in enumerate(self.options):
@@ -253,7 +441,7 @@ class Any(Base):
                 raise TypeError('Argument {} must be a Conformity field instance, is actually: {!r}'.format(i, r))
 
         # We can't put a keyword argument after *args in Python 2, so we need this
-        self.description = kwargs.pop('description', None)  # type: Optional[six.text_type]
+        self.description = kwargs.pop(str('description'), None)  # type: Optional[six.text_type]
         if self.description and not isinstance(self.description, six.text_type):
             raise TypeError("'description' must be a unicode string")
         if kwargs:
@@ -288,7 +476,7 @@ class All(Base):
 
     description = None  # type: Optional[six.text_type]
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, **kwargs):  # type: (*Base, **AnyType) -> None
         # We can't use attrs here because we need to capture all positional arguments and support keyword arguments
         self.requirements = args
         for i, r in enumerate(self.requirements):
@@ -296,7 +484,7 @@ class All(Base):
                 raise TypeError('Argument {} must be a Conformity field instance, is actually: {!r}'.format(i, r))
 
         # We can't put a keyword argument after *args in Python 2, so we need this
-        self.description = kwargs.pop('description', None)  # type: Optional[six.text_type]
+        self.description = kwargs.pop(str('description'), None)  # type: Optional[six.text_type]
         if self.description and not isinstance(self.description, six.text_type):
             raise TypeError("'description' must be a unicode string")
         if kwargs:
