@@ -94,7 +94,7 @@ class Amount(Base):
         return strip_none({
             'type': self.introspect_type,
             'description': self.description,
-            'valid_currencies': self.valid_currencies,
+            'valid_currencies': sorted(self.valid_currencies),
             'gt': self.gt,
             'gte': self.gte,
             'lt': self.lt,

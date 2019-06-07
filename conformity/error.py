@@ -3,7 +3,10 @@ from __future__ import (
     unicode_literals,
 )
 
-from typing import Optional  # noqa: F401 TODO Python 3
+from typing import (  # noqa: F401 TODO Python 3
+    Hashable as HashableType,
+    Optional,
+)
 
 import attr
 import six  # noqa: F401 TODO Python 3
@@ -22,6 +25,7 @@ __all__ = (
     'KeywordError',
     'PositionalError',
     'ValidationError',
+    'update_error_pointer',
 )
 
 
@@ -56,3 +60,14 @@ class KeywordError(TypeError):
     """
     Error raised when you pass keyword arguments into a validated function that doesn't support them.
     """
+
+
+def update_error_pointer(error, pointer_or_prefix):  # type: (Error, HashableType) -> Error
+    """
+    Helper function to update an Error's pointer attribute with a (potentially prefixed) dictionary key or list index.
+    """
+    if error.pointer:
+        error.pointer = '{}.{}'.format(pointer_or_prefix, error.pointer)
+    else:
+        error.pointer = '{}'.format(pointer_or_prefix)
+    return error

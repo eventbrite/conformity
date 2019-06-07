@@ -18,17 +18,6 @@ def strip_none(value):  # type: (Dict) -> Dict
     return {k: v for k, v in value.items() if v is not None}
 
 
-def update_error_pointer(error, pointer_or_prefix):
-    """
-    Helper function to update an Error's pointer attribute with a (potentially prefixed) dictionary key or list index.
-    """
-    if error.pointer:
-        error.pointer = '{}.{}'.format(pointer_or_prefix, error.pointer)
-    else:
-        error.pointer = '{}'.format(pointer_or_prefix)
-    return error
-
-
 attr_is_instance = attr.validators.instance_of
 attr_is_optional = attr.validators.optional
 

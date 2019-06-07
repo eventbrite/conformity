@@ -23,6 +23,7 @@ from conformity.error import (
     ERROR_CODE_MISSING,
     ERROR_CODE_UNKNOWN,
     Error,
+    update_error_pointer,
 )
 from conformity.fields.basic import (
     Anything,
@@ -36,7 +37,6 @@ from conformity.utils import (
     attr_is_optional,
     attr_is_string,
     strip_none,
-    update_error_pointer,
 )
 
 
@@ -132,7 +132,7 @@ class Dictionary(Base):
     contents = attr.ib(
         default=None,
         validator=attr_is_optional(attr_is_instance(dict)),
-    )  # type: Mapping[six.text_type, Base]
+    )  # type: Mapping[HashableType, Base]
     optional_keys = attr.ib(
         default=_optional_keys_default,
         validator=attr_is_iterable(attr_is_instance(object)),
@@ -175,7 +175,7 @@ class Dictionary(Base):
             if key not in value:
                 if key not in self.optional_keys:
                     result.append(
-                        Error('Missing key: {}'.format(key), code=ERROR_CODE_MISSING, pointer=key),
+                        Error('Missing key: {}'.format(key), code=ERROR_CODE_MISSING, pointer=six.text_type(key)),
                     )
             else:
                 # Check key type

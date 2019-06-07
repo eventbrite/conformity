@@ -30,22 +30,22 @@ class ValidatorTests(unittest.TestCase):
     """
     Tests validation functions
     """
-    def test_validator_arguments_validation(self):
+    def test_validator_arguments_validation(self):  # type: () -> None
         with pytest.raises(ValueError):
-            @validate_call(List(UnicodeString()), UnicodeString())
+            @validate_call(List(UnicodeString()), UnicodeString())  # type: ignore
             def something(_foo):
                 pass
 
         with pytest.raises(ValueError):
-            @validate_call(args=SchemalessDictionary(), kwargs=None, returns=UnicodeString())
+            @validate_call(args=SchemalessDictionary(), kwargs=None, returns=UnicodeString())  # type: ignore
             def something_else(_foo):
                 pass
 
-    def test_validate(self):
+    def test_validate(self):  # type: () -> None
         schema = Dictionary({
             'name': UnicodeString(max_length=20),
             'greeting': UnicodeString(),
-        }, optional_keys=['greeting'])
+        }, optional_keys=('greeting', ))
 
         validate(schema, {'name': 'Andrew'})
         validate(schema, {'name': 'Andrew', 'greeting': 'Ahoy-hoy'})
@@ -56,11 +56,11 @@ class ValidatorTests(unittest.TestCase):
         with self.assertRaises(ValidationError):
             validate(schema, {'name': 'Andrew', 'greeeeeeting': 'Ahoy-hoy'})
 
-    def test_validate_call(self):
+    def test_validate_call(self):  # type: () -> None
         schema = Dictionary({
             'name': UnicodeString(max_length=20),
             'greeting': UnicodeString(),
-        }, optional_keys=['greeting'])
+        }, optional_keys=('greeting', ))
 
         @validate_call(schema, UnicodeString())
         def greeter(name, greeting='Hello'):
@@ -122,11 +122,11 @@ class ValidatorTests(unittest.TestCase):
         with pytest.raises(ValidationError):
             args_and_kwargs_function(0, bar='John {}: {}')
 
-    def test_validate_method(self):
+    def test_validate_method(self):  # type: () -> None
         schema = Dictionary({
             'name': UnicodeString(max_length=20),
             'greeting': UnicodeString(),
-        }, optional_keys=['greeting'])
+        }, optional_keys=('greeting', ))
 
         class Helper(object):
             @classmethod

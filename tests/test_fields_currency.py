@@ -32,23 +32,23 @@ class AmountFieldTests(unittest.TestCase):
             description='An amount',
         )
 
-    def test_constructor(self):
+    def test_constructor(self):  # type: () -> None
         with pytest.raises(TypeError):
             # noinspection PyTypeChecker
-            currency_fields.Amount(valid_currencies=1234)  # not iterable
+            currency_fields.Amount(valid_currencies=1234)  # type: ignore
 
         with pytest.raises(TypeError):
             # noinspection PyTypeChecker
-            currency_fields.Amount(valid_currencies=['1', '2', '3'])  # not a set
+            currency_fields.Amount(valid_currencies=['1', '2', '3'])  # type: ignore
 
         with pytest.raises(TypeError):
             # noinspection PyTypeChecker
-            currency_fields.Amount(valid_currencies={1, 2, 3})  # not strings
+            currency_fields.Amount(valid_currencies={1, 2, 3})  # type: ignore
 
-    def test_valid(self):
+    def test_valid(self):  # type: () -> None
         self.assertEqual(self.field.errors(self.value), [])
 
-    def test_invalid_not_amount_instance(self):
+    def test_invalid_not_amount_instance(self):  # type: () -> None
         errors = self.field.errors(100)
         self.assertEqual(len(errors), 1)
         error = errors[0]
@@ -61,7 +61,7 @@ class AmountFieldTests(unittest.TestCase):
             'Not a currint.Amount instance',
         )
 
-    def test_invalid_bad_currency(self):
+    def test_invalid_bad_currency(self):  # type: () -> None
         self.value.currency = Currency('XYZ', 12345)
         errors = self.field.errors(self.value)
         self.assertEqual(len(errors), 1)
@@ -75,7 +75,7 @@ class AmountFieldTests(unittest.TestCase):
             'Not a valid currency code',
         )
 
-    def test_operator_greater_than(self):
+    def test_operator_greater_than(self):  # type: () -> None
         field = currency_fields.Amount(gt=99)
         self.assertEqual(field.errors(self.value), [])
 
@@ -96,7 +96,7 @@ class AmountFieldTests(unittest.TestCase):
             'value',
         )
 
-    def test_operator_greater_than_or_equal_to(self):
+    def test_operator_greater_than_or_equal_to(self):  # type: () -> None
         field = currency_fields.Amount(gte=100)
         self.assertEqual(field.errors(self.value), [])
 
@@ -117,7 +117,7 @@ class AmountFieldTests(unittest.TestCase):
             'value',
         )
 
-    def test_operator_less_than(self):
+    def test_operator_less_than(self):  # type: () -> None
         field = currency_fields.Amount(lt=101)
         self.assertEqual(field.errors(self.value), [])
 
@@ -138,7 +138,7 @@ class AmountFieldTests(unittest.TestCase):
             'value',
         )
 
-    def test_operator_less_than_or_equal_to(self):
+    def test_operator_less_than_or_equal_to(self):  # type: () -> None
         field = currency_fields.Amount(lte=100)
         self.assertEqual(field.errors(self.value), [])
 
@@ -159,8 +159,8 @@ class AmountFieldTests(unittest.TestCase):
             'value',
         )
 
-    def test_introspect(self):
-        self.field.valid_currencies = ['USD']
+    def test_introspect(self):  # type: () -> None
+        self.field.valid_currencies = frozenset({'USD'})
         self.assertEqual(
             self.field.introspect(),
             {
@@ -186,35 +186,35 @@ class AmountDictionaryFieldTests(unittest.TestCase):
             valid_currencies=['JPY', 'USD'],
         )
 
-    def test_constructor(self):
+    def test_constructor(self):  # type: () -> None
         with pytest.raises(TypeError):
             # noinspection PyTypeChecker
-            currency_fields.AmountDictionary(valid_currencies=1234)
+            currency_fields.AmountDictionary(valid_currencies=1234)  # type: ignore
 
         with pytest.raises(TypeError):
             # noinspection PyTypeChecker
-            currency_fields.AmountDictionary(valid_currencies=[1, 2, 3, 4])
+            currency_fields.AmountDictionary(valid_currencies=[1, 2, 3, 4])  # type: ignore
 
         with pytest.raises(TypeError):
             # noinspection PyTypeChecker
-            currency_fields.AmountDictionary(gt='not an int')
+            currency_fields.AmountDictionary(gt='not an int')  # type: ignore
 
         with pytest.raises(TypeError):
             # noinspection PyTypeChecker
-            currency_fields.AmountDictionary(gte='not an int')
+            currency_fields.AmountDictionary(gte='not an int')  # type: ignore
 
         with pytest.raises(TypeError):
             # noinspection PyTypeChecker
-            currency_fields.AmountDictionary(lt='not an int')
+            currency_fields.AmountDictionary(lt='not an int')  # type: ignore
 
         with pytest.raises(TypeError):
             # noinspection PyTypeChecker
-            currency_fields.AmountDictionary(lte='not an int')
+            currency_fields.AmountDictionary(lte='not an int')  # type: ignore
 
-    def test_valid(self):
+    def test_valid(self):  # type: () -> None
         self.assertEqual(self.field.errors(self.value), [])
 
-    def test_invalid_bad_currency(self):
+    def test_invalid_bad_currency(self):  # type: () -> None
         self.value['currency'] = 'XYZ'
         errors = self.field.errors(self.value)
         self.assertEqual(len(errors), 1)
@@ -228,7 +228,7 @@ class AmountDictionaryFieldTests(unittest.TestCase):
             'Value is not one of: "JPY", "USD"',
         )
 
-    def test_operator_greater_than(self):
+    def test_operator_greater_than(self):  # type: () -> None
         field = currency_fields.AmountDictionary(gt=99)
         self.assertEqual(field.errors(self.value), [])
 
@@ -249,7 +249,7 @@ class AmountDictionaryFieldTests(unittest.TestCase):
             'value',
         )
 
-    def test_operator_greater_than_or_equal_to(self):
+    def test_operator_greater_than_or_equal_to(self):  # type: () -> None
         field = currency_fields.AmountDictionary(gte=100)
         self.assertEqual(field.errors(self.value), [])
 
@@ -270,7 +270,7 @@ class AmountDictionaryFieldTests(unittest.TestCase):
             'value',
         )
 
-    def test_operator_less_than(self):
+    def test_operator_less_than(self):  # type: () -> None
         field = currency_fields.AmountDictionary(lt=101)
         self.assertEqual(field.errors(self.value), [])
 
@@ -291,7 +291,7 @@ class AmountDictionaryFieldTests(unittest.TestCase):
             'value',
         )
 
-    def test_operator_less_than_or_equal_to(self):
+    def test_operator_less_than_or_equal_to(self):  # type: () -> None
         field = currency_fields.AmountDictionary(lte=100)
         self.assertEqual(field.errors(self.value), [])
 

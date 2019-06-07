@@ -17,7 +17,7 @@ class GeoFieldTests(unittest.TestCase):
     Tests geographic fields
     """
 
-    def test_latitude(self):
+    def test_latitude(self):  # type: () -> None
         schema = Latitude()
         self.assertEqual(
             schema.errors(89) or [],
@@ -36,7 +36,7 @@ class GeoFieldTests(unittest.TestCase):
             [Error('Value not >= -90')],
         )
 
-    def test_longitude(self):
+    def test_longitude(self):  # type: () -> None
         schema = Longitude()
         self.assertEqual(
             schema.errors(129.1) or [],
@@ -51,7 +51,7 @@ class GeoFieldTests(unittest.TestCase):
             [Error('Value not >= -180')],
         )
 
-    def test_limited_longitude(self):
+    def test_limited_longitude(self):  # type: () -> None
         schema = Longitude(lte=-50)
         self.assertEqual(
             schema.errors(-51.2) or [],
