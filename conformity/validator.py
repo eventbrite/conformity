@@ -5,8 +5,11 @@ from __future__ import (
 
 from functools import wraps
 from typing import (  # noqa: F401 TODO Python 3
-    Any,
+    Any as AnyType,
     Callable,
+    List as ListType,
+    Optional,
+    Tuple as TupleType,
     Union,
 )
 
@@ -31,7 +34,7 @@ __all__ = (
 
 
 def validate(schema, value, noun='value'):
-    # type: (fields.Base, Any, six.text_type) -> None
+    # type: (fields.Base, AnyType, six.text_type) -> None
     """
     Checks the value against the schema, and raises ValidationError if validation
     fails.
@@ -48,10 +51,10 @@ def validate(schema, value, noun='value'):
 
 
 def validate_call(
-    kwargs,  # type: Union[fields.Dictionary, fields.SchemalessDictionary]
+    kwargs,  # type: Optional[Union[fields.Dictionary, fields.SchemalessDictionary]]
     returns,  # type: fields.Base
     is_method=False,  # type: bool
-    args=None  # type: Union[fields.Tuple, fields.List]
+    args=None  # type: Optional[Union[fields.Tuple, fields.List]]
 ):
     # type: (...) -> Callable[[Callable], Callable]
     """
@@ -85,7 +88,7 @@ def validate_call(
             # argument (`self` ond `cls`, respectively), so we need to make an exception for those if positional
             # arguments are not supported and exclude those if positional arguments are supported.
             if args is not None:
-                validate_args = passed_args[(1 if is_method else 0):]
+                validate_args = passed_args[(1 if is_method else 0):]  # type: Union[TupleType, ListType]
                 if isinstance(args, fields.List):
                     validate_args = list(validate_args)
                 validate(args, validate_args, 'positional arguments')
@@ -107,10 +110,10 @@ def validate_call(
 
             return return_value
 
-        decorated.__wrapped__ = func
+        setattr(decorated, '__wrapped__', func)
         # caveat: checking for f.__validated__ will work only if @validate_call is not masked by other decorators,
         # except for @classmethod or @staticmethod
-        decorated.__validated__ = True
+        setattr(decorated, '__validated__', True)
         return decorated
 
     return decorator

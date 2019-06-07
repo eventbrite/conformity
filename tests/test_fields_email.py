@@ -38,14 +38,14 @@ class EmailFieldTests(unittest.TestCase):
         'nick@alliancefrançaise.nu',  # IDNA
     ]
 
-    def test_constructor(self):
+    def test_constructor(self):  # type: () -> None
         with pytest.raises(TypeError):
             # noinspection PyTypeChecker
-            EmailAddress(whitelist=1234)
+            EmailAddress(whitelist=1234)  # type: ignore
 
         with pytest.raises(TypeError):
             # noinspection PyTypeChecker
-            EmailAddress(whitelist=[1, 2, 3, 4])
+            EmailAddress(whitelist=[1, 2, 3, 4])  # type: ignore
 
         assert EmailAddress(description='This is a test').introspect() == {
             'type': 'email_address',
@@ -57,11 +57,11 @@ class EmailFieldTests(unittest.TestCase):
             'domain_whitelist': ['green.org'],
         }
 
-    def test_not_unicode(self):
+    def test_not_unicode(self):  # type: () -> None
         schema = EmailAddress()
         assert schema.errors(self.valid_emails[0].encode('utf-8')) == [Error('Not a unicode string')]
 
-    def test_valid_email_address(self):
+    def test_valid_email_address(self):  # type: () -> None
         schema = EmailAddress()
         for one_email in self.valid_emails:
             self.assertEqual(
@@ -69,7 +69,7 @@ class EmailFieldTests(unittest.TestCase):
                 [],
             )
 
-    def test_invalid_email_address(self):
+    def test_invalid_email_address(self):  # type: () -> None
         schema = EmailAddress()
         self.assertEqual(
             schema.errors('Abc.example.com'),
@@ -142,7 +142,7 @@ class EmailFieldTests(unittest.TestCase):
             [Error('Not a valid email address (invalid domain field)', pointer='[1.2.3.4:56]')]
         )
 
-    def test_non_whitelisted_address(self):
+    def test_non_whitelisted_address(self):  # type: () -> None
         whitelisted_domains = ['a-whitelisted-domain']
         schema = EmailAddress(whitelist=whitelisted_domains)
         self.assertEqual(
@@ -150,14 +150,14 @@ class EmailFieldTests(unittest.TestCase):
             [Error('Not a valid email address (invalid domain field)', pointer='non-whitelisted-domain')],
         )
 
-    def test_valid_non_whitelisted_address(self):
+    def test_valid_non_whitelisted_address(self):  # type: () -> None
         schema = EmailAddress()
         self.assertEqual(
             schema.errors('a-name@a-valid-domain.test'),
             [],
         )
 
-    def test_whitelisted_address_via_constructor(self):
+    def test_whitelisted_address_via_constructor(self):  # type: () -> None
         whitelisted_domains = ['a-whitelisted-domain']
         schema = EmailAddress(whitelist=whitelisted_domains)
         self.assertEqual(
@@ -165,7 +165,7 @@ class EmailFieldTests(unittest.TestCase):
             [],
         )
 
-    def test_whitelist_removes_duplicates(self):
+    def test_whitelist_removes_duplicates(self):  # type: () -> None
         whitelisted_domains = ['a-repeated-whitelisted-domain', 'a-repeated-whitelisted-domain']
         schema = EmailAddress(whitelist=whitelisted_domains)
         self.assertEqual(1, len(schema.domain_whitelist))

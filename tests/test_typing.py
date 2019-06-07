@@ -1,7 +1,7 @@
 """
 This file simply instantiates every field with all possible arguments, so that running `mypy .` at the root of the
-project will cause all of our type hints to be validated. For whatever reason, MyPy does not validate type usage within
-functions and methods named `test_`, so none of our test usages get validated.
+project will cause all of our type hints to be validated. This is just a second-line sanity check to make sure all
+valid ways of instantiating fields pass MyPy verification.
 """
 from __future__ import (
     absolute_import,

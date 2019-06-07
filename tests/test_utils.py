@@ -11,14 +11,14 @@ from conformity.utils import attr_is_instance_or_instance_tuple
 
 
 class TestAttrIsInstanceOrInstanceTuple(object):
-    def test_bad_argument(self):
+    def test_bad_argument(self):  # type: () -> None
         with pytest.raises(TypeError):
             attr_is_instance_or_instance_tuple('not a type')
 
         with pytest.raises(TypeError):
             attr_is_instance_or_instance_tuple((int, 'also not a type'))
 
-    def test_validator(self):
+    def test_validator(self):  # type: () -> None
         @attr.s
         class ForTest(object):
             foo = attr.ib(default=1, validator=attr_is_instance_or_instance_tuple(int))

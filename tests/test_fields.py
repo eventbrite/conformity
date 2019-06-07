@@ -46,7 +46,7 @@ class FieldTests(unittest.TestCase):
     """
     Tests fields
     """
-    def test_integers(self):
+    def test_integers(self):  # type: () -> None
         schema = Integer(gt=0, lt=10)
         self.assertEqual([], schema.errors(1))
         self.assertEqual([Error('Not an integer')], schema.errors('one'))
@@ -58,7 +58,7 @@ class FieldTests(unittest.TestCase):
         self.assertEqual([Error('Value not >= 0')], schema.errors(-1))
         self.assertEqual([Error('Value not <= 10')], schema.errors(11))
 
-    def test_strings(self):
+    def test_strings(self):  # type: () -> None
         schema = UnicodeString()
         self.assertEqual([], schema.errors(''))
         self.assertEqual([], schema.errors('Foo bar baz qux foo bar baz qux foo bar baz qux foo bar baz qux foo bar'))
@@ -92,7 +92,7 @@ class FieldTests(unittest.TestCase):
         with pytest.raises(ValueError):
             UnicodeString(min_length=6, max_length=5)
 
-    def test_complex(self):
+    def test_complex(self):  # type: () -> None
 
         schema = Dictionary({
             'child_ids': List(Integer(gt=0)),
@@ -105,7 +105,7 @@ class FieldTests(unittest.TestCase):
                     'state': UnicodeString(),
                     'country': UnicodeString(),
                 },
-                optional_keys=['line2', 'state'],
+                optional_keys=('line2', 'state'),
             ),
             'unique_things': Set(UnicodeString()),
         })
@@ -198,7 +198,7 @@ class FieldTests(unittest.TestCase):
             introspection['contents']['unique_things'],
         )
 
-    def test_dictionary_extension(self):
+    def test_dictionary_extension(self):  # type: () -> None
         schema1 = Dictionary(
             {
                 'foo': UnicodeString(),
@@ -259,7 +259,7 @@ class FieldTests(unittest.TestCase):
         assert 'display_order' not in schema2.introspect()
         assert 'display_order' not in schema3.introspect()
 
-    def test_dictionary_ordering(self):
+    def test_dictionary_ordering(self):  # type: () -> None
         schema1 = Dictionary(
             OrderedDict((
                 ('foo', UnicodeString()),
@@ -318,7 +318,7 @@ class FieldTests(unittest.TestCase):
             Error(code='INVALID', pointer='moon', message='Not a tuple'),
         ]
 
-    def test_list(self):
+    def test_list(self):  # type: () -> None
         schema = List(UnicodeString(), min_length=4, max_length=8)
 
         assert schema.errors(['foo', 'bar', 'baz', 'qux']) == []
@@ -330,7 +330,7 @@ class FieldTests(unittest.TestCase):
         with pytest.raises(ValueError):
             List(UnicodeString(), min_length=21, max_length=20)
 
-    def test_temporal(self):
+    def test_temporal(self):  # type: () -> None
         past1985 = datetime.datetime(1985, 10, 26, 1, 21, 0)
         past1955 = datetime.datetime(1955, 11, 12, 22, 4, 0)
 
@@ -418,7 +418,7 @@ class FieldTests(unittest.TestCase):
             time_zone_schema.errors(datetime.datetime.now()),
         )
 
-        self.assertEqual([], time_zone_schema.errors(pytz.timezone('America/Chicago')))
+        self.assertEqual([], time_zone_schema.errors(pytz.timezone(str('America/Chicago'))))
 
         assert time_schema.errors(datetime.time(12, 0, 0)) == []
         assert time_schema.errors(datetime.time(7, 0, 0)) == [Error('Value not >= 08:00:00')]
@@ -436,7 +436,7 @@ class FieldTests(unittest.TestCase):
         with pytest.raises(TypeError):
             Date(lte=datetime.time(12, 15, 0))
 
-    def test_anything(self):
+    def test_anything(self):  # type: () -> None
         with pytest.raises(TypeError):
             Anything(b'Not unicode')
 
@@ -445,7 +445,7 @@ class FieldTests(unittest.TestCase):
             'description': 'Test description 1',
         }
 
-    def test_hashable(self):
+    def test_hashable(self):  # type: () -> None
         assert Hashable('Another description 2').introspect() == {
             'type': 'hashable',
             'description': 'Another description 2',
@@ -454,7 +454,7 @@ class FieldTests(unittest.TestCase):
         assert Hashable().errors('this is hashable') == []
         assert Hashable().errors({'this', 'is', 'not', 'hashable'}) == [Error('Value is not hashable')]
 
-    def test_schemaless_dict_empty(self):
+    def test_schemaless_dict_empty(self):  # type: () -> None
         """
         Tests the schemaless dict without any schema at all
         (so the default Hashable: Anything)
@@ -478,7 +478,7 @@ class FieldTests(unittest.TestCase):
             }
         )
 
-    def test_schemaless_dict(self):
+    def test_schemaless_dict(self):  # type: () -> None
         """
         Tests the schemaless dict with some schema
         """
@@ -514,7 +514,7 @@ class FieldTests(unittest.TestCase):
         with pytest.raises(ValueError):
             SchemalessDictionary(Integer(), UnicodeString(), min_length=12, max_length=11)
 
-    def test_tuple(self):
+    def test_tuple(self):  # type: () -> None
         schema = Tuple(Integer(gt=0), UnicodeString(), Constant('I love tuples'))
 
         self.assertEqual(
@@ -560,7 +560,8 @@ class FieldTests(unittest.TestCase):
         )
 
         with pytest.raises(TypeError):
-            Tuple('not a field')
+            # noinspection PyTypeChecker
+            Tuple('not a field')  # type: ignore
 
         with pytest.raises(TypeError):
             Tuple(Integer(gt=0), UnicodeString(), Constant('I love tuples'), description=b'Not a unicode string')
@@ -568,7 +569,7 @@ class FieldTests(unittest.TestCase):
         with pytest.raises(TypeError):
             Tuple(Integer(gt=0), UnicodeString(), Constant('I love tuples'), unsupported='argument')
 
-    def test_dictionary_subclass(self):
+    def test_dictionary_subclass(self):  # type: () -> None
         """
         Tests that subclassing a Dictionary allows you to provide the
         same options as instantiating it.
@@ -579,8 +580,8 @@ class FieldTests(unittest.TestCase):
                 'y': Float(),
                 'z': Float(),
             }
-            optional_keys = ['z']
-        schema = Coordinate(description='Where the treasure is')
+            optional_keys = ('z', )
+        schema = Coordinate(description='Where the treasure is')  # type: Base
 
         # Test the options work right
         self.assertEqual(
@@ -631,9 +632,9 @@ class FieldTests(unittest.TestCase):
 
         with pytest.raises(TypeError):
             # noinspection PyTypeChecker
-            Another({'foo': UnicodeString()}, optional_keys=1234)  # not iterable
+            Another({'foo': UnicodeString()}, optional_keys=1234)  # type: ignore
 
-    def test_decimal(self):
+    def test_decimal(self):  # type: () -> None
         """
         Tests decimal.Decimal object validation
         """
@@ -673,7 +674,7 @@ class FieldTests(unittest.TestCase):
         self.assertEqual([], Decimal(lte=12, gte=6).errors(decimal.Decimal('6')))
         self.assertEqual([], Decimal(lte=12, gte=6).errors(decimal.Decimal('12')))
 
-    def test_unicode_decimal(self):
+    def test_unicode_decimal(self):  # type: () -> None
         """
         Tests unicode decimal parsing
         """
@@ -708,7 +709,7 @@ class FieldTests(unittest.TestCase):
             'description': 'Foo description',
         }
 
-    def test_multi_constant(self):
+    def test_multi_constant(self):  # type: () -> None
         """
         Tests constants with multiple options
         """
@@ -735,7 +736,7 @@ class FieldTests(unittest.TestCase):
         with pytest.raises(TypeError):
             Constant(42, 36, 81, 9231, description=b'not unicode')
 
-    def test_base(self):
+    def test_base(self):  # type: () -> None
         schema = Base()
         assert schema.errors('foo') == [Error('Validation not implemented on base type')]
         with pytest.raises(NotImplementedError):

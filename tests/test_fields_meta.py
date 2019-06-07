@@ -3,7 +3,12 @@ from __future__ import (
     unicode_literals,
 )
 
-from typing import Mapping
+from typing import (  # noqa: F401 TODO Python 3
+    Any as AnyType,
+    Dict,
+    Hashable as HashableType,
+    Mapping,
+)
 import unittest
 
 import pytest
@@ -36,7 +41,7 @@ class MetaFieldTests(unittest.TestCase):
     Tests meta fields
     """
 
-    def test_nullable(self):
+    def test_nullable(self):  # type: () -> None
         constant = Constant('one', 'two')
         schema = Nullable(constant)
         self.assertEqual([], schema.errors(None))
@@ -61,13 +66,13 @@ class MetaFieldTests(unittest.TestCase):
         self.assertEqual(1, len(schema.errors(b'hello, world')))
         self.assertEqual({'type': 'nullable', 'nullable': string.introspect()}, schema.introspect())
 
-    def test_null(self):
+    def test_null(self):  # type: () -> None
         null = Null()
         assert null.errors(None) == []
         assert null.errors('something') == [Error('Value is not null')]
         assert null.introspect() == {'type': 'null'}
 
-    def test_any(self):
+    def test_any(self):  # type: () -> None
         schema = Any(Constant('one'), Constant('two'))
         self.assertEqual(
             schema.errors('one'),
@@ -91,7 +96,8 @@ class MetaFieldTests(unittest.TestCase):
         }
 
         with pytest.raises(TypeError):
-            Any('not a field')
+            # noinspection PyTypeChecker
+            Any('not a field')  # type: ignore
 
         with pytest.raises(TypeError):
             Any(Constant('one'), Constant('two'), description=b'Not unicode')
@@ -99,7 +105,7 @@ class MetaFieldTests(unittest.TestCase):
         with pytest.raises(TypeError):
             Any(Constant('one'), Constant('two'), unsupported='argument')
 
-    def test_all(self):
+    def test_all(self):  # type: () -> None
         schema = All(Constant('one'), UnicodeString())
         self.assertEqual(
             schema.errors('one'),
@@ -119,7 +125,8 @@ class MetaFieldTests(unittest.TestCase):
         }
 
         with pytest.raises(TypeError):
-            All('not a field')
+            # noinspection PyTypeChecker
+            All('not a field')  # type: ignore
 
         with pytest.raises(TypeError):
             All(Constant('one'), UnicodeString(), description=b'Not unicode')
@@ -127,7 +134,7 @@ class MetaFieldTests(unittest.TestCase):
         with pytest.raises(TypeError):
             All(Constant('one'), UnicodeString(), unsupported='argument')
 
-    def test_object_instance(self):
+    def test_object_instance(self):  # type: () -> None
         class Thing(object):
             pass
 
@@ -168,13 +175,13 @@ class MetaFieldTests(unittest.TestCase):
 
         with pytest.raises(TypeError):
             # noinspection PyTypeChecker
-            ObjectInstance('not a type')
+            ObjectInstance('not a type')  # type: ignore
 
         with pytest.raises(TypeError):
             # noinspection PyTypeChecker
-            ObjectInstance((Thing, SomethingElse, 'also not a type'))
+            ObjectInstance((Thing, SomethingElse, 'also not a type'))  # type: ignore
 
-    def test_polymorph(self):
+    def test_polymorph(self):  # type: () -> None
 
         card = Dictionary({
             'payment_type': Constant('card', 'credit'),
@@ -281,7 +288,7 @@ class MetaFieldTests(unittest.TestCase):
             }
         ) == []
 
-    def test_boolean_validator(self):
+    def test_boolean_validator(self):  # type: () -> None
         schema = BooleanValidator(
             lambda x: x.isdigit(),
             'str.isdigit()',
@@ -319,7 +326,7 @@ class MetaFieldTests(unittest.TestCase):
             },
         )
 
-    def test_type_reference(self):
+    def test_type_reference(self):  # type: () -> None
         schema = TypeReference(description='This is a test')
         assert schema.errors(Foo) == []
         assert schema.errors(Bar) == []
@@ -349,13 +356,13 @@ class MetaFieldTests(unittest.TestCase):
 
         with pytest.raises(TypeError):
             # noinspection PyTypeChecker
-            TypeReference(base_classes='not a type')
+            TypeReference(base_classes='not a type')  # type: ignore
 
         with pytest.raises(TypeError):
             # noinspection PyTypeChecker
-            TypeReference(base_classes=(Foo, Baz, 'not a type'))
+            TypeReference(base_classes=(Foo, Baz, 'not a type'))  # type: ignore
 
-    def test_type_path(self):
+    def test_type_path(self):  # type: () -> None
         schema = TypePath(description='This is another test')
         assert schema.errors(b'Nope nope nope') == [Error('Not a unicode string')]
         assert schema.errors('Nope nope nope') == [Error('Value "Nope nope nope" is not a valid Python import path')]
@@ -414,10 +421,10 @@ class Qux(object):
 
 
 class TestClassConfigurationSchema(object):
-    def test_provider_decorator(self):
+    def test_provider_decorator(self):  # type: () -> None
         with pytest.raises(TypeError):
             # noinspection PyTypeChecker
-            ClassConfigurationSchema.provider(Boolean())
+            ClassConfigurationSchema.provider(Boolean())  # type: ignore
 
         schema = Dictionary({})
 
@@ -430,7 +437,7 @@ class TestClassConfigurationSchema(object):
             pass
 
         with pytest.raises(TypeError):
-            decorator(is_not_a_class)
+            decorator(is_not_a_class)  # type: ignore
 
         cls = decorator(IsAClass)
         assert cls is IsAClass
@@ -444,7 +451,7 @@ class TestClassConfigurationSchema(object):
 
         assert getattr(Sample, '_conformity_initialization_schema') is another_schema
 
-    def test_inline_definition_no_default_or_base_class(self):
+    def test_inline_definition_no_default_or_base_class(self):  # type: () -> None
         schema = ClassConfigurationSchema()
 
         assert schema.errors('Not a dict') == [Error('Not a mapping (dictionary)')]
@@ -469,7 +476,7 @@ class TestClassConfigurationSchema(object):
             pointer='path',
         )]
 
-        config = {'path': 'tests.test_fields_meta:BasicProvider'}
+        config = {'path': 'tests.test_fields_meta:BasicProvider'}  # type: Dict[HashableType, AnyType]
         assert sorted(schema.errors(config)) == [
             Error('Missing key: bar', code='MISSING', pointer='kwargs.bar'),
             Error('Missing key: foo', code='MISSING', pointer='kwargs.foo'),
@@ -478,7 +485,7 @@ class TestClassConfigurationSchema(object):
 
         with pytest.raises(ValidationError) as error_context:
             # noinspection PyTypeChecker
-            schema.instantiate_from('Not a dict')
+            schema.instantiate_from('Not a dict')  # type: ignore
         assert error_context.value.args[0] == [Error('Not a mutable mapping (dictionary)')]
 
         config = {'path': 'tests.test_fields_meta:BasicProvider'}
@@ -540,13 +547,13 @@ class TestClassConfigurationSchema(object):
         assert value.bar is True
         assert 'object' not in config
 
-    def test_inline_definition_with_default_and_base_class(self):
+    def test_inline_definition_with_default_and_base_class(self):  # type: () -> None
         schema = ClassConfigurationSchema(
             base_class=BaseSomething,
             default_path='tests.test_fields_meta:SpecificSomething',
         )
 
-        config = {}
+        config = {}  # type: dict
         with pytest.raises(ValidationError) as error_context:
             schema.instantiate_from(config)
         assert sorted(error_context.value.args[0]) == [
@@ -583,7 +590,7 @@ class TestClassConfigurationSchema(object):
         assert value.qux is False
         assert config['object'] == AnotherSomething
 
-    def test_subclass_definition(self):
+    def test_subclass_definition(self):  # type: () -> None
         class ImmutableDict(Mapping):
             def __init__(self, underlying):
                 self.underlying = underlying
@@ -594,7 +601,7 @@ class TestClassConfigurationSchema(object):
             def __getitem__(self, k):
                 return self.underlying[k]
 
-            def get(self, k, default):
+            def get(self, k, default=None):
                 return self.underlying.get(k, default)
 
             def __iter__(self):
@@ -619,7 +626,7 @@ class TestClassConfigurationSchema(object):
 
         schema = ExtendedSchema()
 
-        config = {}
+        config = {}  # type: dict
         with pytest.raises(ValidationError) as error_context:
             schema.instantiate_from(config)
         assert error_context.value.args[0] == [
@@ -634,9 +641,9 @@ class TestClassConfigurationSchema(object):
         assert value.qux == 'unset'
         assert config['object'] == AnotherSomething
 
-        config = ImmutableDict({'kwargs': {'baz': None}})
-        assert schema.errors(config) == []
-        assert 'object' not in config
+        config2 = ImmutableDict({'kwargs': {'baz': None}})
+        assert schema.errors(config2) == []
+        assert 'object' not in config2
 
         assert schema.introspect() == {
             'type': 'class_config_dictionary',

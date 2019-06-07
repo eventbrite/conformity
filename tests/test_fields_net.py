@@ -18,7 +18,7 @@ class NetFieldTests(unittest.TestCase):
     Tests net fields
     """
 
-    def test_ipv4address(self):
+    def test_ipv4address(self):  # type: () -> None
         schema = IPv4Address()
         self.assertEqual(
             schema.errors('127.0.0.1'),
@@ -37,7 +37,7 @@ class NetFieldTests(unittest.TestCase):
             [Error('Not a valid IPv4 address')],
         )
 
-    def test_ipv6address(self):
+    def test_ipv6address(self):  # type: () -> None
         schema = IPv6Address()
         self.assertEqual(
             schema.errors('::2'),
@@ -84,7 +84,7 @@ class NetFieldTests(unittest.TestCase):
             [Error('Not a valid IPv6 address (v4 section not valid address)')],
         )
 
-    def test_ipaddress(self):
+    def test_ipaddress(self):  # type: () -> None
         schema = IPAddress()
         self.assertEqual(
             schema.errors('127.34.22.11'),

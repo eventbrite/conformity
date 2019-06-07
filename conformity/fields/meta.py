@@ -8,7 +8,7 @@ from typing import (  # noqa: F401 TODO Python 3
     Any as AnyType,
     Callable,
     Dict,
-    Hashable,
+    Hashable as HashableType,
     List as ListType,
     Mapping,
     MutableMapping,
@@ -26,6 +26,7 @@ from conformity.error import (
     ERROR_CODE_UNKNOWN,
     Error,
     ValidationError,
+    update_error_pointer,
 )
 from conformity.fields.basic import (
     Base,
@@ -39,7 +40,6 @@ from conformity.utils import (
     attr_is_optional,
     attr_is_string,
     strip_none,
-    update_error_pointer,
 )
 
 
@@ -94,7 +94,7 @@ class Polymorph(Base):
     introspect_type = 'polymorph'
 
     switch_field = attr.ib(validator=attr_is_string())  # type: six.text_type
-    contents_map = attr.ib(validator=attr_is_instance(dict))  # type: Mapping[Hashable, Base]
+    contents_map = attr.ib(validator=attr_is_instance(dict))  # type: Mapping[HashableType, Base]
     description = attr.ib(default=None, validator=attr_is_optional(attr_is_string()))  # type: Optional[six.text_type]
 
     def errors(self, value):
@@ -383,7 +383,7 @@ class ClassConfigurationSchema(Base):
 
         return []
 
-    def instantiate_from(self, configuration):  # type: (MutableMapping) -> AnyType
+    def instantiate_from(self, configuration):  # type: (MutableMapping[HashableType, AnyType]) -> AnyType
         if not isinstance(configuration, MutableMapping):
             raise ValidationError([Error('Not a mutable mapping (dictionary)')])
 
@@ -448,7 +448,7 @@ class Any(Base):
             raise TypeError('Unknown keyword arguments: {}'.format(', '.join(kwargs.keys())))
 
     def errors(self, value):
-        result = []
+        result = []  # type: ListType[Error]
         for option in self.options:
             sub_errors = option.errors(value)
             # If there's no errors from a sub-field, then it's all OK!
@@ -491,7 +491,7 @@ class All(Base):
             raise TypeError('Unknown keyword arguments: {}'.format(', '.join(kwargs.keys())))
 
     def errors(self, value):
-        result = []
+        result = []  # type: ListType[Error]
         for requirement in self.requirements:
             result.extend(requirement.errors(value) or [])
         return result
