@@ -1,6 +1,11 @@
 Changelog
 =========
 
+1.24.0 (2019-06-07)
+-------------------
+- [PATCH] Do some cleanup post-typing-integration
+- [MINOR] Add new ClassConfigurationSchema field
+
 1.23.0 (2019-06-05)
 -------------------
 - [MINOR] Support eager argument validation and type hints
