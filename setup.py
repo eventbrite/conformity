@@ -41,6 +41,8 @@ setup(
     long_description=readme(),
     url='http://github.com/eventbrite/conformity',
     packages=list(map(str, find_packages(exclude=['*.tests', '*.tests.*', 'tests.*', 'tests']))),
+    package_data={str('conformity'): [str('py.typed')]},  # PEP 561
+    zip_safe=False,  # PEP 561
     include_package_data=True,
     install_requires=[
         'attrs>=17.4,<20',
