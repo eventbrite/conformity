@@ -1,6 +1,10 @@
 Changelog
 =========
 
+1.24.2 (2019-06-12)
+-------------------
+- [PATCH] Make validated functions and methods introspectable
+
 1.24.1 (2019-06-11)
 -------------------
 - [PATCH] Add PEP-561 type marker file
