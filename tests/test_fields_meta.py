@@ -576,6 +576,22 @@ class TestClassConfigurationSchema(object):
         ]
         assert config['object'] == AnotherSomething
 
+        config = {'path': 'tests.test_fields_meta.ExtendedAnotherSomething'}
+        with pytest.raises(ValidationError) as error_context:
+            schema.instantiate_from(config)
+        assert error_context.value.args[0] == [
+            Error('Missing key: baz', code='MISSING', pointer='kwargs.baz'),
+        ]
+        assert config['object'] == ExtendedAnotherSomething
+
+        config = {'path': 'tests.test_fields_meta.OverridingAnotherSomething'}
+        with pytest.raises(ValidationError) as error_context:
+            schema.instantiate_from(config)
+        assert error_context.value.args[0] == [
+            Error('Missing key: no_baz', code='MISSING', pointer='kwargs.no_baz'),
+        ]
+        assert config['object'] == OverridingAnotherSomething
+
         config = {'path': 'tests.test_fields_meta.AnotherSomething', 'kwargs': {'baz': None}}
         value = schema.instantiate_from(config)
         assert isinstance(value, AnotherSomething)
@@ -589,6 +605,20 @@ class TestClassConfigurationSchema(object):
         assert value.baz == 'cool'
         assert value.qux is False
         assert config['object'] == AnotherSomething
+
+        config = {'path': 'tests.test_fields_meta.ExtendedAnotherSomething', 'kwargs': {'baz': 'cool', 'qux': False}}
+        value = schema.instantiate_from(config)
+        assert isinstance(value, ExtendedAnotherSomething)
+        assert value.baz == 'cool'
+        assert value.qux is False
+        assert config['object'] == ExtendedAnotherSomething
+
+        config = {'path': 'tests.test_fields_meta.OverridingAnotherSomething', 'kwargs': {'no_baz': 'very cool'}}
+        value = schema.instantiate_from(config)
+        assert isinstance(value, OverridingAnotherSomething)
+        assert value.baz == 'very cool'
+        assert value.qux == 'no_unset'
+        assert config['object'] == OverridingAnotherSomething
 
     def test_subclass_definition(self):  # type: () -> None
         class ImmutableDict(Mapping):
@@ -691,3 +721,15 @@ class AnotherSomething(BaseSomething):
     def __init__(self, baz, qux='unset'):
         self.baz = baz
         self.qux = qux
+
+
+class ExtendedAnotherSomething(AnotherSomething):
+    pass
+
+
+@ClassConfigurationSchema.provider(
+    Dictionary({'no_baz': Nullable(UnicodeString()), 'no_qux': Boolean()}, optional_keys=('no_qux', )),
+)
+class OverridingAnotherSomething(AnotherSomething):
+    def __init__(self, no_baz, no_qux='no_unset'):
+        super(OverridingAnotherSomething, self).__init__(baz=no_baz, qux=no_qux)
