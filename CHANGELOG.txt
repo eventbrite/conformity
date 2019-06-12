@@ -1,6 +1,10 @@
 Changelog
 =========
 
+1.24.3 (2019-06-12)
+-------------------
+- [PATCH] Regression: Fix Dictionary subclass processing and validation
+
 1.24.2 (2019-06-12)
 -------------------
 - [PATCH] Make validated functions and methods introspectable
