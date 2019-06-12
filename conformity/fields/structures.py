@@ -141,29 +141,38 @@ class Dictionary(Base):
     description = attr.ib(default=None, validator=attr_is_optional(attr_is_string()))  # type: Optional[six.text_type]
 
     def __attrs_post_init__(self):
-        if self.contents is None and getattr(self.__class__, 'contents', None):
+        if self.contents is None and getattr(self.__class__, 'contents', None) is not None:
             # If no contents were provided but a subclass has hard-coded contents, use those
             self.contents = self.__class__.contents
         if self.contents is None:
             # If there are still no contents, raise an error
             raise ValueError("'contents' is a required argument")
+        if not isinstance(self.contents, dict):
+            raise TypeError("'contents' must be a dict")
 
-        if self.optional_keys is self._optional_keys_default and getattr(self.__class__, 'optional_keys', None):
+        if (
+            self.optional_keys is self._optional_keys_default and
+            getattr(self.__class__, 'optional_keys', None) is not None
+        ):
             # If the optional_keys argument was defaulted (not specified) but a subclass has it hard-coded, use that
             self.optional_keys = self.__class__.optional_keys
         if not isinstance(self.optional_keys, frozenset):
             self.optional_keys = frozenset(self.optional_keys)
 
-        if self.allow_extra_keys is None and getattr(self.__class__, 'allow_extra_keys', None):
+        if self.allow_extra_keys is None and getattr(self.__class__, 'allow_extra_keys', None) is not None:
             # If the allow_extra_keys argument was not specified but a subclass has it hard-coded, use that value
             self.allow_extra_keys = self.__class__.allow_extra_keys
         if self.allow_extra_keys is None:
             # If no value is found, default to False
             self.allow_extra_keys = False
+        if not isinstance(self.allow_extra_keys, bool):
+            raise TypeError("'allow_extra_keys' must be a boolean")
 
         if self.description is None and getattr(self.__class__, 'description', None):
             # If the description was not specified but a subclass has it hard-coded, use that value
             self.description = self.__class__.description
+        if self.description is not None and not isinstance(self.description, six.text_type):
+            raise TypeError("'description' must be a unicode string")
 
     def errors(self, value):
         if not isinstance(value, dict):

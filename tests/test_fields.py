@@ -6,6 +6,10 @@ from __future__ import (
 from collections import OrderedDict
 import datetime
 import decimal
+from typing import (  # noqa: F401 TODO Python 3
+    Hashable as HashableType,
+    Tuple as TupleType,
+)
 import unittest
 
 import freezegun
@@ -633,6 +637,37 @@ class FieldTests(unittest.TestCase):
         with pytest.raises(TypeError):
             # noinspection PyTypeChecker
             Another({'foo': UnicodeString()}, optional_keys=1234)  # type: ignore
+
+        class BadDict1(Dictionary):
+            allow_extra_keys = 'not a bool'  # type: ignore
+
+        with pytest.raises(TypeError):
+            BadDict1(contents={})
+
+        class BadDict2(Dictionary):
+            description = b'not a unicode'  # type: ignore
+
+        with pytest.raises(TypeError):
+            BadDict2(contents={})
+
+        class BadDict3(Dictionary):
+            contents = 'not a dict'  # type: ignore
+
+        with pytest.raises(TypeError):
+            BadDict3()
+
+        class ExtraDict(Dictionary):
+            contents = {}  # type: ignore
+            optional_keys = ('one', 'two')  # type: TupleType[HashableType, ...]
+
+        d = ExtraDict()
+        assert d.optional_keys == frozenset({'one', 'two'})
+
+        class ExtraExtraDict(ExtraDict):
+            optional_keys = ()  # type: TupleType[HashableType, ...]
+
+        d = ExtraExtraDict()
+        assert d.optional_keys == frozenset({})
 
     def test_decimal(self):  # type: () -> None
         """
