@@ -69,6 +69,11 @@ class ValidatorTests(unittest.TestCase):
                 return 5
             return '{}, {}!'.format(greeting, name)
 
+        assert getattr(greeter, '__validated__') is True
+        assert getattr(greeter, '__validated_schema_args__') is None
+        assert getattr(greeter, '__validated_schema_kwargs__') is schema
+        assert getattr(greeter, '__validated_schema_returns__') == UnicodeString()
+
         self.assertEqual(greeter(name='Andrew'), 'Hello, Andrew!')
         self.assertEqual(greeter(name='Andrew', greeting='Ahoy'), 'Ahoy, Andrew!')
 
@@ -93,6 +98,11 @@ class ValidatorTests(unittest.TestCase):
             if foo:
                 return bar.format(bar)
 
+        assert getattr(args_function, '__validated__') is True
+        assert getattr(args_function, '__validated_schema_args__') == Tuple(Integer(), UnicodeString())
+        assert getattr(args_function, '__validated_schema_kwargs__') is None
+        assert getattr(args_function, '__validated_schema_returns__') == Null()
+
         assert args_function(0, 'John {}') is None
         with pytest.raises(ValidationError):
             args_function(1, 'Jeff {}')
@@ -110,6 +120,14 @@ class ValidatorTests(unittest.TestCase):
         )
         def args_and_kwargs_function(foo, bar, extra='baz'):
             return bar.format(foo, extra)
+
+        assert getattr(args_and_kwargs_function, '__validated__') is True
+        assert getattr(args_and_kwargs_function, '__validated_schema_args__') == Tuple(Integer(), UnicodeString())
+        assert (
+            getattr(args_and_kwargs_function, '__validated_schema_kwargs__') ==
+            Dictionary({'extra': UnicodeString()}, optional_keys=('extra', ))
+        )
+        assert getattr(args_and_kwargs_function, '__validated_schema_returns__') == UnicodeString()
 
         assert args_and_kwargs_function(0, 'John {}: {}') == 'John 0: baz'
         assert args_and_kwargs_function(1, 'Jeff {}: {}', extra='cool') == 'Jeff 1: cool'
@@ -150,6 +168,24 @@ class ValidatorTests(unittest.TestCase):
             )
             def args_and_kwargs_method(self, *args, **kwargs):
                 return [s.format(**kwargs) for s in args]
+
+        assert getattr(Helper.greeter, '__validated__') is True
+        assert getattr(Helper.greeter, '__validated_schema_args__') is None
+        assert getattr(Helper.greeter, '__validated_schema_kwargs__') is schema
+        assert getattr(Helper.greeter, '__validated_schema_returns__') == UnicodeString()
+
+        assert getattr(Helper.args_method, '__validated__') is True
+        assert getattr(Helper.args_method, '__validated_schema_args__') == Tuple(Integer(), Integer())
+        assert getattr(Helper.args_method, '__validated_schema_kwargs__') is None
+        assert getattr(Helper.args_method, '__validated_schema_returns__') == Integer()
+
+        assert getattr(Helper.args_and_kwargs_method, '__validated__') is True
+        assert getattr(Helper.args_and_kwargs_method, '__validated_schema_args__') == List(UnicodeString())
+        assert (
+            getattr(Helper.args_and_kwargs_method, '__validated_schema_kwargs__') ==
+            SchemalessDictionary(value_type=UnicodeString())
+        )
+        assert getattr(Helper.args_and_kwargs_method, '__validated_schema_returns__') == List(UnicodeString())
 
         self.assertEqual(Helper.greeter(name='Andrew'), 'Hello, Andrew!')
         self.assertEqual(Helper.greeter(name='Andrew', greeting='Ahoy'), 'Ahoy, Andrew!')

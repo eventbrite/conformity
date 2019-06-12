@@ -114,6 +114,9 @@ def validate_call(
         # caveat: checking for f.__validated__ will work only if @validate_call is not masked by other decorators,
         # except for @classmethod or @staticmethod
         setattr(decorated, '__validated__', True)
+        setattr(decorated, '__validated_schema_args__', args)
+        setattr(decorated, '__validated_schema_kwargs__', kwargs)
+        setattr(decorated, '__validated_schema_returns__', returns)
         return decorated
 
     return decorator
