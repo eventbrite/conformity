@@ -30,6 +30,8 @@ from conformity.fields import (
     Nullable,
     ObjectInstance,
     Polymorph,
+    PythonPath,
+    SchemalessDictionary,
     TypePath,
     TypeReference,
     UnicodeString,
@@ -397,10 +399,39 @@ class MetaFieldTests(unittest.TestCase):
                 Foo,
             )),
         ]
-        assert schema.introspect() == {'type': 'type_path', 'base_classes': [six.text_type(Foo)]}
+        assert schema.introspect() == {
+            'type': 'python_path',
+            'value_schema': {
+                'type': 'type_reference',
+                'base_classes': [six.text_type(Foo)],
+            }
+        }
 
         assert TypePath.resolve_python_path('tests.test_fields_meta.Qux') == Qux
         assert TypePath.resolve_python_path('tests.test_fields_meta:Qux.InnerQux') == Qux.InnerQux
+
+    def test_python_path(self):  # type: () -> None
+        schema = PythonPath()
+        assert schema.errors('tests.test_fields_meta.MY_FOO') == []
+        assert schema.errors('tests.test_fields_meta.MY_BAR') == []
+        assert schema.errors('tests.test_fields_meta:MY_QUX') == []
+        assert schema.errors('tests.test_fields_meta.MY_DICT') == []
+        assert schema.errors('tests.test_fields_meta:Qux.INNER_CONSTANT') == []
+
+        schema = PythonPath(ObjectInstance(Foo))
+        assert schema.errors('tests.test_fields_meta.MY_FOO') == []
+        assert schema.errors('tests.test_fields_meta.MY_BAR') == []
+        assert schema.errors('tests.test_fields_meta:MY_QUX') == [Error('Not an instance of Foo')]
+        assert schema.errors('tests.test_fields_meta.MY_DICT') == [Error('Not an instance of Foo')]
+        assert schema.errors('tests.test_fields_meta:Qux.INNER_CONSTANT') == [Error('Not an instance of Foo')]
+
+        schema = PythonPath(SchemalessDictionary())
+        assert schema.errors('tests.test_fields_meta.MY_DICT') == []
+        assert schema.errors('tests.test_fields_meta:MY_QUX') == [Error('Not a dict')]
+
+        schema = PythonPath(UnicodeString())
+        assert schema.errors('tests.test_fields_meta:Qux.INNER_CONSTANT') == []
+        assert schema.errors('tests.test_fields_meta.MY_DICT') == [Error('Not a unicode string')]
 
 
 class Foo(object):
@@ -416,8 +447,16 @@ class Baz(object):
 
 
 class Qux(object):
+    INNER_CONSTANT = 'hello'
+
     class InnerQux(object):
         pass
+
+
+MY_FOO = Foo()
+MY_BAR = Bar()
+MY_QUX = Qux()
+MY_DICT = {'foo': 'bar', 'baz': 'qux'}
 
 
 class TestClassConfigurationSchema(object):

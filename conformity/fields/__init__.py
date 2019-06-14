@@ -30,6 +30,7 @@ from conformity.fields.meta import (
     Nullable,
     ObjectInstance,
     Polymorph,
+    PythonPath,
     TypePath,
     TypeReference,
 )
@@ -82,6 +83,7 @@ __all__ = (
     'Nullable',
     'ObjectInstance',
     'Polymorph',
+    'PythonPath',
     'SchemalessDictionary',
     'Set',
     'Time',
