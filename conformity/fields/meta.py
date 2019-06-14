@@ -4,6 +4,7 @@ from __future__ import (
 )
 
 import importlib
+from types import ModuleType  # noqa: F401 TODO Python 3
 from typing import (  # noqa: F401 TODO Python 3
     Any as AnyType,
     Callable,
@@ -152,6 +153,85 @@ class ObjectInstance(Base):
 
 
 @attr.s
+class PythonPath(Base):
+    """
+    Accepts only a unicode path to an importable Python type, function, or variable, including the full path to the
+    enclosing module. Both '.' and ':' are recognized as valid separators between module name and item name, but if
+    the item is not a top-level member of the module, it can only be accessed by using ':' as the separator.
+
+    All of the following are valid type name formats:
+
+    foo.bar.MyClass
+    foo.bar:MyClass
+    foo.bar.my_function
+    foo.bar.MY_CONSTANT
+    foo.bar:MyClass.MY_CONSTANT
+    baz.qux:ParentClass.SubClass
+
+    This field performs two validations: First that the path is a unicode string, and second that the item is
+    importable (exists). If you later need to actually access that item, you can use the `resolve_python_path` static
+    method. Imported items are cached for faster future lookup.
+
+    You can optionally specify a `value_schema` argument to this field, itself a Conformity field, which will perform
+    further validation on the value of the imported item.
+    """
+    introspect_type = 'python_path'
+
+    value_schema = attr.ib(default=None, validator=attr_is_optional(attr_is_conformity_field()))  # type: Optional[Base]
+    description = attr.ib(default=None, validator=attr_is_optional(attr_is_string()))  # type: Optional[six.text_type]
+
+    _module_cache = {}  # type: Dict[six.text_type, ModuleType]
+    _import_cache = {}  # type: Dict[TupleType[six.text_type, six.text_type], AnyType]
+
+    def errors(self, value):  # type: (AnyType) -> ListType[Error]
+        if not isinstance(value, six.text_type):
+            return [Error('Not a unicode string')]
+
+        try:
+            thing = self.resolve_python_path(value)
+        except ValueError:
+            return [Error('Value "{}" is not a valid Python import path'.format(value))]
+        except ImportError as e:
+            return [Error(six.text_type(e.args[0]))]
+        except AttributeError as e:
+            return [Error(six.text_type(e.args[0]))]
+
+        if self.value_schema:
+            return self.value_schema.errors(thing)
+
+        return []
+
+    def introspect(self):  # type: () -> Dict[six.text_type, AnyType]
+        return strip_none({
+            'type': self.introspect_type,
+            'description': self.description,
+            'value_schema': self.value_schema.introspect() if self.value_schema else None,
+        })
+
+    @classmethod
+    def resolve_python_path(cls, type_path):  # type: (six.text_type) -> AnyType
+        if ':' in type_path:
+            module_name, local_path = type_path.split(':', 1)
+        else:
+            module_name, local_path = type_path.rsplit('.', 1)
+
+        cache_key = (module_name, local_path)
+        if cache_key in cls._import_cache:
+            return cls._import_cache[cache_key]
+
+        if module_name not in cls._module_cache:
+            cls._module_cache[module_name] = importlib.import_module(module_name)
+
+        thing = cls._module_cache[module_name]  # type: AnyType
+        for bit in local_path.split('.'):
+            thing = getattr(thing, bit)
+
+        cls._import_cache[cache_key] = thing
+
+        return thing
+
+
+@attr.s
 class TypeReference(Base):
     """
     Accepts only type references, optionally types that must be a subclass of a given type or types.
@@ -188,8 +268,7 @@ class TypeReference(Base):
         })
 
 
-@attr.s
-class TypePath(TypeReference):
+class TypePath(PythonPath):
     """
     Accepts only a unicode path to an importable Python type, including the full path to the enclosing module. Both '.'
     and ':' are recognized as a valid separator between module name and type name.
@@ -200,46 +279,21 @@ class TypePath(TypeReference):
     foo.bar:MyClass
     baz.qux:ParentClass.SubClass
 
-    This field actually validates that the type is importable and exists (and includes a static resolve_python_path to
-    help you convert the value into a type), and so it also includes a long-lived import cache to maximize performance.
+    This field actually validates that the type is importable, exists, and is a `type`, possibly one that subclasses
+    one or more `base_classes`.
+
+    This is a special convenience `PythonPath` extension for expecting the imported item to be a type.
     """
-    introspect_type = 'type_path'
-
-    import_cache = {}  # type: Dict[TupleType[six.text_type, six.text_type], AnyType]
-
-    def errors(self, value):
-        if not isinstance(value, six.text_type):
-            return [Error('Not a unicode string')]
-
-        try:
-            thing = self.resolve_python_path(value)
-        except ValueError:
-            return [Error('Value "{}" is not a valid Python import path'.format(value))]
-        except ImportError as e:
-            return [Error(six.text_type(e.args[0]))]
-        except AttributeError as e:
-            return [Error(six.text_type(e.args[0]))]
-
-        return super(TypePath, self).errors(thing)
-
-    @classmethod
-    def resolve_python_path(cls, type_path):  # type: (six.text_type) -> AnyType
-        if ':' in type_path:
-            module_name, local_path = type_path.split(':', 1)
-        else:
-            module_name, local_path = type_path.rsplit('.', 1)
-
-        cache_key = (module_name, local_path)
-        if cache_key in cls.import_cache:
-            return cls.import_cache[cache_key]
-
-        thing = importlib.import_module(module_name)  # type: AnyType
-        for bit in local_path.split('.'):
-            thing = getattr(thing, bit)
-
-        cls.import_cache[cache_key] = thing
-
-        return thing
+    def __init__(
+        self,
+        base_classes=None,  # type: Optional[Union[Type, TupleType[Type, ...]]]
+        description=None,  # type: Optional[six.text_type]
+    ):
+        # type: (...) -> None
+        super(TypePath, self).__init__(
+            value_schema=TypeReference(base_classes=base_classes),
+            description=description,
+        )
 
 
 @attr.s
@@ -346,7 +400,7 @@ class ClassConfigurationSchema(Base):
         if isinstance(value, MutableMapping):
             value['path'] = path  # in case it was defaulted
             if self.add_class_object_to_dict:
-                value['object'] = TypePath.resolve_python_path(path)
+                value['object'] = PythonPath.resolve_python_path(path)
 
         return [update_error_pointer(e, 'kwargs') for e in self._schema_cache[path].errors(value.get('kwargs', {}))]
 
@@ -363,7 +417,7 @@ class ClassConfigurationSchema(Base):
         if errors:
             return errors
 
-        clazz = TypePath.resolve_python_path(path)
+        clazz = PythonPath.resolve_python_path(path)
         if not hasattr(clazz, self._init_schema_attribute):
             return [Error(
                 "Neither class '{}' nor one of its superclasses was decorated with "
@@ -391,11 +445,11 @@ class ClassConfigurationSchema(Base):
         if errors:
             raise ValidationError(errors)
 
-        thing = configuration.get('object')
-        if not thing:
-            thing = TypePath.resolve_python_path(configuration['path'])
+        clazz = configuration.get('object')
+        if not clazz:
+            clazz = PythonPath.resolve_python_path(configuration['path'])
 
-        return thing(**configuration.get('kwargs', {}))
+        return clazz(**configuration.get('kwargs', {}))
 
     def introspect(self):
         return strip_none({
