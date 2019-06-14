@@ -1,6 +1,11 @@
 Changelog
 =========
 
+1.25.0 (2019-06-13)
+-------------------
+- [MINOR] Add PythonPath field, superclass of TypePath
+- [PATCH] Add more tests to ensure class schema extension behavior
+
 1.24.3 (2019-06-12)
 -------------------
 - [PATCH] Regression: Fix Dictionary subclass processing and validation
