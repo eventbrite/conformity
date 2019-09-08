@@ -442,7 +442,7 @@ class FieldTests(unittest.TestCase):
 
     def test_anything(self):  # type: () -> None
         with pytest.raises(TypeError):
-            Anything(b'Not unicode')
+            Anything(b'Not unicode')  # type: ignore
 
         assert Anything('Test description 1').introspect() == {
             'type': 'anything',

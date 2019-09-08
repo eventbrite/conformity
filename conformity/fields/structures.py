@@ -6,6 +6,7 @@ from __future__ import (
 from collections import OrderedDict
 from typing import (  # noqa: F401 TODO Python 3
     Any as AnyType,
+    Dict,
     FrozenSet,
     Hashable as HashableType,
     Mapping,
@@ -14,6 +15,7 @@ from typing import (  # noqa: F401 TODO Python 3
     Tuple as TupleType,
     Type,
     Union,
+    cast,
 )
 
 import attr
@@ -205,12 +207,13 @@ class Dictionary(Base):
 
     def extend(
         self,
-        contents=None,
-        optional_keys=None,
-        allow_extra_keys=None,
-        description=None,
-        replace_optional_keys=False,
+        contents=None,  # type: Optional[Mapping[HashableType, Base]]
+        optional_keys=None,  # type: Optional[Union[TupleType[HashableType, ...], FrozenSet[HashableType]]]
+        allow_extra_keys=None,  # type: Optional[bool]
+        description=None,  # type: Optional[six.text_type]
+        replace_optional_keys=False,  # type: bool
     ):
+        # type: (...) -> Dictionary
         """
         This method allows you to create a new `Dictionary` that extends the current `Dictionary` with additional
         contents and/or optional keys, and/or replaces the `allow_extra_keys` and/or `description` attributes.
@@ -230,12 +233,12 @@ class Dictionary(Base):
         :return: A new `Dictionary` extended from the current `Dictionary` based on the supplied arguments
         :rtype: Dictionary
         """
-        optional_keys = set(optional_keys or [])
+        optional_keys = frozenset(optional_keys or ())
         return Dictionary(
-            contents=type(self.contents)(
+            contents=cast(Type[Union[Dict, OrderedDict]], type(self.contents))(
                 (k, v) for d in (self.contents, contents) for k, v in six.iteritems(d)
             ) if contents else self.contents,
-            optional_keys=optional_keys if replace_optional_keys else self.optional_keys | optional_keys,
+            optional_keys=optional_keys if replace_optional_keys else frozenset(self.optional_keys) | optional_keys,
             allow_extra_keys=self.allow_extra_keys if allow_extra_keys is None else allow_extra_keys,
             description=self.description if description is None else description,
         )
