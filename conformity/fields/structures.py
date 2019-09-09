@@ -9,6 +9,7 @@ from typing import (  # noqa: F401 TODO Python 3
     Dict,
     FrozenSet,
     Hashable as HashableType,
+    List as ListType,
     Mapping,
     Optional,
     Sized,
@@ -27,10 +28,11 @@ from conformity.error import (
     Error,
     update_error_pointer,
 )
-from conformity.fields.basic import (
+from conformity.fields.basic import (  # noqa: F401 TODO Python 3
     Anything,
     Base,
     Hashable,
+    Introspection,
 )
 from conformity.utils import (
     attr_is_instance,
@@ -58,11 +60,11 @@ class List(Base):
     introspect_type = type_noun  # type: six.text_type
     type_error = 'Not a list'  # type: six.text_type
 
-    def __attrs_post_init__(self):
+    def __attrs_post_init__(self):  # type: () -> None
         if self.min_length is not None and self.max_length is not None and self.min_length > self.max_length:
             raise ValueError('min_length cannot be greater than max_length in UnicodeString')
 
-    def errors(self, value):
+    def errors(self, value):  # type: (AnyType) -> ListType[Error]
         if not isinstance(value, self.valid_types):
             return [Error(self.type_error)]
 
@@ -89,7 +91,7 @@ class List(Base):
         # where the pointer is the value converted to a string instead of an index.
         return ((cls.LazyPointer(i, value), value) for i, value in enumerate(values))
 
-    def introspect(self):
+    def introspect(self):  # type: () -> Introspection
         return strip_none({
             'type': self.introspect_type,
             'contents': self.contents.introspect(),
@@ -142,7 +144,7 @@ class Dictionary(Base):
     allow_extra_keys = attr.ib(default=None)  # type: bool
     description = attr.ib(default=None, validator=attr_is_optional(attr_is_string()))  # type: Optional[six.text_type]
 
-    def __attrs_post_init__(self):
+    def __attrs_post_init__(self):  # type: () -> None
         if self.contents is None and getattr(self.__class__, 'contents', None) is not None:
             # If no contents were provided but a subclass has hard-coded contents, use those
             self.contents = self.__class__.contents
@@ -176,7 +178,7 @@ class Dictionary(Base):
         if self.description is not None and not isinstance(self.description, six.text_type):
             raise TypeError("'description' must be a unicode string")
 
-    def errors(self, value):
+    def errors(self, value):  # type: (AnyType) -> ListType[Error]
         if not isinstance(value, dict):
             return [Error('Not a dict')]
 
@@ -243,8 +245,8 @@ class Dictionary(Base):
             description=self.description if description is None else description,
         )
 
-    def introspect(self):
-        display_order = None
+    def introspect(self):  # type: () -> Introspection
+        display_order = None  # type: Optional[ListType[AnyType]]
         if isinstance(self.contents, OrderedDict):
             display_order = list(self.contents.keys())
 
@@ -279,11 +281,11 @@ class SchemalessDictionary(Base):
     min_length = attr.ib(default=None, validator=attr_is_optional(attr_is_int()))  # type: Optional[int]
     description = attr.ib(default=None, validator=attr_is_optional(attr_is_string()))  # type: Optional[six.text_type]
 
-    def __attrs_post_init__(self):
+    def __attrs_post_init__(self):  # type: () -> None
         if self.min_length is not None and self.max_length is not None and self.min_length > self.max_length:
             raise ValueError('min_length cannot be greater than max_length in UnicodeString')
 
-    def errors(self, value):
+    def errors(self, value):  # type: (AnyType) -> ListType[Error]
         if not isinstance(value, dict):
             return [Error('Not a dict')]
 
@@ -306,13 +308,13 @@ class SchemalessDictionary(Base):
 
         return result
 
-    def introspect(self):
+    def introspect(self):  # type: () -> Introspection
         result = {
             'type': self.introspect_type,
             'max_length': self.max_length,
             'min_length': self.min_length,
             'description': self.description,
-        }
+        }  # type: Introspection
         # We avoid using isinstance() here as that would also match subclass instances
         if not self.key_type.__class__ == Hashable:
             result['key_type'] = self.key_type.introspect()
@@ -342,7 +344,7 @@ class Tuple(Base):
         if kwargs:
             raise TypeError('Unknown keyword arguments: {}'.format(', '.join(kwargs.keys())))
 
-    def errors(self, value):
+    def errors(self, value):  # type: (AnyType) -> ListType[Error]
         if not isinstance(value, tuple):
             return [Error('Not a tuple')]
 
@@ -360,7 +362,7 @@ class Tuple(Base):
 
         return result
 
-    def introspect(self):
+    def introspect(self):  # type: () -> Introspection
         return strip_none({
             'type': self.introspect_type,
             'contents': [value.introspect() for value in self.contents],

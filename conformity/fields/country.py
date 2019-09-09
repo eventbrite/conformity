@@ -7,6 +7,7 @@ from typing import (  # noqa: F401 TODO Python 3
     Any as AnyType,
     AnyStr,
     Callable,
+    List as ListType,
 )
 
 import pycountry
@@ -37,6 +38,7 @@ class CountryCodeField(Constant):
         code_filter=lambda x: True,  # type: Callable[[AnyStr], bool]
         **kwargs  # type: AnyType
     ):
+        # type: (...) -> None
         """
         :param code_filter: If specified, will be called to further filter the available country codes
         :type code_filter: lambda x: bool
@@ -47,7 +49,7 @@ class CountryCodeField(Constant):
         super(CountryCodeField, self).__init__(*valid_country_codes, **kwargs)
         self._error_message = 'Not a valid country code'
 
-    def errors(self, value):
+    def errors(self, value):  # type: (AnyType) -> ListType[Error]
         if not isinstance(value, six.text_type):
             return [Error('Not a unicode string')]
         return super(CountryCodeField, self).errors(value)

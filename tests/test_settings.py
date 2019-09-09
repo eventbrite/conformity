@@ -224,21 +224,21 @@ class TestSettingsOne(object):
 
         keys = settings.keys()
         assert isinstance(keys, KeysView if not six.PY2 else list)
-        keys = list(keys)
-        assert 'foo' in keys
-        assert 'bar' in keys
+        keys_list = list(keys)
+        assert 'foo' in keys_list
+        assert 'bar' in keys_list
 
         values = settings.values()
         assert isinstance(values, ValuesView if not six.PY2 else list)
-        values = list(values)
-        assert 'Cool' in values
-        assert True in values
+        values_list = list(values)
+        assert 'Cool' in values_list
+        assert True in values_list
 
         items = settings.items()
         assert isinstance(items, ItemsView if not six.PY2 else list)
-        items = list(items)
-        assert ('foo', 'Cool') in items
-        assert ('bar', True) in items
+        items_list = list(items)
+        assert ('foo', 'Cool') in items_list
+        assert ('bar', True) in items_list
 
         assert settings.get('foo') == 'Cool'
         assert settings.get('bar', False) is True

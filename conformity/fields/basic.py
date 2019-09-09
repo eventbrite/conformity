@@ -3,6 +3,7 @@ from __future__ import (
     unicode_literals,
 )
 
+import datetime
 import decimal
 from typing import (  # noqa: F401 TODO Python 3
     Any as AnyType,
@@ -32,6 +33,17 @@ from conformity.utils import (
 )
 
 
+# Blah ... until recursive types are supported, this is not strict enough: https://github.com/python/mypy/issues/731
+Introspection = Dict[
+    six.text_type,
+    Union[
+        int, float, bool, six.text_type, decimal.Decimal, datetime.datetime, datetime.date, datetime.time, None,
+        ListType[AnyType],
+        Dict[AnyType, AnyType],
+    ],
+]
+
+
 @attr.s
 class Base(object):
     """
@@ -44,7 +56,7 @@ class Base(object):
         """
         return [Error('Validation not implemented on base type')]
 
-    def introspect(self):  # type: () -> Dict[six.text_type, AnyType]
+    def introspect(self):  # type: () -> Introspection
         """
         Returns a JSON-serializable dictionary containing introspection data that can be used to document the schema.
         """
@@ -81,15 +93,18 @@ class Constant(Base):
         else:
             self._error_message = 'Value is not one of: {}'.format(', '.join(sorted(_repr(v) for v in self.values)))
 
-    def errors(self, value):
+    def errors(self, value):  # type: (AnyType) -> ListType[Error]
         if value not in self.values:
             return [Error(self._error_message, code=ERROR_CODE_UNKNOWN)]
         return []
 
-    def introspect(self):
+    def introspect(self):  # type: () -> Introspection
         return strip_none({
             'type': self.introspect_type,
-            'values': sorted(self.values),
+            'values': [
+                s if isinstance(s, (six.text_type, bool, int, float, type(None))) else six.text_type(s)
+                for s in sorted(self.values, key=six.text_type)
+            ],
             'description': self.description,
         })
 
@@ -104,10 +119,10 @@ class Anything(Base):
 
     description = attr.ib(default=None, validator=attr_is_optional(attr_is_string()))  # type: Optional[six.text_type]
 
-    def errors(self, value):
+    def errors(self, value):  # type: (AnyType) -> ListType[Error]
         return []
 
-    def introspect(self):
+    def introspect(self):  # type: () -> Introspection
         return strip_none({
             'type': self.introspect_type,
             'description': self.description,
@@ -122,7 +137,7 @@ class Hashable(Anything):
 
     introspect_type = 'hashable'
 
-    def errors(self, value):
+    def errors(self, value):  # type: (AnyType) -> ListType[Error]
         try:
             hash(value)
         except TypeError:
@@ -131,7 +146,7 @@ class Hashable(Anything):
             ]
         return []
 
-    def introspect(self):
+    def introspect(self):  # type: () -> Introspection
         return strip_none({
             'type': self.introspect_type,
             'description': self.description,
@@ -148,14 +163,14 @@ class Boolean(Base):
 
     description = attr.ib(default=None, validator=attr_is_optional(attr_is_string()))  # type: Optional[six.text_type]
 
-    def errors(self, value):
+    def errors(self, value):  # type: (AnyType) -> ListType[Error]
         if not isinstance(value, bool):
             return [
                 Error('Not a boolean'),
             ]
         return []
 
-    def introspect(self):
+    def introspect(self):  # type: () -> Introspection
         return strip_none({
             'type': self.introspect_type,
             'description': self.description,
@@ -190,7 +205,7 @@ class Integer(Base):
     )  # type: Optional[Union[int, float, decimal.Decimal]]
     description = attr.ib(default=None, validator=attr_is_optional(attr_is_string()))  # type: Optional[six.text_type]
 
-    def errors(self, value):
+    def errors(self, value):  # type: (AnyType) -> ListType[Error]
         if not isinstance(value, self.valid_type) or isinstance(value, bool):
             return [Error('Not {}'.format(self.valid_noun))]
 
@@ -205,7 +220,7 @@ class Integer(Base):
             errors.append(Error('Value not <= {}'.format(self.lte)))
         return errors
 
-    def introspect(self):
+    def introspect(self):  # type: () -> Introspection
         return strip_none({
             'type': self.introspect_type,
             'description': self.description,
@@ -253,11 +268,11 @@ class UnicodeString(Base):
     description = attr.ib(default=None, validator=attr_is_optional(attr_is_string()))  # type: Optional[six.text_type]
     allow_blank = attr.ib(default=True, validator=attr_is_bool())  # type: bool
 
-    def __attrs_post_init__(self):
+    def __attrs_post_init__(self):  # type: () -> None
         if self.min_length is not None and self.max_length is not None and self.min_length > self.max_length:
             raise ValueError('min_length cannot be greater than max_length in UnicodeString')
 
-    def errors(self, value):
+    def errors(self, value):  # type: (AnyType) -> ListType[Error]
         if not isinstance(value, self.valid_type):
             return [Error('Not a {}'.format(self.valid_noun))]
         elif self.min_length is not None and len(value) < self.min_length:
@@ -268,7 +283,7 @@ class UnicodeString(Base):
             return [Error('String cannot be blank')]
         return []
 
-    def introspect(self):
+    def introspect(self):  # type: () -> Introspection
         return strip_none({
             'type': self.introspect_type,
             'description': self.description,
@@ -299,7 +314,7 @@ class UnicodeDecimal(Base):
 
     description = attr.ib(default=None, validator=attr_is_optional(attr_is_string()))  # type: Optional[six.text_type]
 
-    def errors(self, value):
+    def errors(self, value):  # type: (AnyType) -> ListType[Error]
         if not isinstance(value, six.text_type):
             return [
                 Error('Invalid decimal value (not unicode string)'),
@@ -312,7 +327,7 @@ class UnicodeDecimal(Base):
             ]
         return []
 
-    def introspect(self):
+    def introspect(self):  # type: () -> Introspection
         return strip_none({
             'type': self.introspect_type,
             'description': self.description,

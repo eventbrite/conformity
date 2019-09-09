@@ -14,7 +14,7 @@ class Latitude(Float):
     Latitude coordinate on an ellipsoid or sphere
     """
 
-    def __attrs_post_init__(self):
+    def __attrs_post_init__(self):  # type: () -> None
         # Set end limits if they're not set (and clip any set ones to valid range)
         self.gte = max(-90, self.gte or -100)
         self.lte = min(90, self.lte or 100)
@@ -26,7 +26,7 @@ class Longitude(Float):
     Longitude coordinate on an ellipsoid or sphere
     """
 
-    def __attrs_post_init__(self):
+    def __attrs_post_init__(self):  # type: () -> None
         # Set end limits if they're not set (and clip any set ones to valid range)
         self.gte = max(-180, self.gte or -190)
         self.lte = min(180, self.lte or 190)

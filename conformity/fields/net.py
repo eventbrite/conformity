@@ -3,14 +3,20 @@ from __future__ import (
     unicode_literals,
 )
 
-import functools
 import re
+from typing import (  # noqa: F401 TODO Python 3
+    Any as AnyType,
+    List as ListType,
+)
 
 import attr
 import six
 
 from conformity.error import Error
-from conformity.fields.basic import UnicodeString
+from conformity.fields.basic import (  # noqa: F401 TODO Python 3
+    Introspection,
+    UnicodeString,
+)
 from conformity.fields.meta import Any
 from conformity.utils import strip_none
 
@@ -23,7 +29,7 @@ class IPv4Address(UnicodeString):
 
     introspect_type = 'ipv4_address'
 
-    def errors(self, value):
+    def errors(self, value):  # type: (AnyType) -> ListType[Error]
         # Get any basic type errors
         result = super(IPv4Address, self).errors(value)
         if result:
@@ -34,7 +40,7 @@ class IPv4Address(UnicodeString):
         else:
             return [Error('Not a valid IPv4 address')]
 
-    def introspect(self):
+    def introspect(self):  # type: () -> Introspection
         return strip_none({
             'type': self.introspect_type,
             'description': self.description,
@@ -46,7 +52,7 @@ class IPv6Address(UnicodeString):
 
     introspect_type = 'ipv6_address'
 
-    def errors(self, value):
+    def errors(self, value):  # type: (AnyType) -> ListType[Error]
         # Get any basic type errors
         result = super(IPv6Address, self).errors(value)
         if result:
@@ -93,7 +99,7 @@ class IPv6Address(UnicodeString):
         return []
 
     @staticmethod
-    def expand_ipv6_address(value):
+    def expand_ipv6_address(value):  # type: (six.text_type) -> six.text_type
         """
         Expands a potentially-shortened IPv6 address into its full length
         """
@@ -116,19 +122,17 @@ class IPv6Address(UnicodeString):
         # Now need to make sure every hextet is 4 lower case characters.
         # If a hextet is < 4 characters, we've got missing leading 0's.
         ret_ip = []
-        for hextet in new_ip:
-            ret_ip.append(('0' * (4 - len(hextet)) + hextet).lower())
+        for hextet_str in new_ip:
+            ret_ip.append(('0' * (4 - len(hextet_str)) + hextet_str).lower())
         return ':'.join(ret_ip)
 
-    def introspect(self):
+    def introspect(self):  # type: () -> Introspection
         return strip_none({
             'type': self.introspect_type,
             'description': self.description,
         })
 
 
-IPAddress = functools.partial(
-    Any,
-    IPv4Address(),
-    IPv6Address(),
-)
+class IPAddress(Any):
+    def __init__(self, **kwargs):  # type: (**AnyType) -> None
+        super(IPAddress, self).__init__(IPv4Address(), IPv6Address(), **kwargs)

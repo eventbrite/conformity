@@ -29,8 +29,9 @@ from conformity.error import (
     ValidationError,
     update_error_pointer,
 )
-from conformity.fields.basic import (
+from conformity.fields.basic import (  # noqa: F401 TODO Python 3
     Base,
+    Introspection,
     attr_is_conformity_field,
 )
 from conformity.fields.structures import Dictionary
@@ -56,13 +57,13 @@ class Nullable(Base):
 
     field = attr.ib(validator=attr_is_conformity_field())  # type: Base
 
-    def errors(self, value):
+    def errors(self, value):  # type: (AnyType) -> ListType[Error]
         if value is None:
             return []
 
         return self.field.errors(value)
 
-    def introspect(self):
+    def introspect(self):  # type: () -> Introspection
         return {
             'type': self.introspect_type,
             'nullable': self.field.introspect(),
@@ -76,12 +77,12 @@ class Null(Base):
 
     introspect_type = 'null'
 
-    def errors(self, value):
+    def errors(self, value):  # type: (AnyType) -> ListType[Error]
         if value is not None:
             return [Error('Value is not null')]
         return []
 
-    def introspect(self):
+    def introspect(self):  # type: () -> Introspection
         return {'type': self.introspect_type}
 
 
@@ -98,7 +99,7 @@ class Polymorph(Base):
     contents_map = attr.ib(validator=attr_is_instance(dict))  # type: Mapping[HashableType, Base]
     description = attr.ib(default=None, validator=attr_is_optional(attr_is_string()))  # type: Optional[six.text_type]
 
-    def errors(self, value):
+    def errors(self, value):  # type: (AnyType) -> ListType[Error]
         # Get switch field value
         bits = self.switch_field.split('.')
         switch_value = value
@@ -114,7 +115,7 @@ class Polymorph(Base):
         # Run field errors
         return field.errors(value)
 
-    def introspect(self):
+    def introspect(self):  # type: () -> Introspection
         return strip_none({
             'type': self.introspect_type,
             'description': self.description,
@@ -137,12 +138,12 @@ class ObjectInstance(Base):
     valid_type = attr.ib(validator=attr_is_instance_or_instance_tuple(type))  # type: Union[Type, TupleType[Type, ...]]
     description = attr.ib(default=None, validator=attr_is_optional(attr_is_string()))  # type: Optional[six.text_type]
 
-    def errors(self, value):
+    def errors(self, value):  # type: (AnyType) -> ListType[Error]
         if not isinstance(value, self.valid_type):
-            return [Error('Not an instance of {}'.format(self.valid_type.__name__))]
+            return [Error('Not an instance of {}'.format(getattr(self.valid_type, '__name__', repr(self.valid_type))))]
         return []
 
-    def introspect(self):
+    def introspect(self):  # type: () -> Introspection
         return strip_none({
             'type': self.introspect_type,
             'description': self.description,
@@ -201,7 +202,7 @@ class PythonPath(Base):
 
         return []
 
-    def introspect(self):  # type: () -> Dict[six.text_type, AnyType]
+    def introspect(self):  # type: () -> Introspection
         return strip_none({
             'type': self.introspect_type,
             'description': self.description,
@@ -244,7 +245,7 @@ class TypeReference(Base):
     )  # type: Optional[Union[Type, TupleType[Type, ...]]]
     description = attr.ib(default=None, validator=attr_is_optional(attr_is_string()))  # type: Optional[six.text_type]
 
-    def errors(self, value):
+    def errors(self, value):  # type: (AnyType) -> ListType[Error]
         if not isinstance(value, type):
             return [Error('Not a type')]
 
@@ -253,7 +254,7 @@ class TypeReference(Base):
 
         return []
 
-    def introspect(self):
+    def introspect(self):  # type: () -> Introspection
         base_classes = None
         if self.base_classes:
             if isinstance(self.base_classes, type):
@@ -347,7 +348,7 @@ class ClassConfigurationSchema(Base):
     eager_default_validation = attr.ib(default=True, validator=attr_is_bool())  # type: bool
     add_class_object_to_dict = attr.ib(default=True, validator=attr_is_bool())  # type: bool
 
-    def __attrs_post_init__(self):
+    def __attrs_post_init__(self):  # type: () -> None
         self._schema_cache = {}  # type: Dict[six.text_type, Dictionary]
 
         if not self.base_class:
@@ -373,7 +374,7 @@ class ClassConfigurationSchema(Base):
             # If the default path is specified and eager validation is not disabled, validate the default path.
             self.initiate_cache_for(self.default_path)
 
-    def errors(self, value):
+    def errors(self, value):  # type: (AnyType) -> ListType[Error]
         if not isinstance(value, Mapping):
             return [Error('Not a mapping (dictionary)')]
 
@@ -451,11 +452,11 @@ class ClassConfigurationSchema(Base):
 
         return clazz(**configuration.get('kwargs', {}))
 
-    def introspect(self):
+    def introspect(self):  # type: () -> Introspection
         return strip_none({
             'type': self.introspect_type,
             'description': self.description,
-            'base_class': six.text_type(self.base_class.__name__),
+            'base_class': six.text_type(self.base_class.__name__) if self.base_class else None,
             'default_path': self.default_path,
             'switch_field': 'path',
             'switch_field_schema': self.switch_field_schema.introspect(),
@@ -501,7 +502,7 @@ class Any(Base):
         if kwargs:
             raise TypeError('Unknown keyword arguments: {}'.format(', '.join(kwargs.keys())))
 
-    def errors(self, value):
+    def errors(self, value):  # type: (AnyType) -> ListType[Error]
         result = []  # type: ListType[Error]
         for option in self.options:
             sub_errors = option.errors(value)
@@ -512,7 +513,7 @@ class Any(Base):
             result.extend(sub_errors)
         return result
 
-    def introspect(self):
+    def introspect(self):  # type: () -> Introspection
         return strip_none({
             'type': self.introspect_type,
             'description': self.description,
@@ -544,13 +545,13 @@ class All(Base):
         if kwargs:
             raise TypeError('Unknown keyword arguments: {}'.format(', '.join(kwargs.keys())))
 
-    def errors(self, value):
+    def errors(self, value):  # type: (AnyType) -> ListType[Error]
         result = []  # type: ListType[Error]
         for requirement in self.requirements:
             result.extend(requirement.errors(value) or [])
         return result
 
-    def introspect(self):
+    def introspect(self):  # type: () -> Introspection
         return strip_none({
             'type': self.introspect_type,
             'description': self.description,
@@ -572,7 +573,7 @@ class BooleanValidator(Base):
     error = attr.ib(validator=attr_is_string())  # type: six.text_type
     description = attr.ib(default=None, validator=attr_is_optional(attr_is_string()))  # type: Optional[six.text_type]
 
-    def errors(self, value):
+    def errors(self, value):  # type: (AnyType) -> ListType[Error]
         # Run the validator, but catch any errors and return them as an error.
         try:
             ok = self.validator(value)
@@ -584,7 +585,7 @@ class BooleanValidator(Base):
         else:
             return [Error(self.error)]
 
-    def introspect(self):
+    def introspect(self):  # type: () -> Introspection
         return strip_none({
             'type': self.introspect_type,
             'description': self.description,

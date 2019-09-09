@@ -5,7 +5,9 @@ from __future__ import (
 
 import datetime
 from typing import (  # noqa: F401 TODO Python 3
+    Any as AnyType,
     FrozenSet,
+    List as ListType,
     Optional,
     Tuple as TupleType,
     Type,
@@ -16,7 +18,10 @@ import attr
 import six  # noqa: F401 TODO Python 3
 
 from conformity.error import Error
-from conformity.fields.basic import Base
+from conformity.fields.basic import (  # noqa: F401 TODO Python 3
+    Base,
+    Introspection,
+)
 from conformity.utils import (
     attr_is_optional,
     attr_is_string,
@@ -52,7 +57,7 @@ class TemporalBase(Base):
     lte = attr.ib(default=None)  # type: Union[datetime.date, datetime.time, datetime.datetime, datetime.timedelta]
     description = attr.ib(default=None, validator=attr_is_optional(attr_is_string()))  # type: Optional[six.text_type]
 
-    def __attrs_post_init__(self):
+    def __attrs_post_init__(self):  # type: () -> None
         if self.gt is not None and self._invalid(self.gt):
             raise TypeError("'gt' value {!r} cannot be used for comparisons in this type".format(self.gt))
         if self.gte is not None and self._invalid(self.gte):
@@ -68,7 +73,7 @@ class TemporalBase(Base):
             not cls.valid_isinstance or not isinstance(value, cls.valid_isinstance)
         )
 
-    def errors(self, value):
+    def errors(self, value):  # type: (AnyType) -> ListType[Error]
         if self._invalid(value):
             # using stricter type checking, because date is subclass of datetime, but they're not comparable
             return [Error('Not a {} instance'.format(self.valid_noun))]
@@ -84,14 +89,14 @@ class TemporalBase(Base):
             errors.append(Error('Value not <= {}'.format(self.lte)))
         return errors
 
-    def introspect(self):
+    def introspect(self):  # type: () -> Introspection
         return strip_none({
             'type': self.introspect_type,
             'description': self.description,
-            'gt': self.gt,
-            'gte': self.gte,
-            'lt': self.lt,
-            'lte': self.lte,
+            'gt': six.text_type(self.gt) if self.gt else None,
+            'gte': six.text_type(self.gte) if self.gte else None,
+            'lt': six.text_type(self.lt) if self.lt else None,
+            'lte': six.text_type(self.lte) if self.lte else None,
         })
 
 
