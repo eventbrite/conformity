@@ -5,7 +5,9 @@ from __future__ import (
 
 from typing import (  # noqa: F401 TODO Python 3
     AbstractSet,
+    Any as AnyType,
     Iterable,
+    List as ListType,
     Optional,
 )
 
@@ -17,10 +19,11 @@ from conformity.error import (
     ERROR_CODE_INVALID,
     Error,
 )
-from conformity.fields.basic import (
+from conformity.fields.basic import (  # noqa: F401 TODO Python 3
     Base,
     Constant,
     Integer,
+    Introspection,
 )
 from conformity.fields.structures import Dictionary
 from conformity.utils import (
@@ -50,7 +53,7 @@ class Amount(Base):
     lte = attr.ib(default=None, validator=attr_is_optional(attr_is_int()))  # type: Optional[int]
     description = attr.ib(default=None, validator=attr_is_optional(attr_is_string()))  # type: Optional[six.text_type]
 
-    def errors(self, value):
+    def errors(self, value):  # type: (AnyType) -> ListType[Error]
         if not isinstance(value, currint.Amount):
             return [Error(
                 'Not a currint.Amount instance',
@@ -90,7 +93,7 @@ class Amount(Base):
             ))
         return errors
 
-    def introspect(self):
+    def introspect(self):  # type: () -> Introspection
         return strip_none({
             'type': self.introspect_type,
             'description': self.description,
@@ -114,9 +117,10 @@ class AmountDictionary(Dictionary):
         gte=None,  # type: int
         lt=None,  # type: int
         lte=None,  # type: int
-        *args,
-        **kwargs
+        *args,  # type: AnyType
+        **kwargs  # type: AnyType
     ):
+        # type: (...) -> None
         if valid_currencies is not None and (
             not hasattr(valid_currencies, '__iter__') or
             not all(isinstance(c, six.text_type) for c in valid_currencies)

@@ -4,13 +4,20 @@ from __future__ import (
 )
 
 import decimal
-from typing import Dict  # noqa: F401 TODO Python 3
+from typing import (  # noqa: F401 TODO Python 3
+    Dict,
+    TypeVar,
+)
 
 import attr
 import six
 
 
-def strip_none(value):  # type: (Dict) -> Dict
+KT = TypeVar('KT')
+VT = TypeVar('VT')
+
+
+def strip_none(value):  # type: (Dict[KT, VT]) -> Dict[KT, VT]
     """
     Takes a dict and removes all keys that have `None` values, used mainly for tidying up introspection responses. Take
     care not to use this on something that might legitimately contain a `None`.

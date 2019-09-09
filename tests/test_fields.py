@@ -15,6 +15,7 @@ import unittest
 import freezegun
 import pytest
 import pytz
+import six
 
 from conformity.error import (
     ERROR_CODE_MISSING,
@@ -170,19 +171,19 @@ class FieldTests(unittest.TestCase):
         self.assertEqual('dictionary', introspection['type'])
         self.assertFalse(introspection['allow_extra_keys'])
         self.assertEqual([], introspection['optional_keys'])
-        self.assertEqual(3, len(introspection['contents']))
-        self.assertIn('child_ids', introspection['contents'])
+        self.assertEqual(3, len(introspection['contents']))  # type: ignore
+        self.assertIn('child_ids', introspection['contents'])  # type: ignore
         self.assertEqual(
             {
                 'type': 'list',
                 'contents': {'gt': 0, 'type': 'integer'},
             },
-            introspection['contents']['child_ids'],
+            introspection['contents']['child_ids'],  # type: ignore
         )
-        self.assertIn('address', introspection['contents'])
-        self.assertEqual('dictionary', introspection['contents']['address']['type'])
-        self.assertFalse(introspection['contents']['address']['allow_extra_keys'])
-        self.assertEqual({'line2', 'state'}, set(introspection['contents']['address']['optional_keys']))
+        self.assertIn('address', introspection['contents'])  # type: ignore
+        self.assertEqual('dictionary', introspection['contents']['address']['type'])  # type: ignore
+        self.assertFalse(introspection['contents']['address']['allow_extra_keys'])  # type: ignore
+        self.assertEqual({'line2', 'state'}, set(introspection['contents']['address']['optional_keys']))  # type: ignore
         self.assertEqual(
             {
                 'city': {'type': 'unicode'},
@@ -192,14 +193,14 @@ class FieldTests(unittest.TestCase):
                 'postcode': {'type': 'unicode'},
                 'state': {'type': 'unicode'},
             },
-            introspection['contents']['address']['contents'],
+            introspection['contents']['address']['contents'],  # type: ignore
         )
         self.assertEqual(
             {
                 'type': 'set',
                 'contents': {'type': 'unicode'},
             },
-            introspection['contents']['unique_things'],
+            introspection['contents']['unique_things'],  # type: ignore
         )
 
     def test_dictionary_extension(self):  # type: () -> None
@@ -368,7 +369,7 @@ class FieldTests(unittest.TestCase):
             datetime_schema.introspect(),
             {
                 'type': 'datetime',
-                'gt': past1985,
+                'gt': six.text_type(past1985),
             },
         )
 

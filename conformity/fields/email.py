@@ -7,12 +7,16 @@ import re
 from typing import (  # noqa: F401  TODO Python 3
     Any as AnyType,
     Iterable,
+    List as ListType,
 )
 
 import six
 
 from conformity.error import Error
-from conformity.fields.basic import UnicodeString
+from conformity.fields.basic import (  # noqa: F401 TODO Python 3
+    Introspection,
+    UnicodeString,
+)
 from conformity.fields.net import IPAddress
 from conformity.utils import strip_none
 
@@ -67,7 +71,7 @@ class EmailAddress(UnicodeString):
         if whitelist is not None:
             self.domain_whitelist = whitelist if isinstance(whitelist, frozenset) else frozenset(whitelist)
 
-    def errors(self, value):
+    def errors(self, value):  # type: (AnyType) -> ListType[Error]
         # Get any basic type errors
         result = super(EmailAddress, self).errors(value)
         if result:
@@ -90,7 +94,7 @@ class EmailAddress(UnicodeString):
             return [Error('Not a valid email address (invalid domain field)', pointer=domain_part)]
 
     @classmethod
-    def is_domain_valid(cls, domain_part):
+    def is_domain_valid(cls, domain_part):  # type: (six.text_type) -> bool
         if cls.domain_regex.match(domain_part):
             return True
 
@@ -103,7 +107,7 @@ class EmailAddress(UnicodeString):
                 return True
         return False
 
-    def introspect(self):
+    def introspect(self):  # type: () -> Introspection
         return strip_none({
             'type': self.introspect_type,
             'description': self.description,
