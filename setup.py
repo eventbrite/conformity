@@ -3,10 +3,7 @@ from __future__ import (
     unicode_literals,
 )
 
-from setuptools import (
-    find_packages,
-    setup,
-)
+from setuptools import setup
 
 from conformity import __version__
 
@@ -25,10 +22,11 @@ country_requires = [
 ]
 
 tests_require = [
+    'freezegun',
+    'mypy;python_version>"3.4"',
     'pytest',
     'pytest-cov',
     'pytest-runner',
-    'freezegun',
     'pytz',
 ] + currency_requires + country_requires
 
@@ -40,7 +38,7 @@ setup(
     description='Cacheable schema description and validation',
     long_description=readme(),
     url='http://github.com/eventbrite/conformity',
-    packages=list(map(str, find_packages(exclude=['*.tests', '*.tests.*', 'tests.*', 'tests']))),
+    packages=[str('conformity')],
     package_data={str('conformity'): [str('py.typed')]},  # PEP 561
     zip_safe=False,  # PEP 561
     include_package_data=True,
@@ -67,9 +65,9 @@ setup(
         'Programming Language :: Python :: 2',
         'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.4',
         'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
+        'Programming Language :: Python :: 3.7',
         'Topic :: Software Development',
     ],
 )
