@@ -24,6 +24,10 @@ country_requires = [
     'pycountry',
 ]
 
+spinx_requires = [
+    'sphinx~=2.2;python_version>="3.6"',
+]
+
 tests_require = [
     'freezegun',
     'mypy;python_version>"3.4"',
@@ -31,7 +35,7 @@ tests_require = [
     'pytest-cov',
     'pytest-runner',
     'pytz',
-] + currency_requires + country_requires
+] + currency_requires + country_requires + spinx_requires
 
 setup(
     name='conformity',
@@ -42,7 +46,10 @@ setup(
     long_description=readme(),
     url='http://github.com/eventbrite/conformity',
     packages=list(map(str, find_packages(include=['conformity', 'conformity.*']))),
-    package_data={str('conformity'): [str('py.typed')]},  # PEP 561
+    package_data={
+        str('conformity'): [str('py.typed')],  # PEP 561,
+        str('conformity.sphinx_ext'): [str('static/*')],
+    },
     zip_safe=False,  # PEP 561
     include_package_data=True,
     install_requires=[
@@ -56,6 +63,8 @@ setup(
     extras_require={
         'currency': currency_requires,
         'country': country_requires,
+        'sphinx': spinx_requires,
+        'docs': spinx_requires + country_requires + currency_requires,
         'testing': tests_require,
     },
     license='Apache 2.0',

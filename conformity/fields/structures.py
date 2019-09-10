@@ -47,7 +47,9 @@ from conformity.utils import (
 @attr.s
 class List(Base):
     """
-    A list of things of a single type.
+    Conformity field that ensures that the value is a list of items that all pass validation with the Conformity field
+    passed to the `contents` argument and optionally establishes boundaries for that list with the `max_length` and
+    `min_length` arguments.
     """
 
     contents = attr.ib()
@@ -107,6 +109,11 @@ class List(Base):
 
 @attr.s
 class Set(List):
+    """
+    Conformity field that ensures that the value is an abstract set of items that all pass validation with the
+    Conformity field passed to the `contents` argument and optionally establishes boundaries for that list with the
+    `max_length` and `min_length` arguments.
+    """
     valid_types = (set, frozenset)
     type_noun = 'set'
     introspect_type = type_noun
@@ -120,12 +127,16 @@ class Set(List):
 @attr.s
 class Dictionary(Base):
     """
-    A dictionary with types per key (and requirements per key). If the `contents` argument is an instance of
-    `OrderedDict`, the field introspection will include a `display_order` list of keys matching the order they exist
-    in the `OrderedDict`, and errors will be reported in the order the keys exist in the `OrderedDict`. Order will be
-    maintained for any calls to `extend` as long as those calls also use `OrderedDict`. Ordering behavior is undefined
-    otherwise. This field does NOT enforce that the value it validates presents keys in the same order. `OrderedDict`
-    is used strictly for documentation and error-object-ordering purposes only.
+    Conformity field that ensures that the value is a dictionary with a specific set of keys and value that validate
+    with the Conformity fields associated with those keys (`contents`). Keys are required unless they are listed in
+    the `optional_keys` argument. No extra keys are allowed unless the `allow_extra_keys` argument is set to `True`.
+
+    If the `contents` argument is an instance of `OrderedDict`, the field introspection will include a `display_order`
+    list of keys matching the order they exist in the `OrderedDict`, and errors will be reported in the order the keys
+    exist in the `OrderedDict`. Order will be maintained for any calls to `extend` as long as those calls also use
+    `OrderedDict`. Ordering behavior is undefined otherwise. This field does NOT enforce that the value it validates
+    presents keys in the same order. `OrderedDict` is used strictly for documentation and error-object-ordering
+    purposes only.
     """
 
     introspect_type = 'dictionary'
@@ -221,19 +232,13 @@ class Dictionary(Base):
         contents and/or optional keys, and/or replaces the `allow_extra_keys` and/or `description` attributes.
 
         :param contents: More contents, if any, to extend the current contents
-        :type contents: dict
         :param optional_keys: More optional keys, if any, to extend the current optional keys
-        :type optional_keys: union[set, list, tuple]
         :param allow_extra_keys: If non-`None`, this overrides the current `allow_extra_keys` attribute
-        :type allow_extra_keys: bool
         :param description: If non-`None`, this overrides the current `description` attribute
-        :type description: union[str, unicode]
         :param replace_optional_keys: If `True`, then the `optional_keys` argument will completely replace, instead of
                                       extend, the current optional keys
-        :type replace_optional_keys: bool
 
         :return: A new `Dictionary` extended from the current `Dictionary` based on the supplied arguments
-        :rtype: Dictionary
         """
         optional_keys = frozenset(optional_keys or ())
         return Dictionary(
@@ -266,7 +271,10 @@ class Dictionary(Base):
 @attr.s
 class SchemalessDictionary(Base):
     """
-    Generic dictionary with requirements about key and value types, but not specific keys
+    Conformity field that ensures that the value is a dictionary of any keys and values, but optionally enforcing that
+    the keys pass the Conformity validation specified with the `key_type` argument and/or that the values pass the
+    Conformity validation specified with the `value_type` argument. Size of the dictionary can also be constrained with
+    the optional `max_length` and `min_length` arguments.
     """
 
     introspect_type = 'schemaless_dictionary'
@@ -325,7 +333,9 @@ class SchemalessDictionary(Base):
 
 class Tuple(Base):
     """
-    A tuple with types per element.
+    Conformity field that ensures that the value is a tuple with the same number of arguments as the number of
+    positional arguments passed to this field, and that each argument passes validation with the corresponding
+    Conformity field provided to the positional arguments.
     """
 
     introspect_type = 'tuple'

@@ -39,12 +39,14 @@ from conformity.utils import (
 @attr.s
 class Amount(Base):
     """
-    currint.Amount instances
+    Conformity field that ensures that the value is an instance of `currint.Amount` and optionally enforces boundaries
+    for that amount with the `valid_currencies`, `gt`, `gte`, `lt`, and `lte` arguments. This field requires that
+    Currint be installed.
     """
 
     introspect_type = 'currint.Amount'
     valid_currencies = attr.ib(
-        default=frozenset(currint.currencies.keys()),
+        default=frozenset(),
         validator=attr_is_iterable(attr_is_string(), attr_is_set()),
     )  # type: AbstractSet[six.text_type]
     gt = attr.ib(default=None, validator=attr_is_optional(attr_is_int()))  # type: Optional[int]
@@ -52,6 +54,10 @@ class Amount(Base):
     lt = attr.ib(default=None, validator=attr_is_optional(attr_is_int()))  # type: Optional[int]
     lte = attr.ib(default=None, validator=attr_is_optional(attr_is_int()))  # type: Optional[int]
     description = attr.ib(default=None, validator=attr_is_optional(attr_is_string()))  # type: Optional[six.text_type]
+
+    def __attrs_post_init__(self):  # type: () -> None
+        if not self.valid_currencies:
+            self.valid_currencies = frozenset(currint.currencies.keys())
 
     def errors(self, value):  # type: (AnyType) -> ListType[Error]
         if not isinstance(value, currint.Amount):
@@ -107,7 +113,9 @@ class Amount(Base):
 
 class AmountDictionary(Dictionary):
     """
-    Amount dictionaries
+    Conformity field that ensures that the value is a dictionary containing exactly fields `'currency'` and `'value'`
+    and optionally enforces boundaries for those values with the `valid_currencies`, `gt`, `gte`, `lt`, and `lte`
+    arguments. This field requires that Currint be installed.
     """
 
     def __init__(

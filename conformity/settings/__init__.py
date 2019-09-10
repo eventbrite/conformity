@@ -163,6 +163,9 @@ class Settings(Mapping[six.text_type, Any]):
     definition inheritance.
 
     Examples:
+
+    .. code-block:: python
+
         class BaseSettings(Settings):
             schema = {
                 'foo': fields.Integer(),
@@ -232,6 +235,8 @@ class Settings(Mapping[six.text_type, Any]):
 
         :param data: A mapping of unicode string keys to any values, which, together with the defined defaults in this
                      class, should match the defined schema for this class, as merged with its parent classes.
+
+        :raises: :class:`conformity.settings.Settings.ImproperlyConfigured`
         """
         self._data = {}  # type: SettingsData
         self.set(data)
@@ -242,6 +247,8 @@ class Settings(Mapping[six.text_type, Any]):
 
         :param data: A mapping of unicode string keys to any values, which, together with the defined defaults in this
                      class, should match the defined schema for this class, as merged with its parent classes.
+
+        :raises: :class:`conformity.settings.Settings.ImproperlyConfigured`
         """
         # Merged the class defaults with the supplied data to get the effective settings data
         settings = self._merge_mappings(copy.deepcopy(data), copy.deepcopy(self.defaults))
@@ -329,7 +336,7 @@ class Settings(Mapping[six.text_type, Any]):
 
         :return: The value associated with the given key.
 
-        :raises: KeyError
+        :raises: `KeyError`
         """
         return self._data[key]
 

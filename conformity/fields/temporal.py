@@ -42,7 +42,7 @@ except ImportError:
 @attr.s
 class TemporalBase(Base):
     """
-    Common base class for all temporal types.
+    Common base class for all temporal types. Cannot be used on its own without extension.
     """
 
     # These four must be overridden
@@ -103,7 +103,9 @@ class TemporalBase(Base):
 @attr.s
 class DateTime(TemporalBase):
     """
-    Datetime instances
+    Conformity field that ensures that the value is a `datetime.datetime` instance and optionally enforces boundaries
+    for that `datetime` with the `gt`, `gte`, `lt`, and `lte` arguments, which must also be `datetime` instances if
+    specified.
     """
 
     valid_types = valid_datetime_types
@@ -114,7 +116,8 @@ class DateTime(TemporalBase):
 @attr.s
 class Date(TemporalBase):
     """
-    Date instances
+    Conformity field that ensures that the value is a `datetime.date` instance and optionally enforces boundaries
+    for that `date` with the `gt`, `gte`, `lt`, and `lte` arguments, which must also be `date` instances if specified.
     """
 
     valid_types = valid_date_types
@@ -125,7 +128,8 @@ class Date(TemporalBase):
 @attr.s
 class Time(TemporalBase):
     """
-    Time instances
+    Conformity field that ensures that the value is a `datetime.time` instance and optionally enforces boundaries
+    for that `time` with the `gt`, `gte`, `lt`, and `lte` arguments, which must also be `time` instances if specified.
     """
 
     valid_types = frozenset({datetime.time})
@@ -136,7 +140,9 @@ class Time(TemporalBase):
 @attr.s
 class TimeDelta(TemporalBase):
     """
-    Timedelta instances
+    Conformity field that ensures that the value is a `datetime.timedelta` instance and optionally enforces boundaries
+    for that `timedelta` with the `gt`, `gte`, `lt`, and `lte` arguments, which must also be `timedelta` instances if
+    specified.
     """
 
     valid_types = frozenset({datetime.timedelta})
@@ -147,7 +153,8 @@ class TimeDelta(TemporalBase):
 @attr.s
 class TZInfo(TemporalBase):
     """
-    TZInfo instances
+    Conformity field that ensures that the value is a `datetime.tzinfo` instance. It has `gt`, `gte`, `lt`, and
+    `lte` arguments, but they cannot be used, are deprecated, and will be removed in Conformity 2.0.0.
     """
 
     valid_types = frozenset({datetime.tzinfo})

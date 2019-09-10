@@ -26,6 +26,9 @@ ipv4_regex = re.compile(r'^(25[0-5]|2[0-4]\d|[0-1]?\d?\d)(\.(25[0-5]|2[0-4]\d|[0
 
 @attr.s
 class IPv4Address(UnicodeString):
+    """
+    Conformity field that ensures that the value is a unicode string that is a valid IPv4 address.
+    """
 
     introspect_type = 'ipv4_address'
 
@@ -49,6 +52,9 @@ class IPv4Address(UnicodeString):
 
 @attr.s
 class IPv6Address(UnicodeString):
+    """
+    Conformity field that ensures that the value is a unicode string that is a valid IPv6 address.
+    """
 
     introspect_type = 'ipv6_address'
 
@@ -134,5 +140,8 @@ class IPv6Address(UnicodeString):
 
 
 class IPAddress(Any):
+    """
+    Conformity field that ensures that the value is a unicode string that is a valid IPv4 or IPv6 address.
+    """
     def __init__(self, **kwargs):  # type: (**AnyType) -> None
         super(IPAddress, self).__init__(IPv4Address(), IPv6Address(), **kwargs)
