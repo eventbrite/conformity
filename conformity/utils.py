@@ -5,8 +5,14 @@ from __future__ import (
 
 import decimal
 from typing import (  # noqa: F401 TODO Python 3
+    Any as AnyType,
+    Callable,
     Dict,
+    Optional,
+    Tuple as TupleType,
+    Type,
     TypeVar,
+    Union,
 )
 
 import attr
@@ -15,6 +21,7 @@ import six
 
 KT = TypeVar('KT')
 VT = TypeVar('VT')
+AttrsValidator = Callable[[AnyType, AnyType, AnyType], None]
 
 
 def strip_none(value):  # type: (Dict[KT, VT]) -> Dict[KT, VT]
@@ -25,33 +32,46 @@ def strip_none(value):  # type: (Dict[KT, VT]) -> Dict[KT, VT]
     return {k: v for k, v in value.items() if v is not None}
 
 
-attr_is_instance = attr.validators.instance_of
-attr_is_optional = attr.validators.optional
+attr_is_instance = attr.validators.instance_of  # type: Callable[[Union[Type, TupleType[Type, ...]]], AttrsValidator]
+attr_is_optional = attr.validators.optional  # type: Callable[[AttrsValidator], AttrsValidator]
 
 
-def attr_is_bool():
+def attr_is_bool():  # type: () -> AttrsValidator
+    """Creates an Attrs validator that ensures the argument is a bool."""
     return attr_is_instance(bool)
 
 
-def attr_is_int():
+def attr_is_int():  # type: () -> AttrsValidator
+    """Creates an Attrs validator that ensures the argument is an integer."""
     return attr_is_instance(int)
 
 
-def attr_is_number():
+def attr_is_number():  # type: () -> AttrsValidator
+    """Creates an Attrs validator that ensures the argument is a number."""
     return attr_is_instance((int, float, decimal.Decimal))
 
 
-def attr_is_set():
+def attr_is_set():  # type: () -> AttrsValidator
+    """Creates an Attrs validator that ensures the argument is an abstract set."""
     return attr_is_instance((set, frozenset))
 
 
-def attr_is_string():
+def attr_is_string():  # type: () -> AttrsValidator
+    """Creates an Attrs validator that ensures the argument is a unicode string."""
     return attr_is_instance(six.text_type)
 
 
 # In Attrs 19.1.0 we can use attr.validators.deep_iterable, but we want to support older versions for a while longer,
 # so we use this custom validator for now
-def attr_is_iterable(member_validator=None, iterable_validator=None):
+def attr_is_iterable(
+    member_validator,  # type: AttrsValidator
+    iterable_validator=None  # type: Optional[AttrsValidator]
+):
+    # type: (...) -> AttrsValidator
+    """
+    The equivalent of `attr.validators.deep_iterable` added in Attrs 19.1.0, but we still support older versions.
+    """
+
     # noinspection PyShadowingNames
     def validator(inst, attr, value):
         if not hasattr(value, '__iter__'):
@@ -82,7 +102,14 @@ def attr_is_iterable(member_validator=None, iterable_validator=None):
     return validator
 
 
-def attr_is_instance_or_instance_tuple(check_type):
+def attr_is_instance_or_instance_tuple(
+    check_type,  # type: Union[Type, TupleType[Type, ...]]
+):
+    # type: (...) -> AttrsValidator
+    """
+    Creates an Attrs validator that ensures the argument is a instance of or tuple of instances of the given type.
+    """
+
     # first, some meta META validation
     if not isinstance(check_type, type):
         if not isinstance(check_type, tuple):

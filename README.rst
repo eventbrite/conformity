@@ -1,5 +1,14 @@
-Conformity
-==========
+Conformity - Declarative Schema for Python
+==========================================
+
+.. image:: https://readthedocs.org/projects/conformity/badge/
+    :target: https://conformity.readthedocs.io
+
+.. image:: https://pepy.tech/badge/conformity
+    :target: https://pepy.tech/project/conformity
+
+.. image:: https://img.shields.io/pypi/l/conformity.svg
+    :target: https://pypi.python.org/pypi/conformity
 
 .. image:: https://api.travis-ci.org/eventbrite/conformity.svg
     :target: https://travis-ci.org/eventbrite/conformity
@@ -7,15 +16,21 @@ Conformity
 .. image:: https://img.shields.io/pypi/v/conformity.svg
     :target: https://pypi.python.org/pypi/conformity
 
-.. image:: https://img.shields.io/pypi/l/conformity.svg
+.. image:: https://img.shields.io/pypi/wheel/conformity.svg
+    :target: https://pypi.python.org/pypi/conformity
+
+.. image:: https://img.shields.io/pypi/pyversions/conformity.svg
     :target: https://pypi.python.org/pypi/conformity
 
 
-A low-level, declarative schema validation library.
+**Conformity** is a declarative schema validation library designed for use in libraries, services, application
+settings, and more.
+
+------------
 
 Declare a schema:
 
-.. code:: python
+.. code-block:: python
 
     from conformity.fields import Dictionary, Float, Integer, List, UnicodeString
 
@@ -27,7 +42,7 @@ Declare a schema:
 
 Check to see if data is valid:
 
-.. code:: python
+.. code-block:: python
 
     data = {"name": "Andrew", "height": 180.3, "event_ids": [1, "3"]}
     errors = person.errors(data)
@@ -36,7 +51,7 @@ Check to see if data is valid:
 
 And wrap functions to validate on the way in and out:
 
-.. code:: python
+.. code-block:: python
 
     kwargs = Dictionary({
         "name": UnicodeString(),
@@ -51,34 +66,39 @@ And wrap functions to validate on the way in and out:
             return "Hello, {}.".format(name)
 
 There's support for basic string, numeric, geographic, temporal, networking, and other field types, with everything
-easily extensible (optionally via subclassing).
+easily extensible (optionally via subclassing). Conformity also boasts support for full-blown application settings
+schema definition and validation complete with definable defaults, and includes Sphinx ``autodoc`` extensions to help
+you generate meaningful documentation for your code using Conformity.
 
 
-Errors are always instances of ``conformity.error:Error``, and each error has a ``message``, a ``code``, and a
-``pointer``:
+Installation
+------------
 
-- ``message`` is a plain-language (English) explanation of the problem.
-- ``code`` is a machine-readable code that, in most cases, is ``INVALID`` (using the constant
-  ``conformity.error:ERROR_CODE_INVALID``). In ``Dictionary``, the error code is ``MISSING`` (``ERROR_CODE_MISSING``)
-  for required keys that aren't present and ``UNKNOWN`` for extra keys that aren't allowed. In ``Constant``, the error
-  code is ``UNKNOWN`` for values that don't match the allowed value or values. In ``Polymorph``, the error code is
-  ``UNKNOWN`` for unknown switch values when no ``__default__`` is present.
-- ``pointer`` is ``None`` for errors in most field types. However, for data structure field types (``List``,
-  ``Dictionary``, ``SchemalessDictionary``, ``Tuple``), ``pointer`` is a string representing the dotted path to the
-  offending value in the structure.
+Conformity is available in PyPi and can be installing directly via Pip or listed in ``setup.py``, ``requirements.txt``,
+or ``Pipfile``:
+
+.. code-block:: bash
+
+    pip install 'conformity~=1.26'
+
+.. code-block:: python
+
+    install_requires=[
+        ...
+        'conformity~=1.26',
+        ...
+    ]
+
+.. code-block:: text
+
+    conformity~=1.26
+
+.. code-block:: text
+
+    conformity = {version="~=1.26"}
 
 
-Interface
----------
+Documentation
+-------------
 
-Anything can be a Conformity validator as long as it follows this interface:
-
-* An ``errors(value)`` method that returns a list of ``conformity.error:Error`` objects for each error or an empty
-  list or ``None`` if the value is clean.
-
-* An ``introspect()`` method, that returns a dictionary describing the field. The format of this dictionary has to vary
-  by field, but it should reflect the names of keyword arguments passed into the constructor, and provide enough
-  information to entirely re-create the field as-is. Any sub-fields declared for structures should be represented using
-  their own ``introspect()`` output. The dictionary must also contain a ``type`` key that contains the name of the
-  type, but this should use lower case and underscores rather than the class name. It can also contain a ``description``
-  key which should be interpreted as the human-readable reason for the field.
+The complete Conformity documentation is available on `Read the Docs <https://conformity.readthedocs.io>`_!

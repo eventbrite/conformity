@@ -22,7 +22,8 @@ from conformity.error import (
     ERROR_CODE_UNKNOWN,
     Error,
 )
-from conformity.utils import (
+from conformity.utils import (  # noqa: F401 TODO Python 3
+    AttrsValidator,
     attr_is_bool,
     attr_is_instance,
     attr_is_int,
@@ -47,7 +48,9 @@ Introspection = Dict[
 @attr.s
 class Base(object):
     """
-    Base field type.
+    The base Conformity field from which all Conformity fields must inherit, this defines a simple interface for
+    getting a list of validation errors and recursively introspecting the schema. All fields should accept a
+    `description` argument for use in documentation and introspection.
     """
 
     def errors(self, value):  # type: (AnyType) -> ListType[Error]
@@ -63,13 +66,15 @@ class Base(object):
         raise NotImplementedError('You must override introspect() in a subclass')
 
 
-def attr_is_conformity_field():
+def attr_is_conformity_field():  # type: () -> AttrsValidator
+    """Creates an Attrs validator that ensures the argument is a Conformity field (extends `Base`)."""
     return attr_is_instance(Base)
 
 
 class Constant(Base):
     """
-    Value that must match exactly. You can pass a series of options and any will be accepted.
+    Conformity field that ensures that the value exactly matches the constant value supplied or, if multiple constant
+    values are supplied, exactly matches one of those values.
     """
 
     introspect_type = 'constant'
@@ -112,7 +117,7 @@ class Constant(Base):
 @attr.s
 class Anything(Base):
     """
-    Accepts any value.
+    Conformity field that allows the value to be literally anything.
     """
 
     introspect_type = 'anything'
@@ -132,7 +137,7 @@ class Anything(Base):
 @attr.s
 class Hashable(Anything):
     """
-    Accepts any hashable value
+    Conformity field that ensures that the value is hashable (`hash(...)` can be called on the value without error).
     """
 
     introspect_type = 'hashable'
@@ -156,7 +161,7 @@ class Hashable(Anything):
 @attr.s
 class Boolean(Base):
     """
-    Accepts boolean values only
+    Conformity field that ensures that the value is a boolean.
     """
 
     introspect_type = 'boolean'
@@ -180,7 +185,8 @@ class Boolean(Base):
 @attr.s
 class Integer(Base):
     """
-    Accepts valid integers, with optional range limits.
+    Conformity field that ensures that the value is an integer and optionally enforces boundaries for that integer with
+    the `gt`, `gte`, `lt`, and `lte` arguments.
     """
 
     valid_type = six.integer_types  # type: Union[Type, TupleType[Type, ...]]
@@ -234,7 +240,8 @@ class Integer(Base):
 @attr.s
 class Float(Integer):
     """
-    Accepts floating point numbers as well as integers.
+    Conformity field that ensures that the value is a float and optionally enforces boundaries for that float with
+    the `gt`, `gte`, `lt`, and `lte` arguments.
     """
 
     valid_type = six.integer_types + (float,)  # type: ignore # see https://github.com/python/mypy/issues/224
@@ -245,7 +252,8 @@ class Float(Integer):
 @attr.s
 class Decimal(Integer):
     """
-    Accepts arbitrary-precision Decimal number objects.
+    Conformity field that ensures that the value is a `decimal.Decimal` and optionally enforces boundaries for that
+    decimal with the `gt`, `gte`, `lt`, and `lte` arguments.
     """
 
     valid_type = decimal.Decimal
@@ -256,7 +264,8 @@ class Decimal(Integer):
 @attr.s
 class UnicodeString(Base):
     """
-    Accepts only unicode strings
+    Conformity field that ensures that the value is a unicode string (`str` in Python 3, `unicode` in Python 2) and
+    optionally enforces minimum and maximum lengths with the `min_length`, `max_length`, and `allow_blank` arguments.
     """
 
     valid_type = six.text_type  # type: Type
@@ -296,7 +305,8 @@ class UnicodeString(Base):
 @attr.s
 class ByteString(UnicodeString):
     """
-    Accepts only byte strings
+    Conformity field that ensures that the value is a byte string (`bytes` in Python 3, `str` in Python 2) and
+    optionally enforces minimum and maximum lengths with the `min_length`, `max_length`, and `allow_blank` arguments.
     """
 
     valid_type = six.binary_type
@@ -307,7 +317,8 @@ class ByteString(UnicodeString):
 @attr.s
 class UnicodeDecimal(Base):
     """
-    A decimal value represented as its base-10 unicode string.
+    Conformity field that ensures that the value is a unicode string that is also a valid decimal and can successfully
+    be converted to a `decimal.Decimal`.
     """
 
     introspect_type = 'unicode_decimal'

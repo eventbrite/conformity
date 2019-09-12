@@ -48,9 +48,9 @@ from conformity.utils import (
 @attr.s
 class Nullable(Base):
     """
-    Accepts the field type passed as the first positional argument or a value of null/None. Introspection is a
-    dictionary with "type" set to "nullable" and key "nullable" set to the introspection of the first positional
-    argument.
+    Conformity field that allows a null / `None` value and delegates validation the field type passed as the first
+    positional argument for all non-null values. Introspection is a dictionary with "type" set to "nullable" and key
+    "nullable" set to the introspection of the first positional argument.
     """
 
     introspect_type = 'nullable'
@@ -72,7 +72,8 @@ class Nullable(Base):
 
 class Null(Base):
     """
-    Useful as a return type, to indicate that a function returns nothing, for example.
+    Conformity field that ensures that the value is null / `None`. Useful as a return type, to indicate that a
+    function returns nothing, for example.
     """
 
     introspect_type = 'null'
@@ -89,8 +90,8 @@ class Null(Base):
 @attr.s
 class Polymorph(Base):
     """
-    A field which has one of a set of possible contents based on a field
-    within it (which must be accessible via dictionary lookups)
+    A Conformity field which has one of a set of possible contents based on a field within it (which must be
+    accessible via `Mapping` key lookups).
     """
 
     introspect_type = 'polymorph'
@@ -130,7 +131,7 @@ class Polymorph(Base):
 @attr.s
 class ObjectInstance(Base):
     """
-    Accepts only instances of a given class or type
+    Conformity field that ensures that the value is an instance of the given `valid_type`.
     """
 
     introspect_type = 'object_instance'
@@ -156,9 +157,10 @@ class ObjectInstance(Base):
 @attr.s
 class PythonPath(Base):
     """
-    Accepts only a unicode path to an importable Python type, function, or variable, including the full path to the
-    enclosing module. Both '.' and ':' are recognized as valid separators between module name and item name, but if
-    the item is not a top-level member of the module, it can only be accessed by using ':' as the separator.
+    Conformity field that accepts only a unicode path to an importable Python type, function, or variable, including
+    the full path to the enclosing module. Both '.' and ':' are recognized as valid separators between module name and
+    item name, but if the item is not a top-level member of the module, it can only be accessed by using ':' as the
+    separator.
 
     All of the following are valid type name formats:
 
@@ -235,7 +237,8 @@ class PythonPath(Base):
 @attr.s
 class TypeReference(Base):
     """
-    Accepts only type references, optionally types that must be a subclass of a given type or types.
+    Conformity field that ensures that the value is an instance of `type` and, optionally, that the value is a subclass
+    of the type or types specified by `base_classes`.
     """
     introspect_type = 'type_reference'
 
@@ -271,8 +274,8 @@ class TypeReference(Base):
 
 class TypePath(PythonPath):
     """
-    Accepts only a unicode path to an importable Python type, including the full path to the enclosing module. Both '.'
-    and ':' are recognized as a valid separator between module name and type name.
+    Conformity field that accepts only a unicode path to an importable Python type, including the full path to the
+    enclosing module. Both '.' and ':' are recognized as a valid separator between module name and type name.
 
     All of the following are valid type name formats:
 
@@ -309,33 +312,37 @@ class ClassConfigurationSchema(Base):
 
     Typical usage would be as follows, in Python pseudocode:
 
-    class BaseThing:
-        ...
+    .. code-block:: python
 
-    @ClassConfigurationSchema.provider(fields.Dictionary({...}, ...))
-    class Thing1(BaseThing):
-        ...
+        class BaseThing:
+            ...
 
-    @ClassConfigurationSchema.provider(fields.Dictionary({...}, ...))
-    class Thing2(BaseThing):
-        ...
+        @fields.ClassConfigurationSchema.provider(fields.Dictionary({...}, ...))
+        class Thing1(BaseThing):
+            ...
 
-    settings = get_settings_from_something()
-    schema = ClassConfigurationSchema(base_class=BaseThing)
-    errors = schema.errors(**settings[kwargs])
-    if errors:
-        ... handle errors ...
+        @fields.ClassConfigurationSchema.provider(fields.Dictionary({...}, ...))
+        class Thing2(BaseThing):
+            ...
 
-    thing = settings['object'](settings)
+        settings = get_settings_from_something()
+        schema = fields.ClassConfigurationSchema(base_class=BaseThing)
+        errors = schema.errors(**settings[kwargs])
+        if errors:
+            ... handle errors ...
+
+        thing = settings['object'](settings)
 
     Another approach, using the helper method on the schema, simplifies that last part:
 
-    schema = ClassConfigurationSchema(base_class=BaseThing)
-    thing = schema.instantiate_from(get_settings_from_something())  # raises ValidationError
+    .. code-block:: python
+
+        schema = fields.ClassConfigurationSchema(base_class=BaseThing)
+        thing = schema.instantiate_from(get_settings_from_something())  # raises ValidationError
 
     However, note that, in both cases, instantiation is not nested. If the settings schema Dictionary on some class has
-    a key (or further down) whose value is another ClassConfigurationSchema, code that consumes those settings will
-    also have to instantiate objects from those settings. Validation, however, will be nested as it all other things
+    a key (or further down) whose value is another `ClassConfigurationSchema`, code that consumes those settings will
+    also have to instantiate objects from those settings. Validation, however, will be nested as in all other things
     Conformity.
     """
     introspect_type = 'class_config_dictionary'
@@ -480,8 +487,8 @@ class ClassConfigurationSchema(Base):
 
 class Any(Base):
     """
-    Accepts any one of the types passed as positional arguments.
-    Intended to be used for constants but could be used with others.
+    Conformity field that ensures that the value passes validation with at least one of the Conformity fields passed
+    as positional arguments.
     """
 
     introspect_type = 'any'
@@ -523,8 +530,8 @@ class Any(Base):
 
 class All(Base):
     """
-    The value must pass all of the types passed as positional arguments.
-    Intended to be used for adding extra validation.
+    Conformity field that ensures that the value passes validation with at all of the Conformity fields passed as
+    positional arguments.
     """
 
     introspect_type = 'all'
@@ -562,8 +569,8 @@ class All(Base):
 @attr.s
 class BooleanValidator(Base):
     """
-    Uses a boolean callable (probably lambda) passed in to validate the value
-    based on if it returns True (valid) or False (invalid).
+    Conformity field that ensures that the value passes validation with the `typing.Callable[[typing.Any], bool]`
+    `validator` argument passed in to it.
     """
 
     introspect_type = 'boolean_validator'

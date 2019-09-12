@@ -23,9 +23,9 @@ from conformity.utils import strip_none
 
 class EmailAddress(UnicodeString):
     """
-    On the shoulder of mighty Django (v2.0.x)
-    https://github.com/django/django/blob/stable/2.0.x/django/core/validators.py#L164
-    UTF-8 emails are not supported in general.
+    Conformity field that ensures that the value is a unicode string that is a valid email address according to
+    RFC 2822 and optionally accepts non-compliant fields listed in the `whitelist` argument. Substantially copied from
+    Django (v2.0.x): https://github.com/django/django/blob/stable/2.0.x/django/core/validators.py#L164.
     """
 
     introspect_type = 'email_address'
@@ -57,8 +57,8 @@ class EmailAddress(UnicodeString):
         """
         Construct a new email address field.
 
-        :param message: Unused, and will be removed in version 2.0.0
-        :param code: Unused, and will be removed in version 2.0.0
+        :param message: Deprecated, unused, and will be removed in version 2.0.0
+        :param code: Deprecated, unused, and will be removed in version 2.0.0
         :param whitelist: If specified, an invalid domain part will be permitted if it is in this list
         """
         if whitelist is not None and (

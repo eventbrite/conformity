@@ -27,8 +27,9 @@ __all__ = (
 
 class CountryCodeField(Constant):
     """
-    An enum field for restricting values to valid ISO 3166 country codes.
-    Permits only current countries and uses the ISO 3166 alpha-2 codes.
+    Conformity field that ensures that the value is a valid ISO 3166 country codes. It permits only current countries
+    according to the installed version of PyCountry and uses the ISO 3166 alpha-2 codes. This field requires that
+    PyCountry be installed.
     """
 
     introspect_type = 'country_code_field'
@@ -41,7 +42,6 @@ class CountryCodeField(Constant):
         # type: (...) -> None
         """
         :param code_filter: If specified, will be called to further filter the available country codes
-        :type code_filter: lambda x: bool
         """
         if not callable(code_filter):
             raise TypeError('Argument code_filter must be a callable that accepts a country code and returns a bool')

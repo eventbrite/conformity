@@ -11,7 +11,8 @@ from conformity.fields.basic import Float
 @attr.s
 class Latitude(Float):
     """
-    Latitude coordinate on an ellipsoid or sphere
+    Conformity field that ensures that the value is a float within the normal boundaries of a geographical latitude on
+    an ellipsoid or sphere.
     """
 
     def __attrs_post_init__(self):  # type: () -> None
@@ -23,7 +24,8 @@ class Latitude(Float):
 @attr.s
 class Longitude(Float):
     """
-    Longitude coordinate on an ellipsoid or sphere
+    Conformity field that ensures that the value is a float within the normal boundaries of a geographical longitude on
+    an ellipsoid or sphere.
     """
 
     def __attrs_post_init__(self):  # type: () -> None

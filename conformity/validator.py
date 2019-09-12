@@ -36,8 +36,9 @@ __all__ = (
 def validate(schema, value, noun='value'):
     # type: (fields.Base, AnyType, six.text_type) -> None
     """
-    Checks the value against the schema, and raises ValidationError if validation
-    fails.
+    Checks the value against the schema, and raises `ValidationError` if validation fails.
+
+    :raises: :class:`conformity.error.ValidationError`
     """
     errors = schema.errors(value)
     if errors:
@@ -68,6 +69,8 @@ def validate_call(
     :param returns: Validation schema for the return value
     :param is_method: Set this to `True` for instance methods and class methods, but `False` (the default) for all
                       other callables, including static methods.
+
+    :raises: :class:`conformity.error.ValidationError`
     """
 
     if args is not None and not isinstance(args, (fields.Tuple, fields.List)):
@@ -140,5 +143,7 @@ def validate_method(
     :param args: Validation schema for positional arguments, or `None` if positional arguments are not supported.
     :param kwargs: Validation schema for keyword arguments, or `None` if keyword arguments are not supported.
     :param returns: Validation schema for the return value
+
+    :raises: :class:`conformity.error.ValidationError`
     """
     return validate_call(args=args, kwargs=kwargs, returns=returns, is_method=True)
