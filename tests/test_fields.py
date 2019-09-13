@@ -11,6 +11,7 @@ from typing import (  # noqa: F401 TODO Python 3
     Tuple as TupleType,
 )
 import unittest
+import warnings
 
 import freezegun
 import pytest
@@ -777,3 +778,18 @@ class FieldTests(unittest.TestCase):
         assert schema.errors('foo') == [Error('Validation not implemented on base type')]
         with pytest.raises(NotImplementedError):
             schema.introspect()
+
+
+@pytest.mark.parametrize(('kwarg', ), (('gt', ), ('lt', ), ('gte', ), ('lte', )))
+def test_tzinfo_deprecated_arguments(kwarg):
+    with warnings.catch_warnings(record=True) as w:
+        warnings.simplefilter('always', DeprecationWarning)
+
+        TZInfo(**{kwarg: pytz.timezone('America/Chicago')})  # type: ignore
+
+    assert w
+    assert len(w) == 1
+    assert issubclass(w[-1].category, DeprecationWarning)
+    assert (
+        'Arguments `gt`, `gte`, `lt`, and `lte` are deprecated in TZInfo and will be removed in Conformity 2.0.'
+    ) in str(w[-1].message)

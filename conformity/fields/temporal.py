@@ -13,6 +13,7 @@ from typing import (  # noqa: F401 TODO Python 3
     Type,
     Union,
 )
+import warnings
 
 import attr
 import six  # noqa: F401 TODO Python 3
@@ -161,3 +162,13 @@ class TZInfo(TemporalBase):
     valid_isinstance = datetime.tzinfo
     valid_noun = 'datetime.tzinfo'
     introspect_type = 'tzinfo'
+
+    def __attrs_post_init__(self):  # type: () -> None
+        if self.gt is not None or self.gte is not None or self.lt is not None or self.lte is not None:
+            warnings.warn(
+                'Arguments `gt`, `gte`, `lt`, and `lte` are deprecated in TZInfo and will be removed in '
+                'Conformity 2.0.',
+                DeprecationWarning,
+            )
+
+        super(TZInfo, self).__attrs_post_init__()

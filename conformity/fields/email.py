@@ -9,6 +9,7 @@ from typing import (  # noqa: F401  TODO Python 3
     Iterable,
     List as ListType,
 )
+import warnings
 
 import six
 
@@ -66,6 +67,12 @@ class EmailAddress(UnicodeString):
             not all(isinstance(c, six.text_type) for c in whitelist)
         ):
             raise TypeError("'whitelist' must be an iterable of unicode strings")
+
+        if message is not None or code is not None:
+            warnings.warn(
+                'Arguments `message` and `code` are deprecated in EmailAddress and will be removed in Conformity 2.0.',
+                DeprecationWarning,
+            )
 
         super(EmailAddress, self).__init__(**kwargs)
         if whitelist is not None:

@@ -5,6 +5,7 @@ from __future__ import (
 )
 
 import unittest
+import warnings
 
 import pytest
 
@@ -56,6 +57,32 @@ class EmailFieldTests(unittest.TestCase):
             'type': 'email_address',
             'domain_whitelist': ['green.org'],
         }
+
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter('always', DeprecationWarning)
+
+            # noinspection PyTypeChecker
+            EmailAddress(message='hello')  # type: ignore
+
+        assert w
+        assert len(w) == 1
+        assert issubclass(w[-1].category, DeprecationWarning)
+        assert (
+            'Arguments `message` and `code` are deprecated in EmailAddress and will be removed in Conformity 2.0.'
+        ) in str(w[-1].message)
+
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter('always', DeprecationWarning)
+
+            # noinspection PyTypeChecker
+            EmailAddress(code='')  # type: ignore
+
+        assert w
+        assert len(w) == 1
+        assert issubclass(w[-1].category, DeprecationWarning)
+        assert (
+            'Arguments `message` and `code` are deprecated in EmailAddress and will be removed in Conformity 2.0.'
+        ) in str(w[-1].message)
 
     def test_not_unicode(self):  # type: () -> None
         schema = EmailAddress()
