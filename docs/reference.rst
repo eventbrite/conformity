@@ -26,6 +26,8 @@ API Reference Documentation
 
 .. automodule:: conformity.fields.meta
 
+.. automodule:: conformity.fields.logging
+
 .. automodule:: conformity.error
 
 .. automodule:: conformity.settings

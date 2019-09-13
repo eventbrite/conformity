@@ -27,6 +27,7 @@ from conformity import (
     settings,
     __version__,
 )
+from conformity.fields.logging import PYTHON_LOGGING_CONFIG_SCHEMA
 from conformity.sphinx_ext.autodoc import (
     autodoc_process_docstring,
     autodoc_process_signature,
@@ -301,6 +302,15 @@ def test_autodoc_process_signature(obj, signature, return_annotation, new_signat
     ) == (new_signature, new_return_annotation)
 
 
+def test_autodoc_process_signature_conformity_schema_data():
+    sphinx = cast(Sphinx, mock.MagicMock())
+    options = mock.MagicMock()
+
+    assert autodoc_process_signature(
+        sphinx, 'data', 'path.to.module.DATA_ATTRIBUTE', PYTHON_LOGGING_CONFIG_SCHEMA, options, None, None,
+    ) == (' = pre-defined Conformity schema path.to.module.DATA_ATTRIBUTE', None)
+
+
 def test_autodoc_process_docstring_backticks():
     sphinx = cast(Sphinx, mock.MagicMock())
     options = mock.MagicMock()
@@ -326,6 +336,22 @@ def test_autodoc_process_docstring_backticks():
         "and optionally fields ``'major_value'`` and ``'display'``. This field requires that Currint be installed.",
         '',
     ]
+
+
+def test_autodoc_process_dostring_conformity_schema_data():
+    sphinx = cast(Sphinx, mock.MagicMock())
+    options = mock.MagicMock()
+
+    lines = ['']
+
+    autodoc_process_docstring(sphinx, 'data', 'does not matter', PYTHON_LOGGING_CONFIG_SCHEMA, options, lines)
+
+    assert lines[0] == ''
+    assert lines[1] == ''
+    assert lines[2] == ''
+    assert lines[3].startswith(
+        'strict ``dict``: Settings to enforce the standard Python logging dictionary-based configuration',
+    )
 
 
 def test_autodoc_process_docstring_settings_class():

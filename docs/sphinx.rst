@@ -62,6 +62,9 @@ modify it before it gets rendered. It looks for and does the following things:
 - If a class being documented is decorated with ``@fields.ClassConfigurationSchema`` (see
   `Class Configuration Schemas <fields.html#class-configuration-schemas>`_), the extension parses the schema and
   appends documentation to the class docstring detailing the schema requirements for the constructor arguments.
+- If your module has an attribute that is an instance of any Conformity field and that attribute has a docstring
+  directly below it (even an empty one), the extension parses the schema of that field and appends its documentation
+  to the docstring for that attribute.
 
 The Linkcode extension does not have an events to hook in to like the Autodoc extension. Instead, it just provides a
 helper method that you can use to fulfill Linkcode's ``linkcode_resolve`` attribute in ``conf.py``. Writing a

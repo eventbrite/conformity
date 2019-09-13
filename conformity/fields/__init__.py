@@ -40,9 +40,11 @@ from conformity.fields.net import (
     IPv6Address,
 )
 from conformity.fields.structures import (
+    AdditionalCollectionValidator,
     Dictionary,
     List,
     SchemalessDictionary,
+    Sequence,
     Set,
     Tuple,
 )
@@ -56,6 +58,7 @@ from conformity.fields.temporal import (
 
 
 __all__ = (
+    'AdditionalCollectionValidator',
     'All',
     'Any',
     'Anything',
@@ -85,6 +88,7 @@ __all__ = (
     'Polymorph',
     'PythonPath',
     'SchemalessDictionary',
+    'Sequence',
     'Set',
     'Time',
     'TimeDelta',
