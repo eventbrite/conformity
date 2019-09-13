@@ -298,14 +298,15 @@ In order to use ``CountryCodeField``, you must specify the ``country`` extras de
     # With Pipfile
     conformity = {version="*", extras=["country"]}
 
-There are two other fields that make use of `Currint`_ types if you specify the ``currint`` extras dependency:
+There are four other fields that make use of `Currint`_ types if you specify the ``currint`` extras dependency:
 
 - `currency.Amount <reference.html#conformity.fields.currency.Amount>`_: This field ensures that the value is an
   instance of ``currint.Amount``. It provides an optional ``valid_currencies`` argument which, by default, is the set
   of all ISO 4217 currency codes recognized by Currint. It also provides optional integer ``gt``, ``gte``, ``lt``, and
   ``lte`` boundary arguments that will be compared against the ``currint.Amount.value`` attribute.
-- `currency.AmountDictionary <reference.html#conformity.fields.currency.AmountDictionary>`_: A special extension of
-  ``Dictionary`` that enforces the standard JSON-compatible representation of a ``currint.Amount`` value:
+- `currency.AmountRequestDictionary <reference.html#conformity.fields.currency.AmountRequestDictionary>`_: A special
+  extension of ``Dictionary`` that enforces the standard JSON-compatible representation of a ``currint.Amount`` input
+  value, which must have a string ``'currency'`` key and an integer ``'value'`` key:
 
   .. code-block:: json
 
@@ -316,6 +317,22 @@ There are two other fields that make use of `Currint`_ types if you specify the 
 
   This object, for example, represents USD 12.00. Like ``Amount``, it also has ``valid_currencies``, ``gt``, ``gte``,
   ``lt``, and ``lte`` optional arguments.
+- `currency.AmountResponseDictionary <reference.html#conformity.fields.currency.AmountResponseDictionary>`_: A special
+  extension of ``Dictionary`` that enforces the standard JSON-compatible representation of a ``currint.Amount``
+  response value, which must have a string ``'currency'`` key and an integer ``'value'`` key and may optionally have
+  string keys ``'major_value'`` and ``'display'``.
+
+  .. code-block:: json
+
+      {
+          "currency": "USD",
+          "value": 1200,
+          "major_value": "12.00",
+          "display": "12.00 USD",
+      }
+- `currency.AmountString <reference.html#conformity.fields.currency.AmountString>`_: A unicode string field (which does
+  not extend ``UnicodeString``) that enforces the value meet the currency format ``'CUR,1234'`` or ``'CUR:1234'``, and,
+  like ``Amount``, supports ``valid_currencies``, ``gt``, ``gte``, ``lt``, and ``lte`` optional arguments.
 
 
 Advanced Fields

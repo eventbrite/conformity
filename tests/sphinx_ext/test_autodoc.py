@@ -309,6 +309,9 @@ def test_autodoc_process_docstring_backticks():
         'This is the first line of `documentation` which should be ``modified`` but `only` if the ',
         'contents ```warrant``` modification. We especially do not `want` to mess ``with`` ',
         '`links to other titles`_ or `links to other pages <hello>`_ because that would be `bad`.',
+        "Conformity field that ensures that the value is a dictionary containing at least "
+        "fields `'currency'` and `'value'`",
+        "and optionally fields `'major_value'` and `'display'`. This field requires that Currint be installed.",
         'isort:skip_file',
     ]
 
@@ -318,6 +321,9 @@ def test_autodoc_process_docstring_backticks():
         'This is the first line of ``documentation`` which should be ``modified`` but ``only`` if the ',
         'contents ```warrant``` modification. We especially do not ``want`` to mess ``with`` ',
         '`links to other titles`_ or `links to other pages <hello>`_ because that would be ``bad``.',
+        "Conformity field that ensures that the value is a dictionary containing at least "
+        "fields ``'currency'`` and ``'value'``",
+        "and optionally fields ``'major_value'`` and ``'display'``. This field requires that Currint be installed.",
         '',
     ]
 

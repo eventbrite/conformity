@@ -108,6 +108,11 @@ def _clean_literals(documentation: str) -> str:  # noqa: E999
         new_documentation.append(c)
         last = c
 
+    if len(new_documentation) > 3 and started and new_documentation[-1] == '`' and new_documentation[-2] != '`':
+        # Our code literal ended at the end of a line, so we didn't loop again to finish it off.
+        new_documentation.insert(position_to_insert_backtick + add_to_i, '`')
+        new_documentation.append('`')
+
     return ''.join(new_documentation)
 
 
