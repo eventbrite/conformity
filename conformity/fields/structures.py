@@ -3,18 +3,26 @@ from __future__ import (
     unicode_literals,
 )
 
+import abc
 from collections import OrderedDict
+import sys
 from typing import (  # noqa: F401 TODO Python 3
+    AbstractSet,
     Any as AnyType,
+    Callable,
+    Container,
     Dict,
     FrozenSet,
+    Generic,
     Hashable as HashableType,
     List as ListType,
     Mapping,
     Optional,
+    Sequence as SequenceType,
     Sized,
     Tuple as TupleType,
     Type,
+    TypeVar,
     Union,
     cast,
 )
@@ -44,8 +52,48 @@ from conformity.utils import (
 )
 
 
+VT = TypeVar('VT', bound=Container)
+
+
+if sys.version_info < (3, 7):
+    # We can't just decorate this with @six.add_metaclass. In Python < 3.7, that results in this error:
+    #    TypeError: Cannot inherit from plain Generic
+    # But we can't leave that off, because in Python 3.7+, the abstract method is not enforced without this (it is
+    # enforced in < 3.7 since GenericMeta extends ABCMeta).
+    # So we do it this way:
+    _ACVT = TypeVar('_ACVT')
+
+    def _acv_decorator(_metaclass):  # type: (Type) -> Callable[[Type[_ACVT]], Type[_ACVT]]
+        def wrapper(cls):  # type: (Type[_ACVT]) -> Type[_ACVT]
+            return cls
+        return wrapper
+else:
+    _acv_decorator = six.add_metaclass
+
+
+@_acv_decorator(abc.ABCMeta)
+class AdditionalCollectionValidator(Generic[VT]):
+    """
+    Conformity fields validating collections can have an additional custom validator that can perform extra checks
+    across the entire collection, such as ensuring that values that need to refer to other values in the same
+    collection properly match. This is especially helpful to be able to avoid duplicating the existing collection
+    validation in Conformity's structure fields.
+    """
+
+    @abc.abstractmethod
+    def errors(self, value):  # type: (VT) -> ListType[Error]
+        """
+        Called after the collection has otherwise passed validation, and not called if the collection has not passed
+        its normal validation.
+
+        :param value: The value to be validated.
+
+        :return: A list of errors encountered with this value.
+        """
+
+
 @attr.s
-class List(Base):
+class _BaseSequenceOrSet(Base):
     """
     Conformity field that ensures that the value is a list of items that all pass validation with the Conformity field
     passed to the `contents` argument and optionally establishes boundaries for that list with the `max_length` and
@@ -56,11 +104,15 @@ class List(Base):
     max_length = attr.ib(default=None, validator=attr_is_optional(attr_is_int()))  # type: Optional[int]
     min_length = attr.ib(default=None, validator=attr_is_optional(attr_is_int()))  # type: Optional[int]
     description = attr.ib(default=None, validator=attr_is_optional(attr_is_string()))  # type: Optional[six.text_type]
+    additional_validator = attr.ib(
+        default=None,
+        validator=attr_is_optional(attr_is_instance(AdditionalCollectionValidator)),
+    )  # type: Optional[AdditionalCollectionValidator[AnyType]]
 
-    valid_types = list  # type: Union[Type[Sized], TupleType[Type[Sized], ...]]
-    type_noun = 'list'  # type: six.text_type
-    introspect_type = type_noun  # type: six.text_type
-    type_error = 'Not a list'  # type: six.text_type
+    valid_types = None  # type: Union[Type[Sized], TupleType[Type[Sized], ...]]
+    type_noun = None  # deprecated, will be removed in Conformity 2.0
+    introspect_type = None  # type: six.text_type
+    type_error = None  # type: six.text_type
 
     def __attrs_post_init__(self):  # type: () -> None
         if self.min_length is not None and self.max_length is not None and self.min_length > self.max_length:
@@ -84,6 +136,10 @@ class List(Base):
                 update_error_pointer(error, lazy_pointer.get())
                 for error in (self.contents.errors(element) or [])
             )
+
+        if not result and self.additional_validator:
+            return self.additional_validator.errors(value)
+
         return result
 
     @classmethod
@@ -100,6 +156,9 @@ class List(Base):
             'max_length': self.max_length,
             'min_length': self.min_length,
             'description': self.description,
+            'additional_validation': (
+                self.additional_validator.__class__.__name__ if self.additional_validator else None
+            ),
         })
 
     class LazyPointer(object):
@@ -108,15 +167,43 @@ class List(Base):
 
 
 @attr.s
-class Set(List):
+class List(_BaseSequenceOrSet):
+    additional_validator = attr.ib(
+        default=None,
+        validator=attr_is_optional(attr_is_instance(AdditionalCollectionValidator)),
+    )  # type: Optional[AdditionalCollectionValidator[list]]
+
+    valid_types = list
+    introspect_type = 'list'
+    type_error = 'Not a list'
+
+
+@attr.s
+class Sequence(_BaseSequenceOrSet):
+    additional_validator = attr.ib(
+        default=None,
+        validator=attr_is_optional(attr_is_instance(AdditionalCollectionValidator)),
+    )  # type: Optional[AdditionalCollectionValidator[SequenceType]]
+
+    valid_types = SequenceType
+    introspect_type = 'sequence'
+    type_error = 'Not a sequence'
+
+
+@attr.s
+class Set(_BaseSequenceOrSet):
     """
     Conformity field that ensures that the value is an abstract set of items that all pass validation with the
     Conformity field passed to the `contents` argument and optionally establishes boundaries for that list with the
     `max_length` and `min_length` arguments.
     """
-    valid_types = (set, frozenset)
-    type_noun = 'set'
-    introspect_type = type_noun
+    additional_validator = attr.ib(
+        default=None,
+        validator=attr_is_optional(attr_is_instance(AdditionalCollectionValidator)),
+    )  # type: Optional[AdditionalCollectionValidator[AbstractSet]]
+
+    valid_types = AbstractSet
+    introspect_type = 'set'
     type_error = 'Not a set or frozenset'
 
     class LazyPointer(object):
@@ -154,6 +241,10 @@ class Dictionary(Base):
     )  # type: Union[TupleType[HashableType, ...], FrozenSet[HashableType]]
     allow_extra_keys = attr.ib(default=None)  # type: bool
     description = attr.ib(default=None, validator=attr_is_optional(attr_is_string()))  # type: Optional[six.text_type]
+    additional_validator = attr.ib(
+        default=None,
+        validator=attr_is_optional(attr_is_instance(AdditionalCollectionValidator)),
+    )  # type: Optional[AdditionalCollectionValidator[Mapping[HashableType, AnyType]]]
 
     def __attrs_post_init__(self):  # type: () -> None
         if self.contents is None and getattr(self.__class__, 'contents', None) is not None:
@@ -216,6 +307,10 @@ class Dictionary(Base):
                     code=ERROR_CODE_UNKNOWN,
                 ),
             )
+
+        if not result and self.additional_validator:
+            return self.additional_validator.errors(value)
+
         return result
 
     def extend(
@@ -225,6 +320,7 @@ class Dictionary(Base):
         allow_extra_keys=None,  # type: Optional[bool]
         description=None,  # type: Optional[six.text_type]
         replace_optional_keys=False,  # type: bool
+        additional_validator=None,  # type: Optional[AdditionalCollectionValidator[Mapping[HashableType, AnyType]]]
     ):
         # type: (...) -> Dictionary
         """
@@ -237,6 +333,7 @@ class Dictionary(Base):
         :param description: If non-`None`, this overrides the current `description` attribute
         :param replace_optional_keys: If `True`, then the `optional_keys` argument will completely replace, instead of
                                       extend, the current optional keys
+        :param additional_validator: If non-`None`, this overrides the current `additional_validator` attribute
 
         :return: A new `Dictionary` extended from the current `Dictionary` based on the supplied arguments
         """
@@ -248,6 +345,7 @@ class Dictionary(Base):
             optional_keys=optional_keys if replace_optional_keys else frozenset(self.optional_keys) | optional_keys,
             allow_extra_keys=self.allow_extra_keys if allow_extra_keys is None else allow_extra_keys,
             description=self.description if description is None else description,
+            additional_validator=self.additional_validator if additional_validator is None else additional_validator,
         )
 
     def introspect(self):  # type: () -> Introspection
@@ -265,6 +363,9 @@ class Dictionary(Base):
             'allow_extra_keys': self.allow_extra_keys,
             'description': self.description,
             'display_order': display_order,
+            'additional_validation': (
+                self.additional_validator.__class__.__name__ if self.additional_validator else None
+            ),
         })
 
 
@@ -288,6 +389,10 @@ class SchemalessDictionary(Base):
     max_length = attr.ib(default=None, validator=attr_is_optional(attr_is_int()))  # type: Optional[int]
     min_length = attr.ib(default=None, validator=attr_is_optional(attr_is_int()))  # type: Optional[int]
     description = attr.ib(default=None, validator=attr_is_optional(attr_is_string()))  # type: Optional[six.text_type]
+    additional_validator = attr.ib(
+        default=None,
+        validator=attr_is_optional(attr_is_instance(AdditionalCollectionValidator)),
+    )  # type: Optional[AdditionalCollectionValidator[Mapping[HashableType, AnyType]]]
 
     def __attrs_post_init__(self):  # type: () -> None
         if self.min_length is not None and self.max_length is not None and self.min_length > self.max_length:
@@ -314,6 +419,9 @@ class SchemalessDictionary(Base):
                 for error in (self.value_type.errors(field) or [])
             )
 
+        if not result and self.additional_validator:
+            return self.additional_validator.errors(value)
+
         return result
 
     def introspect(self):  # type: () -> Introspection
@@ -322,6 +430,9 @@ class SchemalessDictionary(Base):
             'max_length': self.max_length,
             'min_length': self.min_length,
             'description': self.description,
+            'additional_validation': (
+                self.additional_validator.__class__.__name__ if self.additional_validator else None
+            ),
         }  # type: Introspection
         # We avoid using isinstance() here as that would also match subclass instances
         if not self.key_type.__class__ == Hashable:
@@ -351,6 +462,14 @@ class Tuple(Base):
         self.description = kwargs.pop(str('description'), None)  # type: Optional[six.text_type]
         if self.description and not isinstance(self.description, six.text_type):
             raise TypeError("'description' must be a unicode string")
+
+        self.additional_validator = kwargs.pop(
+            'additional_validator',
+            None,
+        )  # type: Optional[AdditionalCollectionValidator[TupleType[AnyType, ...]]]
+        if self.additional_validator and not isinstance(self.additional_validator, AdditionalCollectionValidator):
+            raise TypeError("'additional_validator' must be an AdditionalCollectionValidator")
+
         if kwargs:
             raise TypeError('Unknown keyword arguments: {}'.format(', '.join(kwargs.keys())))
 
@@ -370,6 +489,9 @@ class Tuple(Base):
                 for error in (c_elem.errors(v_elem) or [])
             )
 
+        if not result and self.additional_validator:
+            return self.additional_validator.errors(value)
+
         return result
 
     def introspect(self):  # type: () -> Introspection
@@ -377,4 +499,7 @@ class Tuple(Base):
             'type': self.introspect_type,
             'contents': [value.introspect() for value in self.contents],
             'description': self.description,
+            'additional_validation': (
+                self.additional_validator.__class__.__name__ if self.additional_validator else None
+            ),
         })

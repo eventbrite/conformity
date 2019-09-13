@@ -3,7 +3,8 @@ Using Conformity Fields
 
 The core of Conformity's schema validation lies within its extensive set of fields, detailed here. Most fields can
 be imported either from their specific package (detailed below) or from ``conformity.fields``, but fields that require
-extra dependencies (such as `PyCountry`_ or `Currint`_) must be imported directly from their specific package.
+extra dependencies (such as `PyCountry`_ or `Currint`_) and fields and constants from ``conformity.fields.logging``
+must be imported directly from their specific package.
 
 .. contents:: Contents
    :depth: 3
@@ -594,6 +595,24 @@ The final argument of note is ``eager_default_validation``. It is ignored unless
 ``default_path`` is specified and ``eager_default_validation`` is ``True`` (the default), the class at ``default_path``
 will be eagerly imported and resolved and checked to make sure it has a valid ``@ClassConfigurationSchema.provider``
 decorator.
+
+
+Logging Helpers
+---------------
+
+The `Python Logging dictionary configuration <https://docs.python.org/3/library/logging.config.html#configuration-dictionary-schema>`_
+is a common dictionary-based settings/configuration object in need of validation. Python does some level of validation
+on values passed to ``logging.config.dictConfig``, but that validation is not necessarily thorough, and the errors
+arising from an invalid configuration are often cryptic and hard to track down.
+
+The `conformity.fields.logging <reference.html#conformity.fields.logging.PythonLogLevel>`_ module contains one helper
+field ``PythonLogLevel``, which is a simple ``Constant`` with log level names as the pre-defined values, and some
+helper schemas to make it easier for you to accurately validate logging settings:
+
+- ``PYTHON_ROOT_LOGGER_SCHEMA``: The schema (``Dictionary`` instance) for the root logger
+- ``PYTHON_LOGGER_SCHEMA``: The schema (``Dictionary`` instance) for all other loggers
+- ``PYTHON_LOGGING_CONFIG_SCHEMA``: The schema (``Dictionary`` instance) for the entire Python logging config
+  dictionary format.
 
 
 .. _create your own:

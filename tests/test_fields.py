@@ -7,7 +7,11 @@ from collections import OrderedDict
 import datetime
 import decimal
 from typing import (  # noqa: F401 TODO Python 3
+    AbstractSet,
+    Any as AnyType,
     Hashable as HashableType,
+    Mapping,
+    Sequence as SequenceType,
     Tuple as TupleType,
 )
 import unittest
@@ -24,6 +28,7 @@ from conformity.error import (
     Error,
 )
 from conformity.fields import (
+    AdditionalCollectionValidator,
     Anything,
     Base,
     Boolean,
@@ -38,6 +43,7 @@ from conformity.fields import (
     Integer,
     List,
     SchemalessDictionary,
+    Sequence,
     Set,
     Time,
     TimeDelta,
@@ -793,3 +799,190 @@ def test_tzinfo_deprecated_arguments(kwarg):
     assert (
         'Arguments `gt`, `gte`, `lt`, and `lte` are deprecated in TZInfo and will be removed in Conformity 2.0.'
     ) in str(w[-1].message)
+
+
+class TestStructures(object):
+    def test_additional_collection_validator(self):
+        class V(AdditionalCollectionValidator[list]):
+            pass
+
+        with pytest.raises(TypeError) as error_context:
+            V()  # type: ignore
+
+        assert 'abstract methods' in error_context.value.args[0]
+
+    def test_list(self):  # type: () -> None
+        with pytest.raises(TypeError):
+            # noinspection PyTypeChecker
+            List(UnicodeString(), additional_validator='Not a validator')  # type: ignore
+
+        field = List(UnicodeString())
+
+        assert field.errors(('hello', 'goodbye')) == [Error(message='Not a list')]
+        assert field.errors({'hello': 'goodbye'}) == [Error(message='Not a list')]
+        assert field.errors({'hello', 'goodbye'}) == [Error(message='Not a list')]
+        assert field.errors(['hello', 2]) == [Error(message='Not a unicode string', pointer='1')]
+        assert field.errors(['hello', 'goodbye']) == []
+
+        class V(AdditionalCollectionValidator[list]):
+            def errors(self, value):
+                errors = []
+                for i, v in enumerate(value):
+                    if v > 500:
+                        errors.append(Error('Whoop custom error', pointer='{}'.format(i)))
+                return errors
+
+        field = List(Integer(), additional_validator=V())
+
+        assert field.errors([501, 'Not a number dude']) == [Error(message='Not an integer', pointer='1')]
+        assert field.errors([501, 499]) == [Error(message='Whoop custom error', pointer='0')]
+        assert field.errors([500, 499]) == []
+
+    def test_sequence(self):  # type: () -> None
+        with pytest.raises(TypeError):
+            # noinspection PyTypeChecker
+            Sequence(UnicodeString(), additional_validator='Not a validator')  # type: ignore
+
+        field = Sequence(UnicodeString())
+
+        assert field.errors({'hello': 'goodbye'}) == [Error(message='Not a sequence')]
+        assert field.errors({'hello', 'goodbye'}) == [Error(message='Not a sequence')]
+        assert field.errors(['hello', 2]) == [Error(message='Not a unicode string', pointer='1')]
+        assert field.errors((1, 'world')) == [Error(message='Not a unicode string', pointer='0')]
+        assert field.errors(['hello', 'goodbye']) == []
+        assert field.errors(('hello', 'goodbye')) == []
+
+        class V(AdditionalCollectionValidator[SequenceType]):
+            def errors(self, value):
+                errors = []
+                for i, v in enumerate(value):
+                    if v > 500:
+                        errors.append(Error('Whoop another error', pointer='{}'.format(i)))
+                return errors
+
+        field = Sequence(Integer(), additional_validator=V())
+
+        assert field.errors([501, 'Not a number dude']) == [Error(message='Not an integer', pointer='1')]
+        assert field.errors([501, 499]) == [Error(message='Whoop another error', pointer='0')]
+        assert field.errors((501, 499)) == [Error(message='Whoop another error', pointer='0')]
+        assert field.errors([500, 499]) == []
+        assert field.errors((500, 499)) == []
+
+    def test_set(self):  # type: () -> None
+        with pytest.raises(TypeError):
+            # noinspection PyTypeChecker
+            Set(UnicodeString(), additional_validator='Not a validator')  # type: ignore
+
+        field = Set(UnicodeString())
+
+        assert field.errors(('hello', 'goodbye')) == [Error(message='Not a set or frozenset')]
+        assert field.errors({'hello': 'goodbye'}) == [Error(message='Not a set or frozenset')]
+        assert field.errors(['hello', 'goodbye']) == [Error(message='Not a set or frozenset')]
+        assert field.errors({'hello', 2}) == [Error(message='Not a unicode string', pointer='[2]')]
+        assert field.errors(frozenset(('hello', 2))) == [Error(message='Not a unicode string', pointer='[2]')]
+        assert field.errors({'hello', 'goodbye'}) == []
+        assert field.errors(frozenset(('hello', 'goodbye'))) == []
+
+        class V(AdditionalCollectionValidator[AbstractSet]):
+            def errors(self, value):
+                errors = []
+                for v in value:
+                    if v > 500:
+                        errors.append(Error('Whoop custom error', pointer='{}'.format(v)))
+                return errors
+
+        field = Set(Integer(), additional_validator=V())
+
+        assert field.errors({501, 'Not a number'}) == [Error(message='Not an integer', pointer='[Not a number]')]
+        assert field.errors({501, 499}) == [Error(message='Whoop custom error', pointer='501')]
+        assert field.errors(frozenset((501, 499))) == [Error(message='Whoop custom error', pointer='501')]
+        assert field.errors({500, 499}) == []
+        assert field.errors(frozenset((500, 499))) == []
+
+    def test_dictionary(self):
+        with pytest.raises(TypeError):
+            # noinspection PyTypeChecker
+            Dictionary({'foo': UnicodeString()}, additional_validator='Not a validator')  # type: ignore
+
+        field = Dictionary({
+            'foo': UnicodeString(),
+            'bar': Integer(),
+            'baz': UnicodeString(),
+        })
+
+        assert field.errors(['foo', 'bar', 'baz']) == [Error(message='Not a dict')]
+        assert field.errors(('foo', 'bar', 'baz')) == [Error(message='Not a dict')]
+        assert field.errors({'foo', 'bar', 'baz'}) == [Error(message='Not a dict')]
+        assert field.errors({'foo': 'Hello', 'bar': 12, 'baz': True}) == [
+            Error(message='Not a unicode string', pointer='baz'),
+        ]
+        assert field.errors({'foo': 'Hello', 'bar': 12, 'baz': 'Goodbye'}) == []
+
+        class V(AdditionalCollectionValidator[Mapping[HashableType, AnyType]]):
+            def errors(self, value):
+                if value['foo'] != value['baz']:
+                    return [Error('Value foo does not match value baz', pointer='foo')]
+                return []
+
+        field = field.extend(additional_validator=V())
+
+        assert field.errors({'foo': 'Hello', 'bar': 12, 'baz': 'Goodbye'}) == [
+            Error(message='Value foo does not match value baz', pointer='foo'),
+        ]
+        assert field.errors({'foo': 'Hello', 'bar': 12, 'baz': 'Hello'}) == []
+
+    def test_schemaless_dictionary(self):
+        with pytest.raises(TypeError):
+            # noinspection PyTypeChecker
+            SchemalessDictionary(  # type: ignore
+                key_type=UnicodeString(),
+                value_type=Integer(),
+                additional_validator='Not a validator',
+            )
+
+        field = SchemalessDictionary(key_type=UnicodeString(), value_type=Integer())
+
+        assert field.errors(['foo', 'bar', 'baz']) == [Error(message='Not a dict')]
+        assert field.errors(('foo', 'bar', 'baz')) == [Error(message='Not a dict')]
+        assert field.errors({'foo', 'bar', 'baz'}) == [Error(message='Not a dict')]
+        assert field.errors({'foo': 42, 'bar': 11, 'baz': 'Goodbye'}) == [
+            Error(message='Not an integer', pointer='baz'),
+        ]
+        assert field.errors({'foo': 42, 'bar': 11, 'baz': 91}) == []
+
+        class V(AdditionalCollectionValidator[Mapping[HashableType, AnyType]]):
+            def errors(self, value):
+                if value['foo'] != value['baz']:
+                    return [Error('Value foo does not match value baz', pointer='foo')]
+                return []
+
+        field = SchemalessDictionary(key_type=UnicodeString(), value_type=Integer(), additional_validator=V())
+
+        assert field.errors({'foo': 42, 'bar': 11, 'baz': 91}) == [
+            Error(message='Value foo does not match value baz', pointer='foo'),
+        ]
+        assert field.errors({'foo': 42, 'bar': 11, 'baz': 42}) == []
+
+    def test_tuple(self):
+        with pytest.raises(TypeError):
+            Tuple(UnicodeString(), Integer(), Boolean(), additional_validator='Not a validator')  # type: ignore
+
+        field = Tuple(UnicodeString(), Integer(), Boolean())
+
+        assert field.errors(['foo', 'bar', 'baz']) == [Error(message='Not a tuple')]
+        assert field.errors({'foo': 'bar'}) == [Error(message='Not a tuple')]
+        assert field.errors({'foo', 'bar', 'baz'}) == [Error(message='Not a tuple')]
+        assert field.errors(('foo', 'bar', True)) == [Error(message='Not an integer', pointer='1')]
+        assert field.errors(('foo', 12, False)) == []
+        assert field.errors(('foo', 12, True)) == []
+
+        class V(AdditionalCollectionValidator[TupleType[AnyType]]):
+            def errors(self, value):
+                if value[2] is not True:
+                    return [Error('The third value must be True', pointer='2')]
+                return []
+
+        field = Tuple(UnicodeString(), Integer(), Boolean(), additional_validator=V())
+
+        assert field.errors(('foo', 12, False)) == [Error(message='The third value must be True', pointer='2')]
+        assert field.errors(('foo', 12, True)) == []

@@ -289,10 +289,8 @@ def _pretty_introspect(value: fields.Base, depth: int = 1, nullable: str = '') -
         documentation += 'flexible ``dict``{}: {}\n'.format(nullable, description)
         documentation += '\n{}**keys**\n{}{}\n'.format(first, second, _pretty_introspect(value.key_type, depth + 1))
         documentation += '\n{}**values**\n{}{}\n'.format(first, second, _pretty_introspect(value.value_type, depth + 1))
-    elif isinstance(value, fields.List):
-        noun = 'list'
-        if isinstance(value, fields.Set):
-            noun = 'set'
+    elif isinstance(value, (fields.List, fields.Sequence, fields.Set)):
+        noun = value.introspect_type
         documentation += '``{}``{}: {}\n'.format(noun, nullable, description)
         documentation += '\n{}**values**\n{}{}\n'.format(first, second, _pretty_introspect(value.contents, depth + 1))
     elif isinstance(value, fields.Nullable):
@@ -412,7 +410,7 @@ def _get_class_schema_documentation(class_object: Type) -> List[str]:
 
 
 # noinspection PyCompatibility,PyUnusedLocal
-def autodoc_process_docstring(app: Sphinx, what: str, name: str, obj: Any, options: Any, lines: List[str]):
+def autodoc_process_docstring(app: Sphinx, what: str, name: str, obj: Any, options: Any, lines: List[str]) -> None:
     for i, line in enumerate(lines):
         if line.strip() == 'isort:skip_file':
             lines[i] = ''
@@ -428,6 +426,9 @@ def autodoc_process_docstring(app: Sphinx, what: str, name: str, obj: Any, optio
             # move/adapt from https://github.com/eventbrite/pysoa/blob/e44a3cc/docs/update_reference_docs.py#L753-L759
             lines.extend(['', ''])
             lines.extend(_get_class_schema_documentation(obj))
+    elif what == 'data' and isinstance(obj, fields.Base):
+        lines.extend(['', ''])
+        lines.extend(_pretty_introspect(obj, depth=0).split('\n'))
 
 
 # noinspection PyCompatibility,PyUnusedLocal
@@ -439,7 +440,10 @@ def autodoc_process_signature(
     options: Any,
     signature: Optional[str],
     return_annotation: Optional[str],
-):
+) -> Tuple[Optional[str], Optional[str]]:
+    if what == 'data' and isinstance(obj, fields.Base):
+        return ' = pre-defined Conformity schema {}'.format(name), None
+
     original_signature = signature
     original_return_annotation = return_annotation
 
@@ -553,7 +557,7 @@ def autodoc_process_signature(
     return signature, return_annotation
 
 
-def config_initialized(app: Sphinx, config: Config):
+def config_initialized(app: Sphinx, config: Config) -> None:
     config.html_static_path.append(os.path.join(os.path.dirname(__file__), 'static'))
     app.add_js_file('autodoc_auto_toc.js')
 

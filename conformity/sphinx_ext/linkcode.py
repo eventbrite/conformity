@@ -95,7 +95,10 @@ def create_linkcode_resolve(
             if not (source and start_line) or start_line == 1:
                 source, start_line = inspect.getsourcelines(obj)
         except (TypeError, OSError):
-            source, start_line = inspect.getsourcelines(obj)
+            try:
+                source, start_line = inspect.getsourcelines(obj)
+            except TypeError:
+                source, start_line = [], 0
         if source and start_line:
             suffix = f'#L{start_line}-L{start_line + len(source) - 1}'
 
