@@ -1,6 +1,17 @@
 Changelog
 =========
 
+1.26.0 (2019-09-13)
+-------------------
+- [MINOR] Add Python logging configuration validation schema
+- [MINOR] Fix #71: Refactor the fields supporting Currint amounts
+- [MINOR] Getting documentation ready for Read the Docs
+- [PATCH] Really fix find_packages
+- [PATCH] Restore use of find_packages that should not have been removed
+- [MINOR] Fix #68 and find and fix other issues with typing
+- [MINOR] Implement #65: Add support for generic Settings objects
+- [PATCH] Clean up Travis file using config.travis-ci.org
+
 1.25.0 (2019-06-13)
 -------------------
 - [MINOR] Add PythonPath field, superclass of TypePath
