@@ -1,7 +1,6 @@
 """isort:skip_file"""
 # flake8: noqa
 import collections
-import functools
 import inspect
 import json
 from typing import (
@@ -33,16 +32,15 @@ from conformity.sphinx_ext.autodoc import (
     autodoc_process_signature,
     config_initialized,
     get_annotations,
+    get_unwrapped_arg_spec,
     setup as setup_extension_for_test,  # aliased because PyTest will try to run something called `setup`
 )
+from conformity.validator import validate_method
+
+from tests.sphinx_ext.utils import decorated
 
 
-def decorated(func):
-    @functools.wraps(func)
-    def wrapper(*args, **kwargs):
-        return func(*args, **kwargs)
-
-    return func
+LocalToThisModuleOptionalInt = Optional[int]
 
 
 class ClassHoldingSigsToTest:
@@ -66,7 +64,19 @@ class ClassHoldingSigsToTest:
         two=None,
         **kwargs
     ):
-        # type: (six.text_type, Optional[int], **bool) -> Dict[six.binary_type, int]
+        # type: (six.text_type, LocalToThisModuleOptionalInt, **bool) -> Dict[six.binary_type, int]
+        pass
+
+    @decorated
+    @validate_method(fields.SchemalessDictionary(), fields.Anything())
+    @decorated
+    def sig3_super_wrapped(
+        self,
+        one,
+        two=None,
+        **kwargs
+    ):
+        # type: (six.text_type, LocalToThisModuleOptionalInt, **bool) -> Dict[six.binary_type, int]
         pass
 
     def sig3_35(
@@ -185,6 +195,12 @@ class ClassConfigurationToTest:
             'kwargs': bool,
             'return': Dict[bytes, int],
         }),
+        (ClassHoldingSigsToTest.sig3_super_wrapped, {
+            'one': str,
+            'two': Optional[int],
+            'kwargs': bool,
+            'return': Dict[bytes, int],
+        }),
         (ClassHoldingSigsToTest.sig3_35, {
             'one': str,
             'two': Optional[int],
@@ -211,7 +227,8 @@ class ClassConfigurationToTest:
     ),
 )
 def test_get_annotations(obj, annotations):
-    assert get_annotations(inspect.getfullargspec(obj), obj) == annotations
+    spec = get_unwrapped_arg_spec(obj)
+    assert get_annotations(spec, obj) == annotations
 
 
 @pytest.mark.parametrize(
@@ -242,6 +259,13 @@ def test_get_annotations(obj, annotations):
         ),
         (
             ClassHoldingSigsToTest.sig3,
+            '(one, two=None, **kwargs)',
+            'No matter',
+            '(one: str, two: Optional[int] = None, **kwargs: bool)',
+            'Dict[bytes, int]',
+        ),
+        (
+            ClassHoldingSigsToTest.sig3_super_wrapped,
             '(one, two=None, **kwargs)',
             'No matter',
             '(one: str, two: Optional[int] = None, **kwargs: bool)',

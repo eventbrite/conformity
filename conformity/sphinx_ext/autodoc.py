@@ -80,7 +80,15 @@ class DumbSetJsonEncoder(json.JSONEncoder):
 
 
 # noinspection PyCompatibility
-def _clean_literals(documentation: str) -> str:  # noqa: E999
+def get_unwrapped_arg_spec(c: Callable) -> inspect.FullArgSpec:  # noqa: E999
+    while hasattr(c, '__wrapped__'):
+        c = getattr(c, '__wrapped__')
+
+    return inspect.getfullargspec(c)
+
+
+# noinspection PyCompatibility
+def _clean_literals(documentation: str) -> str:
     # Make all single backticks double, in reStructuredText form, but only if not part of a link (`hello`_) and not
     # already a double or triple backtick.
     new_documentation: List[str] = []
@@ -119,6 +127,10 @@ def _clean_literals(documentation: str) -> str:  # noqa: E999
 # noinspection PyCompatibility
 def _clean_annotation(annotation: str, scope_object: Union[Callable, Type]) -> Any:
     annotation = annotation.lstrip('*')
+
+    while hasattr(scope_object, '__wrapped__'):
+        scope_object = getattr(scope_object, '__wrapped__')
+
     try:
         # noinspection PyUnresolvedReferences
         scope_globals = scope_object.__globals__  # type: ignore
@@ -453,7 +465,7 @@ def autodoc_process_signature(
 
     if is_class and hasattr(obj, '__attrs_attrs__'):
         init = getattr(obj, '__init__')
-        arg_spec = inspect.getfullargspec(init)
+        arg_spec = get_unwrapped_arg_spec(init)
         if arg_spec.annotations and len(arg_spec.annotations) > 1:
             annotations = arg_spec.annotations
         else:
@@ -491,7 +503,7 @@ def autodoc_process_signature(
             init.__annotations__ = annotations
 
     if inspect.isfunction(obj) or inspect.ismethod(obj):
-        arg_spec = inspect.getfullargspec(obj)
+        arg_spec = get_unwrapped_arg_spec(obj)
         annotations = get_annotations(arg_spec, obj)
 
         if 'return' in annotations:
