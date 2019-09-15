@@ -82,4 +82,9 @@ setup(
         'Programming Language :: Python :: 3.7',
         'Topic :: Software Development',
     ],
+    project_urls={
+        'Documentation': 'https://conformity.readthedocs.io',
+        'Issues': 'https://github.com/eventbrite/conformity/issues',
+        'CI': 'https://travis-ci.org/eventbrite/conformity/',
+    },
 )
