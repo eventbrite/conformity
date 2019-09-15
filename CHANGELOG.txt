@@ -1,6 +1,10 @@
 Changelog
 =========
 
+1.26.1 (2019-09-15)
+-------------------
+- [PATCH] Fix bug in Sphix ext improperly resolving signatures
+
 1.26.0 (2019-09-13)
 -------------------
 - [MINOR] Add Python logging configuration validation schema
