@@ -10,8 +10,11 @@ from typing import (  # noqa: F401 TODO Python 3
     Hashable as HashableType,
     List as ListType,
     Mapping,
+    Optional,
     Tuple as TupleType,
 )
+
+import six  # noqa: F401 TODO Python 3
 
 from conformity import fields
 from conformity.error import (
@@ -34,7 +37,7 @@ class PythonLogLevel(fields.Constant):
     documentation.
     """
 
-    def __init__(self, description=None):
+    def __init__(self, description=None):  # type: (Optional[six.text_type]) -> None
         """
         Constructs a `PythonLogLevel` field.
 
