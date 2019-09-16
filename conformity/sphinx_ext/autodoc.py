@@ -95,7 +95,7 @@ def _clean_literals(documentation: str) -> str:
 
     position_to_insert_backtick = -1
     add_to_i = 0
-    started = ended = False
+    started = ended = is_reference = False
     last = ''
     for i, c in enumerate(documentation):
         if c == '`':
@@ -106,17 +106,25 @@ def _clean_literals(documentation: str) -> str:
             else:
                 started = True
                 position_to_insert_backtick = i
+                if last == ':':
+                    is_reference = True
         elif ended:
-            started = ended = False
-            if c != '_':
+            if c != '_' and not is_reference:
                 new_documentation.insert(position_to_insert_backtick + add_to_i, '`')
                 new_documentation.append('`')
                 add_to_i += 2
+            started = ended = is_reference = False
 
         new_documentation.append(c)
         last = c
 
-    if len(new_documentation) > 3 and started and new_documentation[-1] == '`' and new_documentation[-2] != '`':
+    if (
+        len(new_documentation) > 3 and
+        started and
+        not is_reference and
+        new_documentation[-1] == '`' and
+        new_documentation[-2] != '`'
+    ):
         # Our code literal ended at the end of a line, so we didn't loop again to finish it off.
         new_documentation.insert(position_to_insert_backtick + add_to_i, '`')
         new_documentation.append('`')

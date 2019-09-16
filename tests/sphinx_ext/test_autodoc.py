@@ -346,6 +346,8 @@ def test_autodoc_process_docstring_backticks():
         "Conformity field that ensures that the value is a dictionary containing at least "
         "fields `'currency'` and `'value'`",
         "and optionally fields `'major_value'` and `'display'`. This field requires that Currint be installed.",
+        'We also do `not` want :class:`classes`, :method:`methods`, :function:`functions`, and :ref:`references`, '
+        'etc. to be `changed`, including ending :decorator:`ones`',
         'isort:skip_file',
     ]
 
@@ -358,6 +360,8 @@ def test_autodoc_process_docstring_backticks():
         "Conformity field that ensures that the value is a dictionary containing at least "
         "fields ``'currency'`` and ``'value'``",
         "and optionally fields ``'major_value'`` and ``'display'``. This field requires that Currint be installed.",
+        'We also do ``not`` want :class:`classes`, :method:`methods`, :function:`functions`, and :ref:`references`, '
+        'etc. to be ``changed``, including ending :decorator:`ones`',
         '',
     ]
 
