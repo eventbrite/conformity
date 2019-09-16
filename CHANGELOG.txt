@@ -1,6 +1,11 @@
 Changelog
 =========
 
+1.26.2 (2019-09-16)
+-------------------
+- [PATCH] Fix a Sphinx bug that breaks uses of :ref:, etc.
+- [PATCH] Add project URLs to setup.py
+
 1.26.1 (2019-09-15)
 -------------------
 - [PATCH] Fix bug in Sphix ext improperly resolving signatures
