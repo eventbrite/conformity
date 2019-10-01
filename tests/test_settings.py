@@ -14,7 +14,7 @@ import pytest
 import six
 
 from conformity import fields
-from conformity.settings import (  # noqa: F401 TODO Python 3
+from conformity.settings import (
     Settings,
     SettingsData,
     SettingsSchema,

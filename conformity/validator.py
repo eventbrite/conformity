@@ -4,7 +4,7 @@ from __future__ import (
 )
 
 from functools import wraps
-from typing import (  # noqa: F401 TODO Python 3
+from typing import (
     Any as AnyType,
     Callable,
     List as ListType,
@@ -13,7 +13,7 @@ from typing import (  # noqa: F401 TODO Python 3
     Union,
 )
 
-import six  # noqa: F401 TODO Python 3
+import six
 
 from conformity import fields
 from conformity.error import (

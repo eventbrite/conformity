@@ -4,8 +4,8 @@ from __future__ import (
 )
 
 import importlib
-from types import ModuleType  # noqa: F401 TODO Python 3
-from typing import (  # noqa: F401 TODO Python 3
+from types import ModuleType
+from typing import (
     Any as AnyType,
     Callable,
     Dict,
@@ -29,7 +29,7 @@ from conformity.error import (
     ValidationError,
     update_error_pointer,
 )
-from conformity.fields.basic import (  # noqa: F401 TODO Python 3
+from conformity.fields.basic import (
     Base,
     Introspection,
     attr_is_conformity_field,

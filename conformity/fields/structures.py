@@ -6,7 +6,7 @@ from __future__ import (
 import abc
 from collections import OrderedDict
 import sys
-from typing import (  # noqa: F401 TODO Python 3
+from typing import (
     AbstractSet,
     Any as AnyType,
     Callable,
@@ -36,7 +36,7 @@ from conformity.error import (
     Error,
     update_error_pointer,
 )
-from conformity.fields.basic import (  # noqa: F401 TODO Python 3
+from conformity.fields.basic import (
     Anything,
     Base,
     Hashable,

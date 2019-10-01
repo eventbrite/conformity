@@ -37,6 +37,7 @@ from typing import (
     Any,
     Callable,
     Dict,
+    Optional,
 )
 
 from sphinx.application import Sphinx
@@ -63,7 +64,7 @@ def create_linkcode_resolve(
     :return: a function that can be assigned to `linkcode_resolve` in your `conf.py` file.
     """
     try:
-        commit = subprocess.check_output(['git', 'rev-parse', '--short', 'HEAD']).decode('utf-8').strip()
+        commit: Optional[str] = subprocess.check_output(['git', 'rev-parse', '--short', 'HEAD']).decode('utf-8').strip()
     except subprocess.CalledProcessError:
         commit = None
 

@@ -30,7 +30,7 @@ spinx_requires = [
 
 tests_require = [
     'freezegun',
-    'mypy;python_version>"3.4"',
+    'mypy~=0.730;python_version>"3.4"',
     'pytest',
     'pytest-cov',
     'pytest-runner',
@@ -55,7 +55,7 @@ setup(
     install_requires=[
         'attrs>=17.4,<20',
         'six',
-        'typing;python_version<"3.5"',
+        'typing~=3.7.4;python_version<"3.5"',
     ],
     tests_require=tests_require,
     setup_requires=['pytest-runner'],

@@ -5,7 +5,7 @@ from __future__ import (
 
 import datetime
 import decimal
-from typing import (  # noqa: F401 TODO Python 3
+from typing import (
     Any as AnyType,
     Dict,
     List as ListType,
@@ -22,7 +22,7 @@ from conformity.error import (
     ERROR_CODE_UNKNOWN,
     Error,
 )
-from conformity.utils import (  # noqa: F401 TODO Python 3
+from conformity.utils import (
     AttrsValidator,
     attr_is_bool,
     attr_is_instance,

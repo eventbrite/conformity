@@ -5,7 +5,7 @@ from __future__ import (
 
 import collections
 import logging
-from typing import (  # noqa: F401 TODO Python 3
+from typing import (
     Any as AnyType,
     Hashable as HashableType,
     List as ListType,
@@ -14,7 +14,7 @@ from typing import (  # noqa: F401 TODO Python 3
     Tuple as TupleType,
 )
 
-import six  # noqa: F401 TODO Python 3
+import six
 
 from conformity import fields
 from conformity.error import (

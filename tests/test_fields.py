@@ -6,7 +6,7 @@ from __future__ import (
 from collections import OrderedDict
 import datetime
 import decimal
-from typing import (  # noqa: F401 TODO Python 3
+from typing import (
     AbstractSet,
     Any as AnyType,
     Hashable as HashableType,
@@ -934,10 +934,10 @@ class TestStructures(object):
     def test_schemaless_dictionary(self):
         with pytest.raises(TypeError):
             # noinspection PyTypeChecker
-            SchemalessDictionary(  # type: ignore
+            SchemalessDictionary(
                 key_type=UnicodeString(),
                 value_type=Integer(),
-                additional_validator='Not a validator',
+                additional_validator='Not a validator',  # type: ignore
             )
 
         field = SchemalessDictionary(key_type=UnicodeString(), value_type=Integer())
