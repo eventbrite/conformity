@@ -4,7 +4,7 @@ from __future__ import (
 )
 
 import datetime
-from typing import (  # noqa: F401 TODO Python 3
+from typing import (
     Any as AnyType,
     FrozenSet,
     List as ListType,
@@ -16,10 +16,10 @@ from typing import (  # noqa: F401 TODO Python 3
 import warnings
 
 import attr
-import six  # noqa: F401 TODO Python 3
+import six
 
 from conformity.error import Error
-from conformity.fields.basic import (  # noqa: F401 TODO Python 3
+from conformity.fields.basic import (
     Base,
     Introspection,
 )

@@ -3,13 +3,13 @@ from __future__ import (
     unicode_literals,
 )
 
-from typing import (  # noqa: F401 TODO Python 3
+from typing import (
     Hashable as HashableType,
     Optional,
 )
 
 import attr
-import six  # noqa: F401 TODO Python 3
+import six
 
 from conformity.utils import (
     attr_is_optional,

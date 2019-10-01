@@ -34,6 +34,10 @@ import json
 import logging
 import os
 import re
+from types import (
+    FunctionType,
+    MethodType,
+)
 from typing import (
     Any,
     Callable,
@@ -163,7 +167,10 @@ def _annotation_to_string(annotation_obj: Any) -> str:
 
 
 # noinspection PyCompatibility
-def get_annotations(arg_spec: inspect.FullArgSpec, function_object: Callable) -> Mapping[str, Any]:
+def get_annotations(
+    arg_spec: inspect.FullArgSpec,
+    function_object: Union[FunctionType, MethodType],
+) -> Mapping[str, Any]:
     if arg_spec.annotations:
         return arg_spec.annotations
 

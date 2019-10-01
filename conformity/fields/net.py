@@ -4,7 +4,7 @@ from __future__ import (
 )
 
 import re
-from typing import (  # noqa: F401 TODO Python 3
+from typing import (
     Any as AnyType,
     List as ListType,
 )
@@ -13,7 +13,7 @@ import attr
 import six
 
 from conformity.error import Error
-from conformity.fields.basic import (  # noqa: F401 TODO Python 3
+from conformity.fields.basic import (
     Introspection,
     UnicodeString,
 )
