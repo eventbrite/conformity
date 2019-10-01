@@ -1,6 +1,12 @@
 Changelog
 =========
 
+1.26.3 (2019-10-01)
+-------------------
+- [PATCH] Improve documentation
+- [PATCH] Fix new MyPy errors and remove unnecessary comments
+- [PATCH] Fix .readthedocs.yml
+
 1.26.2 (2019-09-16)
 -------------------
 - [PATCH] Fix a Sphinx bug that breaks uses of :ref:, etc.
