@@ -71,6 +71,12 @@ schema definition and validation complete with definable defaults, and includes 
 you generate meaningful documentation for your code using Conformity.
 
 
+License
+-------
+
+Conformity is licensed under the `Apache License, version 2.0 <LICENSE>`_.
+
+
 Installation
 ------------
 
