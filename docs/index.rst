@@ -75,6 +75,8 @@ Table of Contents
    validators
    reference
    sphinx
+   contributing
+   history
 
 
 Indices, Tables, and Searching
