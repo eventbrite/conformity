@@ -368,7 +368,7 @@ class TestSettingsTwo(object):
                 },
             })
 
-        assert '- inner_qux.not_defined: Extra keys present: not_defined' in error_context.value.args[0]
+        assert '- inner_qux.not_defined: Extra key present: not_defined' in error_context.value.args[0]
 
         with pytest.raises(Settings.ImproperlyConfigured) as error_context:
             SettingsTwo({

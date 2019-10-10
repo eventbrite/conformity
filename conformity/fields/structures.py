@@ -301,13 +301,12 @@ class Dictionary(Base):
         # Check for extra keys
         extra_keys = set(value.keys()) - set(self.contents.keys())
         if extra_keys and not self.allow_extra_keys:
-            result.append(
-                Error(
-                    'Extra keys present: {}'.format(', '.join(six.text_type(key) for key in sorted(extra_keys))),
+            for extra_key in sorted(extra_keys):
+                result.append(Error(
+                    'Extra key present: {}'.format(six.text_type(extra_key)),
                     code=ERROR_CODE_UNKNOWN,
-                    pointer=six.text_type(sorted(extra_keys)[0]),
-                ),
-            )
+                    pointer=six.text_type(extra_key),
+                ))
 
         if not result and self.additional_validator:
             return self.additional_validator.errors(value)
