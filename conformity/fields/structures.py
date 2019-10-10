@@ -305,6 +305,7 @@ class Dictionary(Base):
                 Error(
                     'Extra keys present: {}'.format(', '.join(six.text_type(key) for key in sorted(extra_keys))),
                     code=ERROR_CODE_UNKNOWN,
+                    pointer=six.text_type(sorted(extra_keys)[0]),
                 ),
             )
 
