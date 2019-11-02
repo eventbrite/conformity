@@ -452,13 +452,14 @@ def test_autodoc_process_docstring_settings_class():
     assert lines[50] == '  **values**'
     assert lines[51] == '    ``boolean``: *(no description)*'
     assert lines[52] == ''
-    assert lines[53] == '**Default Values**'
-    assert lines[54] == ''
-    assert lines[55] == 'Keys present in the dict below can be omitted from compliant settings dicts, in which case ' \
+    assert lines[53] == ''
+    assert lines[54] == '**Default Values**'
+    assert lines[55] == ''
+    assert lines[56] == 'Keys present in the dict below can be omitted from compliant settings dicts, in which case ' \
                         'the values below will apply as the default values.'
-    assert lines[56] == ''
-    assert lines[57] == '.. code-block:: json'
-    assert lines[58] == ''
+    assert lines[57] == ''
+    assert lines[58] == '.. code-block:: json'
+    assert lines[59] == ''
 
     assert json.loads('\n'.join(lines[59:]).strip()) == SettingsToTest.defaults
 
