@@ -32,7 +32,9 @@ def strip_none(value):  # type: (Dict[KT, VT]) -> Dict[KT, VT]
     return {k: v for k, v in value.items() if v is not None}
 
 
-attr_is_instance = attr.validators.instance_of  # type: Callable[[Union[Type, TupleType[Type, ...]]], AttrsValidator]
+attr_is_instance = (
+    attr.validators.instance_of  # type: ignore
+)  # type: Callable[[Union[Type, TupleType[Type, ...]]], AttrsValidator]
 attr_is_optional = attr.validators.optional  # type: Callable[[AttrsValidator], AttrsValidator]
 
 

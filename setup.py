@@ -3,6 +3,8 @@ from __future__ import (
     unicode_literals,
 )
 
+import sys
+
 from setuptools import (
     find_packages,
     setup,
@@ -30,7 +32,7 @@ spinx_requires = [
 
 tests_require = [
     'freezegun',
-    'mypy~=0.730;python_version>"3.4"',
+    'mypy~=0.740;python_version>"3.4"',
     'pytest',
     'pytest-cov',
     'pytest-runner',
@@ -58,7 +60,7 @@ setup(
         'typing~=3.7.4;python_version<"3.5"',
     ],
     tests_require=tests_require,
-    setup_requires=['pytest-runner'],
+    setup_requires=['pytest-runner'] if {'pytest', 'test', 'ptr'}.intersection(sys.argv) else [],
     test_suite='tests',
     extras_require={
         'currency': currency_requires,
@@ -80,6 +82,7 @@ setup(
         'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
+        'Programming Language :: Python :: 3.8',
         'Topic :: Software Development',
     ],
     project_urls={

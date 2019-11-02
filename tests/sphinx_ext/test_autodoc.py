@@ -231,6 +231,10 @@ def test_get_annotations(obj, annotations):
     assert get_annotations(spec, obj) == annotations
 
 
+@pytest.mark.skipif(
+    attr.__version__.startswith('17.'),  # type: ignore
+    reason='Documentation extensions support only Attrs >= 18',
+)
 @pytest.mark.parametrize(
     ('obj', 'signature', 'return_annotation', 'new_signature', 'new_return_annotation'),
     (
