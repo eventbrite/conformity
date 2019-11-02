@@ -1,6 +1,10 @@
 Changelog
 =========
 
+1.26.4 (2019-11-01)
+-------------------
+- [PATCH] [SPHINX] Soft fail getting annotations when source not found
+
 1.26.3 (2019-10-01)
 -------------------
 - [PATCH] Improve documentation
