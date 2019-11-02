@@ -174,10 +174,17 @@ def get_annotations(
     if arg_spec.annotations:
         return arg_spec.annotations
 
+    try:
+        source_lines = inspect.getsourcelines(function_object)[0]
+    except OSError as e:
+        if 'could not get source code' in e.args[0]:
+            return {}
+        raise
+
     function_started = args_started = args_finished = False
     full_type_comment: Optional[str] = None
     annotations: Dict[str, Any] = {}
-    for line in inspect.getsourcelines(function_object)[0]:
+    for line in source_lines:
         line = line.strip()
         if not line:
             continue
@@ -403,6 +410,7 @@ def _get_settings_schema_documentation(settings_class_object: Type[Settings]) ->
     for k, v in sorted(settings_class_object.schema.items(), key=lambda i: i[0]):
         lines.extend('- ``{}`` - {}'.format(k, _pretty_introspect(v)).split('\n'))
 
+    lines.append('')
     lines.append('**Default Values**')
     lines.append('')
     lines.append(
