@@ -34,7 +34,10 @@ from conformity.fields.basic import (
     Introspection,
     attr_is_conformity_field,
 )
-from conformity.fields.structures import Dictionary
+from conformity.fields.structures import (
+    Dictionary,
+    SchemalessDictionary,
+)
 from conformity.utils import (
     attr_is_bool,
     attr_is_instance,
@@ -356,7 +359,7 @@ class ClassConfigurationSchema(Base):
     add_class_object_to_dict = attr.ib(default=True, validator=attr_is_bool())  # type: bool
 
     def __attrs_post_init__(self):  # type: () -> None
-        self._schema_cache = {}  # type: Dict[six.text_type, Dictionary]
+        self._schema_cache = {}  # type: Dict[six.text_type, Union[Dictionary, SchemalessDictionary]]
 
         if not self.base_class:
             if getattr(self.__class__, 'base_class', None):
@@ -433,12 +436,10 @@ class ClassConfigurationSchema(Base):
             )]
 
         schema = getattr(clazz, self._init_schema_attribute)
-        if not isinstance(schema, Dictionary):
+        if not isinstance(schema, (Dictionary, SchemalessDictionary)):
             return [Error(
-                "Class '{}' attribute '{}' should be a Dictionary Conformity field or one of its subclasses".format(
-                    path,
-                    self._init_schema_attribute,
-                ),
+                "Class '{}' attribute '{}' should be a Dictionary or SchemalessDictionary Conformity field or one of "
+                'their subclasses'.format(path, self._init_schema_attribute),
             )]
 
         self._schema_cache[path] = schema
@@ -472,9 +473,12 @@ class ClassConfigurationSchema(Base):
         })
 
     @staticmethod
-    def provider(schema):  # type: (Dictionary) -> Callable[[Type], Type]
-        if not isinstance(schema, Dictionary):
-            raise TypeError("'schema' must be an instance of the Dictionary Conformity field or one of its subclasses")
+    def provider(schema):  # type: (Union[Dictionary, SchemalessDictionary]) -> Callable[[Type], Type]
+        if not isinstance(schema, (Dictionary, SchemalessDictionary)):
+            raise TypeError(
+                "'schema' must be an instance of a Dictionary or SchemalessDictionary Conformity field or one of "
+                'their subclasses',
+            )
 
         def wrapper(cls):  # type: (Type) -> Type
             if not isinstance(cls, type):
