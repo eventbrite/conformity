@@ -1,6 +1,10 @@
 Changelog
 =========
 
+1.26.6 (2019-11-04)
+-------------------
+- [PATCH] ClassConformitySchema should support SchemalessDictionaries, too
+
 1.26.5 (2019-11-01)
 -------------------
 - [PATCH] Add support for Python 3.8
