@@ -511,7 +511,7 @@ class TestClassConfigurationSchema(object):
         )]
         assert schema.errors({'path': 'tests.test_fields_meta:InvalidProvider'}) == [Error(
             "Class 'tests.test_fields_meta:InvalidProvider' attribute '_conformity_initialization_schema' should be a "
-            "Dictionary Conformity field or one of its subclasses",
+            "Dictionary or SchemalessDictionary Conformity field or one of their subclasses",
             pointer='path',
         )]
 
@@ -730,6 +730,33 @@ class TestClassConfigurationSchema(object):
             },
         }
 
+    def test_schemaless(self):  # type: () -> None
+        schema = ClassConfigurationSchema(base_class=BaseSomething)
+
+        config = {'path': 'tests.test_fields_meta:SomethingWithJustKwargs'}  # type: dict
+        value = schema.instantiate_from(config)
+        assert config['object'] == SomethingWithJustKwargs
+        assert isinstance(value, SomethingWithJustKwargs)
+        assert value.kwargs == {}
+
+        config = {
+            'path': 'tests.test_fields_meta:SomethingWithJustKwargs',
+            'kwargs': {'dog': 'Bree', 'cute': True, 'cat': b'Pumpkin'},
+        }
+        value = schema.instantiate_from(config)
+        assert config['object'] == SomethingWithJustKwargs
+        assert isinstance(value, SomethingWithJustKwargs)
+        assert value.kwargs == {'dog': 'Bree', 'cute': True, 'cat': b'Pumpkin'}
+
+        config = {'path': 'tests.test_fields_meta:SomethingWithJustKwargs', 'kwargs': {b'Not unicode': False}}
+        with pytest.raises(ValidationError) as error_context:
+            schema.instantiate_from(config)
+        assert error_context.value.args[0] == [
+            Error('Not a unicode string', code='INVALID', pointer='kwargs.Not unicode') if six.PY2 else
+            Error('Not a unicode string', code='INVALID', pointer='kwargs.{!r}'.format(b'Not unicode'))
+        ]
+        assert config['object'] == SomethingWithJustKwargs
+
 
 class InvalidProvider(object):
     _conformity_initialization_schema = Boolean()
@@ -772,3 +799,9 @@ class ExtendedAnotherSomething(AnotherSomething):
 class OverridingAnotherSomething(AnotherSomething):
     def __init__(self, no_baz, no_qux='no_unset'):
         super(OverridingAnotherSomething, self).__init__(baz=no_baz, qux=no_qux)
+
+
+@ClassConfigurationSchema.provider(SchemalessDictionary(key_type=UnicodeString(), value_type=Any()))
+class SomethingWithJustKwargs(BaseSomething):
+    def __init__(self, **kwargs):
+        self.kwargs = kwargs
