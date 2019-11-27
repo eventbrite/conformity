@@ -34,6 +34,12 @@ from conformity.utils import (
 )
 
 
+try:
+    from collections.abc import Hashable as HashableClass
+except ImportError:
+    from collections import Hashable as HashableClass
+
+
 # Blah ... until recursive types are supported, this is not strict enough: https://github.com/python/mypy/issues/731
 Introspection = Dict[
     six.text_type,
@@ -99,7 +105,7 @@ class Constant(Base):
             self._error_message = 'Value is not one of: {}'.format(', '.join(sorted(_repr(v) for v in self.values)))
 
     def errors(self, value):  # type: (AnyType) -> ListType[Error]
-        if value not in self.values:
+        if not isinstance(value, HashableClass) or value not in self.values:
             return [Error(self._error_message, code=ERROR_CODE_UNKNOWN)]
         return []
 

@@ -769,6 +769,10 @@ class FieldTests(unittest.TestCase):
             schema.errors(360000),
             [Error('Value is not one of: 36, 42, 81, 9231', code=ERROR_CODE_UNKNOWN)],
         )
+        self.assertEqual(
+            schema.errors([42]),
+            [Error('Value is not one of: 36, 42, 81, 9231', code=ERROR_CODE_UNKNOWN)],
+        )
 
         with pytest.raises(TypeError):
             Constant(42, 36, 81, 9231, description='foo', unsupported='bar')
