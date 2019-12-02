@@ -552,7 +552,7 @@ def autodoc_process_signature(
                 new_signature += f': {_annotation_to_string(annotations[arg])}'
             if i >= first_default_index:
                 new_signature += ' = ' if arg in annotations else '='
-                new_signature += _repr_default(arg_spec.defaults[i - first_default_index])
+                new_signature += _repr_default(cast(Tuple[Any, ...], arg_spec.defaults)[i - first_default_index])
 
         if arg_spec.varargs and not has_put_vararg:
             if has_put_arg:
@@ -567,7 +567,9 @@ def autodoc_process_signature(
                 new_signature += ', '
             has_put_arg = True
             annotation = f': {_annotation_to_string(annotations[arg])}' if arg in annotations else ''
-            new_signature += f'{arg}{annotation} = {_repr_default(arg_spec.kwonlydefaults[arg])}'
+            new_signature += f'{arg}{annotation}'
+            if arg_spec.kwonlydefaults and arg in arg_spec.kwonlydefaults:
+                new_signature += f' = {_repr_default(arg_spec.kwonlydefaults[arg])}'
 
         if arg_spec.varkw:
             if has_put_arg:
