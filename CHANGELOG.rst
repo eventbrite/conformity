@@ -1,6 +1,10 @@
 Changelog
 =========
 
+1.26.7 (2019-12-02)
+-------------------
+- [PATCH] Fix Constant field when receiving unhashable values (#83)
+
 1.26.6 (2019-11-04)
 -------------------
 - [PATCH] ClassConformitySchema should support SchemalessDictionaries, too
