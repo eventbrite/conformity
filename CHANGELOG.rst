@@ -1,6 +1,10 @@
 Changelog
 =========
 
+1.26.8 (2019-12-02)
+-------------------
+- [PATCH] Fix typing issues introduced with MyPy 0.750 (#84)
+
 1.26.7 (2019-12-02)
 -------------------
 - [PATCH] Fix Constant field when receiving unhashable values (#83)
