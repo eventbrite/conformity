@@ -99,7 +99,13 @@ class Constant(Base):
             self._error_message = 'Value is not one of: {}'.format(', '.join(sorted(_repr(v) for v in self.values)))
 
     def errors(self, value):  # type: (AnyType) -> ListType[Error]
-        if value not in self.values:
+        try:
+            is_valid = value in self.values
+        except TypeError:
+            # Unhashable values can't be used for membership checks.
+            is_valid = False
+
+        if not is_valid:
             return [Error(self._error_message, code=ERROR_CODE_UNKNOWN)]
         return []
 
