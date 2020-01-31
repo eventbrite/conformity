@@ -4,6 +4,14 @@ from __future__ import (
 )
 
 import re
+from typing import (
+    AbstractSet,
+    Any as AnyType,
+    Iterable,
+    List as ListType,
+    Optional,
+    Tuple as TupleType,
+)
 import warnings
 
 import attr
@@ -17,6 +25,7 @@ from conformity.error import (
 from conformity.fields.basic import (
     Base,
     Constant,
+    Introspection,
     Integer,
     UnicodeString,
 )
