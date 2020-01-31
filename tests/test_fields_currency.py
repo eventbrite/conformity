@@ -479,11 +479,7 @@ class CurrencyCodeTest(unittest.TestCase):
         error = errors[0]
         self.assertEqual(
             error.code,
-            ERROR_CODE_INVALID,
-        )
-        self.assertEqual(
-            error.message,
-            'Not a valid currency code',
+            ERROR_CODE_UNKNOWN,
         )
 
     def test_not_unicode_string(self):
