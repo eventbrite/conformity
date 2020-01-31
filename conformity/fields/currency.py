@@ -356,8 +356,6 @@ class CurrencyCodeField(Constant):
                 pointer='value',
             )]
 
-        return super(CurrencyCodeField, self).errors(value)
-
     def introspect(self):
         return strip_none({
             'type': self.introspect_type,
