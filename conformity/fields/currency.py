@@ -25,8 +25,8 @@ from conformity.error import (
 from conformity.fields.basic import (
     Base,
     Constant,
-    Introspection,
     Integer,
+    Introspection,
     UnicodeString,
 )
 from conformity.fields.structures import Dictionary

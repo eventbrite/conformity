@@ -494,4 +494,4 @@ class CurrencyCodeTest(unittest.TestCase):
 
     def test_introspect(self):
         introspection = self.field.introspect()
-        self.assertEqual("currency_code_field", introspection["type"])
+        self.assertEqual('currency_code_field', introspection['type'])
