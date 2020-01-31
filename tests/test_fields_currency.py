@@ -462,7 +462,7 @@ class TestAmountDictionariesAndStrings(object):
 
 class CurrencyCodeTest(unittest.TestCase):
     """
-        Tests the CurrencyCodeField field
+    Tests the CurrencyCodeField field
     """
 
     def setUp(self):
