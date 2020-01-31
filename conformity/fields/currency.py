@@ -334,7 +334,7 @@ class CurrencyCodeField(Constant):
     An enum field for restricting values to valid currency codes. Permits only current currencies
     and uses currint library.
     """
-    introspect_type = "currency_code_field"
+    introspect_type = 'currency_code_field'
 
     def __init__(self, code_filter=lambda x: True, **kwargs):
         """
@@ -350,9 +350,3 @@ class CurrencyCodeField(Constant):
             return [Error('Not a unicode string')]
 
         return super(CurrencyCodeField, self).errors(value)
-
-    def introspect(self):
-        return strip_none({
-            'type': self.introspect_type,
-            'valid_currency_codes': self.values,
-        })
