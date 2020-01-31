@@ -327,3 +327,26 @@ class AmountResponseDictionary(Dictionary):
             allow_extra_keys=False,
             description=description,
         )
+
+
+class CurrencyCodeField(Constant):
+    """
+    An enum field for restricting values to valid currency codes. Permits only current currencies
+    and uses currint library.
+    """
+    introspect_type = 'currency_code_field'
+
+    def __init__(self, code_filter=lambda x: True, **kwargs):
+        """
+        :param code_filter: If specified, will be called to further filter the available currency codes
+        :type code_filter: lambda x: bool
+        """
+
+        valid_currency_codes = (code for code in DEFAULT_CURRENCY_CODES if code_filter(code))
+        super(CurrencyCodeField, self).__init__(*valid_currency_codes, **kwargs)
+
+    def errors(self, value):
+        if not isinstance(value, six.text_type):
+            return [Error('Not a unicode string')]
+
+        return super(CurrencyCodeField, self).errors(value)

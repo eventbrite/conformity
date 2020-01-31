@@ -458,3 +458,40 @@ class TestAmountDictionariesAndStrings(object):
             'AmountDictionary is deprecated and will be removed in Conformity 2.0. '
             'Use AmountRequestDictionary, instead.'
         ) in str(w[-1].message)
+
+
+class CurrencyCodeTest(unittest.TestCase):
+    """
+    Tests the CurrencyCodeField field
+    """
+
+    def setUp(self):
+        self.currency = 'USD'
+        self.field = currency_fields.CurrencyCodeField()
+
+    def test_valid(self):
+        self.assertEqual(self.field.errors(self.currency), [])
+
+    def test_invalid_currency_code(self):
+        currency = 'US'
+        errors = self.field.errors(currency)
+        self.assertEqual(len(errors), 1)
+        error = errors[0]
+        self.assertEqual(
+            error.code,
+            ERROR_CODE_UNKNOWN,
+        )
+
+    def test_not_unicode_string(self):
+        currency = b'USD'
+        errors = self.field.errors(currency)
+        self.assertEqual(len(errors), 1)
+        error = errors[0]
+        self.assertEqual(
+            error.message,
+            'Not a unicode string',
+        )
+
+    def test_introspect(self):
+        introspection = self.field.introspect()
+        self.assertEqual('currency_code_field', introspection['type'])
