@@ -470,7 +470,7 @@ class CurrencyCodeTest(unittest.TestCase):
         self.field = currency_fields.CurrencyCodeField()
 
     def test_valid(self):
-        self.assertEqual(self.field.errors(self.currency), None)
+        self.assertEqual(self.field.errors(self.currency), [])
 
     def test_invalid_currency_code(self):
         currency = 'US'
