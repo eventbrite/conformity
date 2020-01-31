@@ -331,8 +331,8 @@ class AmountResponseDictionary(Dictionary):
 
 class CurrencyCodeField(Constant):
     """
-        An enum field for restricting values to valid currency codes. Permits only current currencies
-        and uses currint library.
+    An enum field for restricting values to valid currency codes. Permits only current currencies
+    and uses currint library.
     """
     introspect_type = "currency_code_field"
 
