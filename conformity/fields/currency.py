@@ -4,14 +4,6 @@ from __future__ import (
 )
 
 import re
-from typing import (
-    AbstractSet,
-    Any as AnyType,
-    Iterable,
-    List as ListType,
-    Optional,
-    Tuple as TupleType,
-)
 import warnings
 
 import attr
@@ -26,7 +18,6 @@ from conformity.fields.basic import (
     Base,
     Constant,
     Integer,
-    Introspection,
     UnicodeString,
 )
 from conformity.fields.structures import Dictionary
@@ -348,6 +339,13 @@ class CurrencyCodeField(Constant):
     def errors(self, value):
         if not isinstance(value, six.text_type):
             return [Error('Not a unicode string')]
+
+        if value not in self.values:
+            return [Error(
+                'Not a valid currency code',
+                code=ERROR_CODE_INVALID,
+                pointer='value',
+            )]
 
         return super(CurrencyCodeField, self).errors(value)
 
