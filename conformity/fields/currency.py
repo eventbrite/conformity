@@ -349,12 +349,7 @@ class CurrencyCodeField(Constant):
         if not isinstance(value, six.text_type):
             return [Error('Not a unicode string')]
 
-        if value not in self.values:
-            return [Error(
-                'Not a valid currency code',
-                code=ERROR_CODE_INVALID,
-                pointer='value',
-            )]
+        return super(CurrencyCodeField, self).errors(value)
 
     def introspect(self):
         return strip_none({
