@@ -336,7 +336,7 @@ There are four other fields that make use of `Currint`_ types if you specify the
   like ``Amount``, supports ``valid_currencies``, ``gt``, ``gte``, ``lt``, and ``lte`` optional arguments.
 
 - `currency.CurrencyCodeField <reference.html#conformity.fields.currency.CurrencyCodeField>`_: is a special extension of
-``Constant`` that ensures the value is a Unicode string that enforces the value meets the currency format as ``'USD'`. It has one
+``Constant`` that ensures the value is a Unicode string that enforces the value meets the currency format as ``'USD'``. It has one
 argument, ``code_filter``, which if specified must be a ``typing.Callable[[typing.AnyStr], bool]``. The filter will be
 passed a currency code and should return ``True`` if that currency code is allowed and ``False`` if it is not allowed.
 This is an eager filter that will filter the allowed currency codes when the instance is constructed instead of waiting
