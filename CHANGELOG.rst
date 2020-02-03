@@ -1,6 +1,10 @@
 Changelog
 =========
 
+1.27.0 (2020-02-03)
+-------------------
+- [MINOR] Add currency code field (#85)
+
 1.26.8 (2019-12-02)
 -------------------
 - [PATCH] Fix typing issues introduced with MyPy 0.750 (#84)
