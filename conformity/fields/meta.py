@@ -198,9 +198,9 @@ class PythonPath(Base):
         except ValueError:
             return [Error('Value "{}" is not a valid Python import path'.format(value))]
         except ImportError as e:
-            return [Error(six.text_type(e.args[0]))]
+            return [Error('ImportError: {}'.format(six.text_type(e.args[0])))]
         except AttributeError as e:
-            return [Error(six.text_type(e.args[0]))]
+            return [Error('AttributeError: {}'.format(six.text_type(e.args[0])))]
 
         if self.value_schema:
             return self.value_schema.errors(thing)

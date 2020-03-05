@@ -369,12 +369,12 @@ class MetaFieldTests(unittest.TestCase):
         assert schema.errors(b'Nope nope nope') == [Error('Not a unicode string')]
         assert schema.errors('Nope nope nope') == [Error('Value "Nope nope nope" is not a valid Python import path')]
         assert schema.errors('foo.bar:Hello') == [
-            Error('No module named foo.bar' if six.PY2 else "No module named 'foo'")
+            Error('ImportError: No module named foo.bar' if six.PY2 else "ImportError: No module named 'foo'")
         ]
         assert schema.errors('conformity.fields:NotARealField') == [
             Error(
-                "'module' object has no attribute 'NotARealField'" if six.PY2 else
-                "module 'conformity.fields' has no attribute 'NotARealField'"
+                "AttributeError: 'module' object has no attribute 'NotARealField'" if six.PY2 else
+                "AttributeError: module 'conformity.fields' has no attribute 'NotARealField'"
             )
         ]
         assert schema.errors('conformity.fields:UnicodeString') == []
@@ -501,7 +501,7 @@ class TestClassConfigurationSchema(object):
             Error('Missing key (and no default specified): path', code='MISSING', pointer='path'),
         ]
         assert schema.errors({'path': 'foo.bar:Hello'}) == [Error(
-            'No module named foo.bar' if six.PY2 else "No module named 'foo'",
+            'ImportError: No module named foo.bar' if six.PY2 else "ImportError: No module named 'foo'",
             pointer='path',
         )]
         assert schema.errors({'path': 'tests.test_fields_meta.Foo'}) == [Error(
