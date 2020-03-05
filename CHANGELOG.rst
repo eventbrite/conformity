@@ -1,6 +1,10 @@
 Changelog
 =========
 
+1.27.1 (2020-03-05)
+-------------------
+- [PATCH] Differentiate import errors from other validation errors (#86)
+
 1.27.0 (2020-02-03)
 -------------------
 - [MINOR] Add currency code field (#85)
