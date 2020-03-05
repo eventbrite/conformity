@@ -1,6 +1,10 @@
 Changelog
 =========
 
+1.26.9 (2020-03-05)
+-------------------
+- [PATCH] Differentiate import errors from other validation errors (#86)
+
 1.26.8 (2019-12-02)
 -------------------
 - [PATCH] Fix typing issues introduced with MyPy 0.750 (#84)
