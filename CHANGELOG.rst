@@ -1,6 +1,10 @@
 Changelog
 =========
 
+1.27.2 (2020-03-06)
+-------------------
+- [PATCH] Add Python 3.8 bdist_wheel support
+
 1.27.1 (2020-03-05)
 -------------------
 - [PATCH] Differentiate import errors from other validation errors (#86)
