@@ -143,5 +143,7 @@ class IPAddress(Any):
     """
     Conformity field that ensures that the value is a unicode string that is a valid IPv4 or IPv6 address.
     """
+    introspect_type = 'ip_address'
+
     def __init__(self, **kwargs):  # type: (**AnyType) -> None
         super(IPAddress, self).__init__(IPv4Address(), IPv6Address(), **kwargs)
