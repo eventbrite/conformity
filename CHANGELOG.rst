@@ -1,6 +1,10 @@
 Changelog
 =========
 
+1.27.3 (2020-06-29)
+-------------------
+- Add introspect type to IPAddress
+
 1.27.2 (2020-03-06)
 -------------------
 - [PATCH] Add Python 3.8 bdist_wheel support
