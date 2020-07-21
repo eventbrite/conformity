@@ -3,18 +3,17 @@ from __future__ import (
     unicode_literals,
 )
 
-from typing import (
-    Hashable as HashableType,
-    Optional,
-)
 
-import attr
-import six
-
-from conformity.utils import (
-    attr_is_optional,
-    attr_is_string,
+# NOTE: The following have been moved to different modules, but are imported
+#       here for backwards compatibility. These aliases will be removed in a
+#       future release.
+from conformity.constants import (
+    ERROR_CODE_INVALID,
+    ERROR_CODE_MISSING,
+    ERROR_CODE_UNKNOWN,
 )
+from conformity.types import Error
+from conformity.utils.field import update_pointer
 
 
 __all__ = (
@@ -27,21 +26,6 @@ __all__ = (
     'ValidationError',
     'update_error_pointer',
 )
-
-
-ERROR_CODE_INVALID = 'INVALID'
-ERROR_CODE_MISSING = 'MISSING'
-ERROR_CODE_UNKNOWN = 'UNKNOWN'
-
-
-@attr.s
-class Error(object):
-    """
-    Represents an error found validating against the schema.
-    """
-    message = attr.ib(validator=attr_is_string())  # type: six.text_type
-    code = attr.ib(default=ERROR_CODE_INVALID, validator=attr_is_string())  # type: six.text_type
-    pointer = attr.ib(default=None, validator=attr_is_optional(attr_is_string()))  # type: Optional[six.text_type]
 
 
 class ValidationError(ValueError):
@@ -62,12 +46,7 @@ class KeywordError(TypeError):
     """
 
 
-def update_error_pointer(error, pointer_or_prefix):  # type: (Error, HashableType) -> Error
-    """
-    Helper function to update an Error's pointer attribute with a (potentially prefixed) dictionary key or list index.
-    """
-    if error.pointer:
-        error.pointer = '{}.{}'.format(pointer_or_prefix, error.pointer)
-    else:
-        error.pointer = '{}'.format(pointer_or_prefix)
-    return error
+# NOTE: update_error_pointer has been deprecated. Use utils.field:update_pointer
+#       instead. This alias has been added for backwards compatibility, but it
+#       will be removed in a future release.
+update_error_pointer = update_pointer

@@ -18,10 +18,7 @@ import attr
 import currint
 import six
 
-from conformity.error import (
-    ERROR_CODE_INVALID,
-    Error,
-)
+from conformity.constants import ERROR_CODE_INVALID
 from conformity.fields.basic import (
     Base,
     Constant,
@@ -30,13 +27,14 @@ from conformity.fields.basic import (
     UnicodeString,
 )
 from conformity.fields.structures import Dictionary
+from conformity.fields.utils import strip_none
+from conformity.types import Error
 from conformity.utils import (
     attr_is_int,
     attr_is_iterable,
     attr_is_optional,
     attr_is_set,
     attr_is_string,
-    strip_none,
 )
 
 

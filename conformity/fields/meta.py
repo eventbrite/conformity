@@ -22,13 +22,12 @@ from typing import (
 import attr
 import six
 
-from conformity.error import (
+from conformity.constants import (
     ERROR_CODE_MISSING,
     ERROR_CODE_UNKNOWN,
-    Error,
-    ValidationError,
-    update_error_pointer,
+    WARNING_CODE_FIELD_DEPRECATED,
 )
+from conformity.error import ValidationError
 from conformity.fields.basic import (
     Base,
     Introspection,
@@ -38,13 +37,20 @@ from conformity.fields.structures import (
     Dictionary,
     SchemalessDictionary,
 )
+from conformity.fields.utils import (
+    strip_none,
+    update_pointer,
+)
+from conformity.types import (
+    Error,
+    Warning,
+)
 from conformity.utils import (
     attr_is_bool,
     attr_is_instance,
     attr_is_instance_or_instance_tuple,
     attr_is_optional,
     attr_is_string,
-    strip_none,
 )
 
 
@@ -87,7 +93,9 @@ class Null(Base):
         return []
 
     def introspect(self):  # type: () -> Introspection
-        return {'type': self.introspect_type}
+        return {
+            'type': self.introspect_type,
+        }
 
 
 @attr.s
@@ -103,21 +111,40 @@ class Polymorph(Base):
     contents_map = attr.ib(validator=attr_is_instance(dict))  # type: Mapping[HashableType, Base]
     description = attr.ib(default=None, validator=attr_is_optional(attr_is_string()))  # type: Optional[six.text_type]
 
-    def errors(self, value):  # type: (AnyType) -> ListType[Error]
+    def _get_switch_value(self, value):
+        # type: (Any) -> Optional[six.text_type]
+
         # Get switch field value
         bits = self.switch_field.split('.')
         switch_value = value
         for bit in bits:
             switch_value = switch_value[bit]
-        # Get field
+
         if switch_value not in self.contents_map:
+            switch_value = None
             if '__default__' in self.contents_map:
                 switch_value = '__default__'
-            else:
-                return [Error("Invalid switch value '{}'".format(switch_value), code=ERROR_CODE_UNKNOWN)]
+
+        return switch_value
+
+    def errors(self, value):  # type: (AnyType) -> ListType[Error]
+        switch_value = self._get_switch_value(value)
+
+        if switch_value is None:
+            return [Error("Invalid switch value '{}'".format(switch_value), code=ERROR_CODE_UNKNOWN)]
+
+        # Get field
         field = self.contents_map[switch_value]
         # Run field errors
         return field.errors(value)
+
+    def warnings(self, value):
+        # type: (AnyType) -> ListType[Warning]
+        switch_value = self._get_switch_value(value)
+        if switch_value is not None:
+            field = self.contents_map[switch_value]
+            return field.warnings(value)
+        return []
 
     def introspect(self):  # type: () -> Introspection
         return strip_none({
@@ -213,6 +240,13 @@ class PythonPath(Base):
             'description': self.description,
             'value_schema': self.value_schema.introspect() if self.value_schema else None,
         })
+
+    def warnings(self, value):
+        # type: (AnyType) -> ListType[Warning]
+        warnings = super(PythonPath, self).warnings(value)
+        if self.value_schema:
+            warnings.extend(self.value_schema.warnings(value))
+        return warnings
 
     @classmethod
     def resolve_python_path(cls, type_path):  # type: (six.text_type) -> AnyType
@@ -406,14 +440,14 @@ class ClassConfigurationSchema(Base):
 
         errors = self._populate_schema_cache_if_necessary(path)
         if errors:
-            return [update_error_pointer(e, 'path') for e in errors]
+            return [update_pointer(e, 'path') for e in errors]
 
         if isinstance(value, MutableMapping):
             value['path'] = path  # in case it was defaulted
             if self.add_class_object_to_dict:
                 value['object'] = PythonPath.resolve_python_path(path)
 
-        return [update_error_pointer(e, 'kwargs') for e in self._schema_cache[path].errors(value.get('kwargs', {}))]
+        return [update_pointer(e, 'kwargs') for e in self._schema_cache[path].errors(value.get('kwargs', {}))]
 
     def initiate_cache_for(self, path):  # type: (six.text_type) -> None
         errors = self._populate_schema_cache_if_necessary(path)
@@ -524,6 +558,18 @@ class Any(Base):
             result.extend(sub_errors)
         return result
 
+    def warnings(self, value):
+        # type: (AnyType) -> ListType[Warning]
+        result = []  # type: ListType[Warning]
+        for option in self.options:
+            sub_errors = option.errors(value)
+            # If there's no errors from a sub-field, then only return warnings from that field.
+            if not sub_errors:
+                return option.warnings(value)
+            # Otherwise, add the warnings to the overall results
+            result.extend(option.warnings(value))
+        return result
+
     def introspect(self):  # type: () -> Introspection
         return strip_none({
             'type': self.introspect_type,
@@ -560,6 +606,13 @@ class All(Base):
         result = []  # type: ListType[Error]
         for requirement in self.requirements:
             result.extend(requirement.errors(value) or [])
+        return result
+
+    def warnings(self, value):
+        # type: (AnyType) -> ListType[Warning]
+        result = []  # type: ListType[Warning]
+        for requirement in self.requirements:
+            result.extend(requirement.warnings(value))
         return result
 
     def introspect(self):  # type: () -> Introspection
@@ -602,3 +655,29 @@ class BooleanValidator(Base):
             'description': self.description,
             'validator': self.validator_description,
         })
+
+
+@attr.s
+class Deprecated(Base):
+    field = attr.ib()  # type: Base
+    message attr.ib(
+        default=None,
+        validator=attr_is_optional(attr_is_string()),
+    )  # type: Optional[six.text_type]
+
+    def warnings(self, value):
+        # type: (AnyType) -> ListType[Warning]
+        warnings = self.field.warnings(value)
+        warnings.append(Warning(
+            code=WARNING_CODE_FIELD_DEPRECATED,
+            message=self.message,
+        ))
+        return warnings
+
+    def introspect(self):
+        field_introspection = self.field.introspect()
+        field_introspection['deprecated'] = True
+        return field_introspection
+
+
+

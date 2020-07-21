@@ -17,10 +17,8 @@ from typing import (
 import six
 
 from conformity import fields
-from conformity.error import (
-    ERROR_CODE_UNKNOWN,
-    Error,
-)
+from conformity.constants import ERROR_CODE_UNKNOWN
+from conformity.types import Error
 
 
 __all__ = (

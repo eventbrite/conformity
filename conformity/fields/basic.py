@@ -18,9 +18,12 @@ from typing import (
 import attr
 import six
 
-from conformity.error import (
-    ERROR_CODE_UNKNOWN,
+from conformity.constants import ERROR_CODE_UNKNOWN
+from conformity.fields.utils import strip_none
+from conformity.types import (
     Error,
+    Warning,
+    Validation,
 )
 from conformity.utils import (
     AttrsValidator,
@@ -30,7 +33,6 @@ from conformity.utils import (
     attr_is_number,
     attr_is_optional,
     attr_is_string,
-    strip_none,
 )
 
 
@@ -52,12 +54,24 @@ class Base(object):
     getting a list of validation errors and recursively introspecting the schema. All fields should accept a
     `description` argument for use in documentation and introspection.
     """
-
     def errors(self, value):  # type: (AnyType) -> ListType[Error]
         """
         Returns a list of errors with the value. An empty return means that it's valid.
         """
         return [Error('Validation not implemented on base type')]
+
+    def warnings(self, value):  # type: (AnyType) -> ListType[Warning]
+        """
+        Returns a list of warnings for the field or value.
+        """
+        return []
+
+    def validate(self, value):
+        # type: (AnyType) -> Validation
+        return Validation(
+            errors=self.errors(value),
+            warnings=self.warnings(value),
+        )
 
     def introspect(self):  # type: () -> Introspection
         """

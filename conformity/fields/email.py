@@ -13,13 +13,13 @@ import warnings
 
 import six
 
-from conformity.error import Error
 from conformity.fields.basic import (
     Introspection,
     UnicodeString,
 )
+from conformity.fields.utils import strip_none
 from conformity.fields.net import IPAddress
-from conformity.utils import strip_none
+from conformity.types import Error
 
 
 class EmailAddress(UnicodeString):

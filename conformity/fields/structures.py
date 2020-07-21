@@ -30,11 +30,9 @@ from typing import (
 import attr
 import six
 
-from conformity.error import (
+from conformity.constants import (
     ERROR_CODE_MISSING,
     ERROR_CODE_UNKNOWN,
-    Error,
-    update_error_pointer,
 )
 from conformity.fields.basic import (
     Anything,
@@ -42,13 +40,20 @@ from conformity.fields.basic import (
     Hashable,
     Introspection,
 )
+from conformity.fields.utils import (
+    strip_none,
+    update_pointer,
+)
+from conformity.types import (
+    Error,
+    Warning,
+)
 from conformity.utils import (
     attr_is_instance,
     attr_is_int,
     attr_is_iterable,
     attr_is_optional,
     attr_is_string,
-    strip_none,
 )
 
 
@@ -133,7 +138,7 @@ class _BaseSequenceOrSet(Base):
             )
         for lazy_pointer, element in self._enumerate(value):
             result.extend(
-                update_error_pointer(error, lazy_pointer.get())
+                update_pointer(error, lazy_pointer.get())
                 for error in (self.contents.errors(element) or [])
             )
 
@@ -141,6 +146,15 @@ class _BaseSequenceOrSet(Base):
             return self.additional_validator.errors(value)
 
         return result
+
+    def warnings(self, value):
+        warnings = super(_BaseSequenceOrSet, self).warnings(value)
+        for lazy_pointer, element in self._enumerate(value):
+            warnings.extend(
+                update_pointer(warning, lazy_pointer.get())
+                for warning in self.contents.warnings(element)
+            )
+        return warnings
 
     @classmethod
     def _enumerate(cls, values):
@@ -150,7 +164,7 @@ class _BaseSequenceOrSet(Base):
         return ((cls.LazyPointer(i, value), value) for i, value in enumerate(values))
 
     def introspect(self):  # type: () -> Introspection
-        return strip_none({
+        introspection = {
             'type': self.introspect_type,
             'contents': self.contents.introspect(),
             'max_length': self.max_length,
@@ -159,7 +173,9 @@ class _BaseSequenceOrSet(Base):
             'additional_validation': (
                 self.additional_validator.__class__.__name__ if self.additional_validator else None
             ),
-        })
+        }
+
+        return strip_none(introspection)
 
     class LazyPointer(object):
         def __init__(self, index, _):
@@ -295,7 +311,7 @@ class Dictionary(Base):
             else:
                 # Check key type
                 result.extend(
-                    update_error_pointer(error, key)
+                    update_pointer(error, key)
                     for error in (field.errors(value[key]) or [])
                 )
         # Check for extra keys
@@ -310,6 +326,21 @@ class Dictionary(Base):
 
         if not result and self.additional_validator:
             return self.additional_validator.errors(value)
+
+        return result
+
+    def warnings(self, value):
+        # type: (AnyType) -> ListType(Warning)
+        if not isinstance(value, dict):
+            return []
+
+        result = []  # type: ListType[Warning]
+        for key, field in self.contents.items():
+            if key in value:
+                result.extend(
+                    update_pointer(warning, key)
+                    for warning in field.warnings(value[key])
+                )
 
         return result
 
@@ -353,7 +384,7 @@ class Dictionary(Base):
         if isinstance(self.contents, OrderedDict):
             display_order = list(self.contents.keys())
 
-        return strip_none({
+        introspection = {
             'type': self.introspect_type,
             'contents': {
                 key: value.introspect()
@@ -366,7 +397,9 @@ class Dictionary(Base):
             'additional_validation': (
                 self.additional_validator.__class__.__name__ if self.additional_validator else None
             ),
-        })
+        }
+
+        return strip_none(introspection)
 
 
 @attr.s
@@ -411,16 +444,34 @@ class SchemalessDictionary(Base):
 
         for key, field in value.items():
             result.extend(
-                update_error_pointer(error, key)
+                update_pointer(error, key)
                 for error in (self.key_type.errors(key) or [])
             )
             result.extend(
-                update_error_pointer(error, key)
+                update_pointer(error, key)
                 for error in (self.value_type.errors(field) or [])
             )
 
         if not result and self.additional_validator:
             return self.additional_validator.errors(value)
+
+        return result
+
+    def warnings(self, value):
+        # type: (AnyType) -> ListType[Warning]
+        if not isinstance(value, dict):
+            return []
+
+        result = []  # type: ListType[Warning]
+        for d_key, d_value in value.items():
+            result.extend(
+                update_pointer(warning, d_key)
+                for warning in self.key_type.warnings(d_key)
+            )
+            result.extend(
+                update_pointer(warning, d_key)
+                for warning in self.value_type.warnings(d_value)
+            )
 
         return result
 
@@ -439,6 +490,7 @@ class SchemalessDictionary(Base):
             result['key_type'] = self.key_type.introspect()
         if not self.value_type.__class__ == Anything:
             result['value_type'] = self.value_type.introspect()
+
         return strip_none(result)
 
 
@@ -485,7 +537,7 @@ class Tuple(Base):
 
         for i, (c_elem, v_elem) in enumerate(zip(self.contents, value)):
             result.extend(
-                update_error_pointer(error, i)
+                update_pointer(error, i)
                 for error in (c_elem.errors(v_elem) or [])
             )
 
@@ -494,12 +546,31 @@ class Tuple(Base):
 
         return result
 
+    def warnings(self, value):
+        # type: (AnyType) -> ListType[Warning]
+        if (
+            not isinstance(value, tuple) or
+            len(value) != len(self.contents)
+        ):
+            return []
+
+        result = []  # type: ListType[Warning]
+        for i, (field, item) in enumerate(zip(contents, value)):
+            result.extend(
+                update_pointer(warning, i)
+                for warning in field.warnings(item)
+            )
+
+        return result
+
     def introspect(self):  # type: () -> Introspection
-        return strip_none({
+        introspection = {
             'type': self.introspect_type,
             'contents': [value.introspect() for value in self.contents],
             'description': self.description,
             'additional_validation': (
                 self.additional_validator.__class__.__name__ if self.additional_validator else None
             ),
-        })
+        }
+
+        return strip_none(introspection)

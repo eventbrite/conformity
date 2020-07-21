@@ -13,7 +13,7 @@ from typing import (
 import pycountry
 import six
 
-from conformity.error import Error
+from conformity.types import Error
 from conformity.fields.basic import Constant
 
 
