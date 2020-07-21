@@ -7,7 +7,7 @@ import unittest
 
 import pytest
 
-from conformity.error import (
+from conformity.constants import (
     ERROR_CODE_INVALID,
     ERROR_CODE_UNKNOWN,
 )

@@ -5,7 +5,7 @@ from __future__ import (
 
 import unittest
 
-from conformity.error import Error
+from conformity.types import Error
 from conformity.fields import (
     Latitude,
     Longitude,

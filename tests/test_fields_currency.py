@@ -14,7 +14,7 @@ from currint import (
 import pytest
 import six
 
-from conformity.error import (
+from conformity.constants import (
     ERROR_CODE_INVALID,
     ERROR_CODE_UNKNOWN,
 )

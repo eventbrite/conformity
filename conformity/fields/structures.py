@@ -555,7 +555,7 @@ class Tuple(Base):
             return []
 
         result = []  # type: ListType[Warning]
-        for i, (field, item) in enumerate(zip(contents, value)):
+        for i, (field, item) in enumerate(zip(self.contents, value)):
             result.extend(
                 update_pointer(warning, i)
                 for warning in field.warnings(item)

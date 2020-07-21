@@ -112,25 +112,27 @@ class Polymorph(Base):
     description = attr.ib(default=None, validator=attr_is_optional(attr_is_string()))  # type: Optional[six.text_type]
 
     def _get_switch_value(self, value):
-        # type: (Any) -> Optional[six.text_type]
+        # type: (Any) -> (six.text_type, bool)
 
         # Get switch field value
         bits = self.switch_field.split('.')
         switch_value = value
+        valid = True
         for bit in bits:
             switch_value = switch_value[bit]
 
         if switch_value not in self.contents_map:
-            switch_value = None
             if '__default__' in self.contents_map:
                 switch_value = '__default__'
+            else:
+                valid = False
 
-        return switch_value
+        return switch_value, valid
 
     def errors(self, value):  # type: (AnyType) -> ListType[Error]
-        switch_value = self._get_switch_value(value)
+        switch_value, valid = self._get_switch_value(value)
 
-        if switch_value is None:
+        if not valid:
             return [Error("Invalid switch value '{}'".format(switch_value), code=ERROR_CODE_UNKNOWN)]
 
         # Get field
@@ -140,8 +142,8 @@ class Polymorph(Base):
 
     def warnings(self, value):
         # type: (AnyType) -> ListType[Warning]
-        switch_value = self._get_switch_value(value)
-        if switch_value is not None:
+        switch_value, valid = self._get_switch_value(value)
+        if valid:
             field = self.contents_map[switch_value]
             return field.warnings(value)
         return []
@@ -660,7 +662,7 @@ class BooleanValidator(Base):
 @attr.s
 class Deprecated(Base):
     field = attr.ib()  # type: Base
-    message attr.ib(
+    message = attr.ib(
         default=None,
         validator=attr_is_optional(attr_is_string()),
     )  # type: Optional[six.text_type]
@@ -675,9 +677,7 @@ class Deprecated(Base):
         return warnings
 
     def introspect(self):
+        # type: () -> Introspection
         field_introspection = self.field.introspect()
         field_introspection['deprecated'] = True
         return field_introspection
-
-
-

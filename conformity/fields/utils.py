@@ -9,7 +9,7 @@ from typing import (
     TypeVar,
 )
 
-from conformity.types.issues import Issue
+from conformity.types import Issue
 
 
 KT = TypeVar('KT')

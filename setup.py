@@ -32,6 +32,7 @@ spinx_requires = [
 
 tests_require = [
     'freezegun',
+    'mock;python_version<"3.3"',
     'mypy~=0.740;python_version>"3.4"',
     'pytest',
     'pytest-cov',

@@ -5,12 +5,12 @@ from __future__ import (
 
 import unittest
 
-from conformity.error import Error
 from conformity.fields import (
     IPAddress,
     IPv4Address,
     IPv6Address,
 )
+from conformity.types import Error
 
 
 class NetFieldTests(unittest.TestCase):
