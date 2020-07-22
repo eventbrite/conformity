@@ -3,6 +3,7 @@ from __future__ import (
     unicode_literals,
 )
 
+from typing import cast
 import warnings
 
 import six
@@ -59,4 +60,4 @@ def update_error_pointer(error, pointer_or_prefix):
     )
 
     from conformity.fields.utils import update_pointer
-    return update_pointer(error, pointer_or_prefix)
+    return cast(Error, update_pointer(error, pointer_or_prefix))

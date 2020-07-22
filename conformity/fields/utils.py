@@ -9,11 +9,17 @@ from typing import (
     TypeVar,
 )
 
-from conformity.types import Issue
+from conformity.types import (
+    Issue,
+    Error,
+    Warning,
+)
 
 
 KT = TypeVar('KT')
 VT = TypeVar('VT')
+
+IssueVar = TypeVar('IssueVar', Issue, Error, Warning)
 
 
 def strip_none(value):
@@ -27,7 +33,7 @@ def strip_none(value):
 
 
 def update_pointer(issue, pointer_or_prefix):
-    # type: (Issue, Hashable) -> Issue
+    # type: (IssueVar, Hashable) -> IssueVar
     """
     Helper function to update a pointer attribute with a (potentially prefixed)
     dictionary key or list index.

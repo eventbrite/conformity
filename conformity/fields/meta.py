@@ -112,7 +112,7 @@ class Polymorph(Base):
     description = attr.ib(default=None, validator=attr_is_optional(attr_is_string()))  # type: Optional[six.text_type]
 
     def _get_switch_value(self, value):
-        # type: (Any) -> (six.text_type, bool)
+        # type: (AnyType) -> TupleType[six.text_type, bool]
 
         # Get switch field value
         bits = self.switch_field.split('.')
@@ -131,7 +131,6 @@ class Polymorph(Base):
 
     def errors(self, value):  # type: (AnyType) -> ListType[Error]
         switch_value, valid = self._get_switch_value(value)
-
         if not valid:
             return [Error("Invalid switch value '{}'".format(switch_value), code=ERROR_CODE_UNKNOWN)]
 
@@ -663,9 +662,9 @@ class BooleanValidator(Base):
 class Deprecated(Base):
     field = attr.ib()  # type: Base
     message = attr.ib(
-        default=None,
+        default='This field has been deprecated',
         validator=attr_is_optional(attr_is_string()),
-    )  # type: Optional[six.text_type]
+    )  # type: six.text_type
 
     def warnings(self, value):
         # type: (AnyType) -> ListType[Warning]

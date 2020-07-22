@@ -56,7 +56,7 @@ from conformity.types import Error
 try:
     from unittest import mock
 except ImportError:
-    import mock
+    import mock  # type: ignore
 
 
 class FieldTests(unittest.TestCase):
@@ -802,7 +802,6 @@ class FieldTests(unittest.TestCase):
     @mock.patch('conformity.fields.Base.warnings')
     @mock.patch('conformity.fields.Base.errors')
     def test_base_validate(self, mock_errors, mock_warnings):
-        # type: () -> None
         schema = Base()
         mock_value = mock.MagicMock()
         validation = schema.validate(mock_value)

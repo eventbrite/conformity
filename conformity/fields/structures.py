@@ -330,7 +330,7 @@ class Dictionary(Base):
         return result
 
     def warnings(self, value):
-        # type: (AnyType) -> ListType(Warning)
+        # type: (AnyType) -> ListType[Warning]
         if not isinstance(value, dict):
             return []
 
@@ -384,7 +384,7 @@ class Dictionary(Base):
         if isinstance(self.contents, OrderedDict):
             display_order = list(self.contents.keys())
 
-        introspection = {
+        return strip_none({
             'type': self.introspect_type,
             'contents': {
                 key: value.introspect()
@@ -397,9 +397,7 @@ class Dictionary(Base):
             'additional_validation': (
                 self.additional_validator.__class__.__name__ if self.additional_validator else None
             ),
-        }
-
-        return strip_none(introspection)
+        })
 
 
 @attr.s
@@ -564,13 +562,11 @@ class Tuple(Base):
         return result
 
     def introspect(self):  # type: () -> Introspection
-        introspection = {
+        return strip_none({
             'type': self.introspect_type,
             'contents': [value.introspect() for value in self.contents],
             'description': self.description,
             'additional_validation': (
                 self.additional_validator.__class__.__name__ if self.additional_validator else None
             ),
-        }
-
-        return strip_none(introspection)
+        })
