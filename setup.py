@@ -23,7 +23,8 @@ currency_requires = [
 ]
 
 country_requires = [
-    'pycountry',
+    'pycountry<19.7.15;python_version<"3"',
+    'pycountry>=19.7.15;python_version>="3"',
 ]
 
 spinx_requires = [
