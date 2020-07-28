@@ -808,7 +808,7 @@ class SomethingWithJustKwargs(BaseSomething):
         self.kwargs = kwargs
 
 
-class DeprecatedFieldTests(object):
+class TestDeprecatedField(object):
     def test_warnings_returns_field_deprecation_warning(self):
         field = Deprecated(Integer(), 'This field has been deprecated')
         warnings = field.warnings(1)
@@ -820,4 +820,4 @@ class DeprecatedFieldTests(object):
         field = Deprecated(Integer(), 'This field has been deprecated')
         introspection = field.introspect()
         assert 'deprecated' in introspection
-        assert introspection['decprecated'] is True
+        assert introspection['deprecated'] is True
