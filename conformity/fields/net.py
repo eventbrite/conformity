@@ -12,13 +12,13 @@ from typing import (
 import attr
 import six
 
-from conformity.error import Error
 from conformity.fields.basic import (
     Introspection,
     UnicodeString,
 )
 from conformity.fields.meta import Any
-from conformity.utils import strip_none
+from conformity.fields.utils import strip_none
+from conformity.types import Error
 
 
 ipv4_regex = re.compile(r'^(25[0-5]|2[0-4]\d|[0-1]?\d?\d)(\.(25[0-5]|2[0-4]\d|[0-1]?\d?\d)){3}$')

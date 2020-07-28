@@ -14,10 +14,8 @@ import unittest
 import pytest
 import six
 
-from conformity.error import (
-    Error,
-    ValidationError,
-)
+from conformity.constants import WARNING_CODE_FIELD_DEPRECATED
+from conformity.error import ValidationError
 from conformity.fields import (
     All,
     Any,
@@ -25,7 +23,9 @@ from conformity.fields import (
     BooleanValidator,
     ClassConfigurationSchema,
     Constant,
+    Deprecated,
     Dictionary,
+    Integer,
     Null,
     Nullable,
     ObjectInstance,
@@ -36,6 +36,7 @@ from conformity.fields import (
     TypeReference,
     UnicodeString,
 )
+from conformity.types import Error
 
 
 class MetaFieldTests(unittest.TestCase):
@@ -805,3 +806,18 @@ class OverridingAnotherSomething(AnotherSomething):
 class SomethingWithJustKwargs(BaseSomething):
     def __init__(self, **kwargs):
         self.kwargs = kwargs
+
+
+class TestDeprecatedField(object):
+    def test_warnings_returns_field_deprecation_warning(self):
+        field = Deprecated(Integer(), 'This field has been deprecated')
+        warnings = field.warnings(1)
+        assert len(warnings) == 1
+        assert warnings[0].code == WARNING_CODE_FIELD_DEPRECATED
+        assert warnings[0].message == field.message
+
+    def test_introspect_adds_deprecated_field(self):
+        field = Deprecated(Integer(), 'This field has been deprecated')
+        introspection = field.introspect()
+        assert 'deprecated' in introspection
+        assert introspection['deprecated'] is True

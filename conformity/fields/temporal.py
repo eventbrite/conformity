@@ -18,15 +18,15 @@ import warnings
 import attr
 import six
 
-from conformity.error import Error
 from conformity.fields.basic import (
     Base,
     Introspection,
 )
+from conformity.fields.utils import strip_none
+from conformity.types import Error
 from conformity.utils import (
     attr_is_optional,
     attr_is_string,
-    strip_none,
 )
 
 

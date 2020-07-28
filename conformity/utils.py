@@ -7,11 +7,9 @@ import decimal
 from typing import (
     Any as AnyType,
     Callable,
-    Dict,
     Optional,
     Tuple as TupleType,
     Type,
-    TypeVar,
     Union,
 )
 
@@ -19,17 +17,7 @@ import attr
 import six
 
 
-KT = TypeVar('KT')
-VT = TypeVar('VT')
 AttrsValidator = Callable[[AnyType, AnyType, AnyType], None]
-
-
-def strip_none(value):  # type: (Dict[KT, VT]) -> Dict[KT, VT]
-    """
-    Takes a dict and removes all keys that have `None` values, used mainly for tidying up introspection responses. Take
-    care not to use this on something that might legitimately contain a `None`.
-    """
-    return {k: v for k, v in value.items() if v is not None}
 
 
 attr_is_instance = (

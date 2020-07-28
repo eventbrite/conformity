@@ -51,8 +51,8 @@ if six.PY2:
     SettingsValuesView = List[Any]
     SettingsItemsView = List[Tuple[six.text_type, Any]]
 else:
-    SettingsKeysView = KeysView[six.text_type]
-    SettingsValuesView = ValuesView[Any]
+    SettingsKeysView = KeysView[six.text_type]  # type: ignore
+    SettingsValuesView = ValuesView[Any]  # type: ignore
     SettingsItemsView = ItemsView[six.text_type, Any]
 
 

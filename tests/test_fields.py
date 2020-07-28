@@ -22,10 +22,9 @@ import pytest
 import pytz
 import six
 
-from conformity.error import (
+from conformity.constants import (
     ERROR_CODE_MISSING,
     ERROR_CODE_UNKNOWN,
-    Error,
 )
 from conformity.fields import (
     AdditionalCollectionValidator,
@@ -52,6 +51,12 @@ from conformity.fields import (
     UnicodeDecimal,
     UnicodeString,
 )
+from conformity.types import Error
+
+try:
+    from unittest import mock
+except ImportError:
+    import mock  # type: ignore
 
 
 class FieldTests(unittest.TestCase):
@@ -788,6 +793,23 @@ class FieldTests(unittest.TestCase):
         assert schema.errors('foo') == [Error('Validation not implemented on base type')]
         with pytest.raises(NotImplementedError):
             schema.introspect()
+
+    def test_base_warnings(self):
+        # type: () -> None
+        schema = Base()
+        assert schema.warnings(mock.MagicMock()) == []
+
+    @mock.patch('conformity.fields.Base.warnings')
+    @mock.patch('conformity.fields.Base.errors')
+    def test_base_validate(self, mock_errors, mock_warnings):
+        schema = Base()
+        mock_value = mock.MagicMock()
+        validation = schema.validate(mock_value)
+
+        mock_errors.assert_called_once_with(mock_value)
+        assert validation.errors == mock_errors.return_value
+        mock_warnings.assert_called_once_with(mock_value)
+        assert validation.warnings == mock_warnings.return_value
 
 
 @pytest.mark.parametrize(('kwarg', ), (('gt', ), ('lt', ), ('gte', ), ('lte', )))

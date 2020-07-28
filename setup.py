@@ -23,7 +23,8 @@ currency_requires = [
 ]
 
 country_requires = [
-    'pycountry',
+    'pycountry<19.7.15;python_version<"3"',
+    'pycountry>=19.7.15;python_version>="3"',
 ]
 
 spinx_requires = [
@@ -32,8 +33,9 @@ spinx_requires = [
 
 tests_require = [
     'freezegun',
+    'mock;python_version<"3.3"',
     'mypy~=0.740;python_version>"3.4"',
-    'pytest',
+    'pytest>4.2,<5.4',
     'pytest-cov',
     'pytest-runner',
     'pytz',
