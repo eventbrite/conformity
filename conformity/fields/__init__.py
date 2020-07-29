@@ -1,8 +1,3 @@
-from __future__ import (
-    absolute_import,
-    unicode_literals,
-)
-
 from conformity.fields.basic import (
     Anything,
     Base,

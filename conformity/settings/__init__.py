@@ -1,8 +1,3 @@
-from __future__ import (
-    absolute_import,
-    unicode_literals,
-)
-
 import copy
 import itertools
 from typing import (
@@ -20,8 +15,6 @@ from typing import (
     ValuesView,
     cast,
 )
-
-import six
 
 from conformity import fields
 from conformity.error import ValidationError
@@ -45,19 +38,11 @@ except ImportError:
     from abc import ABCMeta as BaseMeta  # type: ignore
 
 
-if six.PY2:
-    # TODO Always use KeysView, ValuesView, and ItemsView when Python 3-only
-    SettingsKeysView = List[six.text_type]
-    SettingsValuesView = List[Any]
-    SettingsItemsView = List[Tuple[six.text_type, Any]]
-else:
-    SettingsKeysView = KeysView[six.text_type]  # type: ignore
-    SettingsValuesView = ValuesView[Any]  # type: ignore
-    SettingsItemsView = ItemsView[six.text_type, Any]
-
-
-SettingsSchema = Mapping[six.text_type, fields.Base]
-SettingsData = Mapping[six.text_type, Any]
+SettingsKeysView = KeysView[str]
+SettingsValuesView = ValuesView[Any]
+SettingsItemsView = ItemsView[str, Any]
+SettingsSchema = Mapping[str, fields.Base]
+SettingsData = Mapping[str, Any]
 
 # noinspection PyShadowingBuiltins
 _VT = TypeVar('_VT', bound=Any)
@@ -90,8 +75,7 @@ class _SettingsMetaclass(BaseMeta):
     #         print('{}: {}'.format(name, bases))
     #         return super(Meta, mcs).__new__(mcs, name, bases, body)
     #
-    # @six.add_metaclass(Meta)
-    # class Base(Mapping[six.text_type, Any]):
+    # class Base(Mapping[str, Any], metaclass=Meta):
     #     pass
     #
     # class Foo(Base):
@@ -135,11 +119,11 @@ class _SettingsMetaclass(BaseMeta):
             defaults_not_inherited = not any(cls.defaults is b.defaults for b in applicable_bases)
             chain_of_schemas = itertools.chain(
                 itertools.chain(*(b.schema.items() for b in reversed(applicable_bases))),
-                cast(Iterable[Tuple[six.text_type, fields.Base]], cls.schema.items() if schema_not_inherited else ()),
+                cast(Iterable[Tuple[str, fields.Base]], cls.schema.items() if schema_not_inherited else ()),
             )
             chain_of_defaults = itertools.chain(
                 itertools.chain(*(b.defaults.items() for b in reversed(applicable_bases))),
-                cast(Iterable[Tuple[six.text_type, Any]], cls.defaults.items() if defaults_not_inherited else ()),
+                cast(Iterable[Tuple[str, Any]], cls.defaults.items() if defaults_not_inherited else ()),
             )
 
             # Now we define the schema and defaults for this class to be the merged schemas and defaults from above.
@@ -149,8 +133,7 @@ class _SettingsMetaclass(BaseMeta):
         return cls
 
 
-@six.add_metaclass(_SettingsMetaclass)
-class Settings(Mapping[six.text_type, Any]):
+class Settings(Mapping[str, Any], metaclass=_SettingsMetaclass):
     """
     Represents settings schemas and defaults that can be inherited and merged across the inheritance hierarchy.
 
@@ -229,7 +212,7 @@ class Settings(Mapping[six.text_type, Any]):
         Raised when validation fails for the configuration data (contents) passed into the constructor or `set(data)`.
         """
 
-    def __init__(self, data):  # type: (SettingsData) -> None
+    def __init__(self, data: SettingsData) -> None:
         """
         Instantiate a new Settings object and validate its contents.
 
@@ -241,7 +224,7 @@ class Settings(Mapping[six.text_type, Any]):
         self._data = {}  # type: SettingsData
         self.set(data)
 
-    def set(self, data):  # type: (SettingsData) -> None
+    def set(self, data: SettingsData) -> None:
         """
         Initialize and validate the configuration data (contents) for this settings object.
 
@@ -276,8 +259,8 @@ class Settings(Mapping[six.text_type, Any]):
         self._data = settings
 
     @classmethod
-    def _merge_mappings(cls, data, defaults):  # type: (SettingsData, SettingsData) -> SettingsData
-        new_data = {}  # type: Dict[six.text_type, Any]
+    def _merge_mappings(cls, data: SettingsData, defaults: SettingsData) -> SettingsData:
+        new_data = {}  # type: Dict[str, Any]
 
         for key in set(itertools.chain(data.keys(), defaults.keys())):
             if key in data and key in defaults:
@@ -292,7 +275,7 @@ class Settings(Mapping[six.text_type, Any]):
 
         return new_data
 
-    def keys(self):  # type: () -> SettingsKeysView
+    def keys(self) -> SettingsKeysView:
         """
         Returns a `KeysView` of the settings data (even in Python 2).
 
@@ -300,7 +283,7 @@ class Settings(Mapping[six.text_type, Any]):
         """
         return cast(SettingsKeysView, self._data.keys())
 
-    def values(self):  # type: () -> SettingsValuesView
+    def values(self) -> SettingsValuesView:
         """
         Returns a `ValuesView` of the settings data (even in Python 2).
 
@@ -308,7 +291,7 @@ class Settings(Mapping[six.text_type, Any]):
         """
         return self._data.values()
 
-    def items(self):  # type: () -> SettingsItemsView
+    def items(self) -> SettingsItemsView:
         """
         Returns an `ItemsView` of the settings data (even in Python 2).
 
@@ -316,7 +299,7 @@ class Settings(Mapping[six.text_type, Any]):
         """
         return cast(SettingsItemsView, self._data.items())
 
-    def get(self, key, default=None):  # type: (six.text_type, Optional[_VT]) -> Optional[_VT]
+    def get( self, key: str, default: Optional[_VT]=None) -> Optional[_VT]:
         """
         Returns the value associated with the given key, or the default if specified as an argument, or `None` if no
         default is specified.
@@ -328,7 +311,7 @@ class Settings(Mapping[six.text_type, Any]):
         """
         return self._data.get(key, default)
 
-    def __getitem__(self, key):  # type: (six.text_type) -> Any
+    def __getitem__(self, key:str) -> Any:
         """
         Returns the value associated with the given key, or raises a `KeyError` if it does not exist.
 
@@ -340,7 +323,7 @@ class Settings(Mapping[six.text_type, Any]):
         """
         return self._data[key]
 
-    def __len__(self):  # type: () -> int
+    def __len__(self) -> int:
         """
         Returns the number of keys in the root of this settings data.
 
@@ -348,7 +331,7 @@ class Settings(Mapping[six.text_type, Any]):
         """
         return len(self._data)
 
-    def __iter__(self):  # type: () -> Iterator[six.text_type]
+    def __iter__(self) -> Iterator[str]:
         """
         Returns an iterator over the keys of this settings data.
 
@@ -356,7 +339,7 @@ class Settings(Mapping[six.text_type, Any]):
         """
         return iter(self._data)
 
-    def __contains__(self, key):  # type: (Any) -> bool
+    def __contains__(self, key: str) -> bool:
         """
         Indicates whether the specific key exists in this settings data.
 
@@ -366,7 +349,7 @@ class Settings(Mapping[six.text_type, Any]):
         """
         return key in self._data
 
-    def __eq__(self, other):  # type: (Any) -> bool
+    def __eq__(self, other: Any) -> bool:
         """
         Indicates whether the other object provided is an instance of the same Settings subclass as this Settings
         subclass and its settings data matches this settings data.
@@ -377,7 +360,7 @@ class Settings(Mapping[six.text_type, Any]):
         """
         return isinstance(other, self.__class__) and self._data == other._data
 
-    def __ne__(self, other):  # type: (Any) -> bool
+    def __ne__(self, other: Any) -> bool:
         """
         Indicates the reverse of __eq__.
 
