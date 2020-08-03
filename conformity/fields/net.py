@@ -1,111 +1,107 @@
-from __future__ import (
-    absolute_import,
-    unicode_literals,
-)
-
 import re
-from typing import (
-    Any as AnyType,
-    List as ListType,
-)
+from typing import Any as AnyType
 
-import attr
-import six
-
-from conformity.fields.basic import (
-    Introspection,
-    UnicodeString,
-)
+from conformity.fields.builtin import String
 from conformity.fields.meta import Any
 from conformity.fields.utils import strip_none
-from conformity.types import Error
+from conformity.types import (
+    Error,
+    Validation,
+)
+from conformity.typing import Introspection
 
 
 ipv4_regex = re.compile(r'^(25[0-5]|2[0-4]\d|[0-1]?\d?\d)(\.(25[0-5]|2[0-4]\d|[0-1]?\d?\d)){3}$')
 
 
-@attr.s
-class IPv4Address(UnicodeString):
+class IPv4Address(String):
     """
-    Conformity field that ensures that the value is a unicode string that is a valid IPv4 address.
+    Validates that the value is a string that is a valid IPv4 address.
     """
 
+    valid_noun = 'an IPv4 address'
     introspect_type = 'ipv4_address'
 
-    def errors(self, value):  # type: (AnyType) -> ListType[Error]
+    def validate(self, value: AnyType) -> Validation:
         # Get any basic type errors
-        result = super(IPv4Address, self).errors(value)
-        if result:
-            return result
-        # Check for IPv4-ness
-        if ipv4_regex.match(value):
-            return []
-        else:
-            return [Error('Not a valid IPv4 address')]
-
-    def introspect(self):  # type: () -> Introspection
-        return strip_none({
-            'type': self.introspect_type,
-            'description': self.description,
-        })
+        v = super().validate(value)
+        if (
+            v.is_valid() and
+            not ipv4_regex.match(value)
+        ):
+            v.errors.append(Error('Not a valid IPv4 address'))
+        return v
 
 
-@attr.s
-class IPv6Address(UnicodeString):
+class IPv6Address(String):
     """
-    Conformity field that ensures that the value is a unicode string that is a valid IPv6 address.
+    Validates that the value is a string that is a valid IPv6 address.
     """
 
+    valid_noun = 'an IPv6 address'
     introspect_type = 'ipv6_address'
 
-    def errors(self, value):  # type: (AnyType) -> ListType[Error]
+    def validate(self, value: AnyType) -> Validation:
         # Get any basic type errors
-        result = super(IPv6Address, self).errors(value)
-        if result:
-            return result
-        # It must have at least one :
+        v = super().validate(value)
+        if v.errors:
+            return v
+
+        # Validate formatting
         if ':' not in value:
-            return [Error('Not a valid IPv6 address (no colons)')]
-        # We can only have one '::' shortener.
-        if value.count('::') > 1:
-            return [Error('Not a valid IPv6 address (multiple shorteners)')]
-        # '::' should be encompassed by start, digits or end.
-        if ':::' in value:
-            return [Error('Not a valid IPv6 address (shortener not bounded)')]
-        # A single colon can neither start nor end an address.
-        if ((value.startswith(':') and not value.startswith('::')) or
-                (value.endswith(':') and not value.endswith('::'))):
-            return [Error('Not a valid IPv6 address (colon at start or end)')]
-        # We can never have more than 7 ':' (1::2:3:4:5:6:7:8 is invalid)
-        if value.count(':') > 7:
-            return [Error('Not a valid IPv6 address (too many colons)')]
-        # If we have no concatenation, we need to have 8 fields with 7 ':'.
-        if '::' not in value and value.count(':') != 7:
+            # It must have at least one :
+            v.errors.append(Error('Not a valid IPv6 address (no colons)'))
+        elif value.count('::') > 1:
+            # We can only have one '::' shortener.
+            v.errors.append(Error('Not a valid IPv6 address (multiple shorteners)'))
+        elif ':::' in value:
+            # '::' should be encompassed by start, digits or end.
+            v.errors.append(Error('Not a valid IPv6 address (shortener not bounded)'))
+        elif (
+            (value.startswith(':') and not value.startswith('::')) or
+            (value.endswith(':') and not value.endswith('::'))
+        ):
+            # A single colon can neither start nor end an address.
+            v.errors.append(Error('Not a valid IPv6 address (colon at start or end)'))
+        elif value.count(':') > 7:
+            # We can never have more than 7 ':' (1::2:3:4:5:6:7:8 is invalid)
+            v.errors.append(Error('Not a valid IPv6 address (too many colons)'))
+        elif '::' not in value and value.count(':') != 7:
+            # If we have no concatenation, we need to have 8 fields with 7 ':'.
             # We might have an IPv4 mapped address.
             if value.count('.') != 3:
-                return [Error('Not a valid IPv6 address (v4 section not valid address)')]
-        value = self.expand_ipv6_address(value)
-        # Check that each of the hextets are between 0x0 and 0xFFFF.
-        for hextet in value.split(':'):
-            if hextet.count('.') == 3:
-                # If we have an IPv4 mapped address, the IPv4 portion has to
-                # be at the end of the IPv6 portion.
-                if not value.split(':')[-1] == hextet:
-                    return [Error('Not a valid IPv6 address (v4 section not at end)')]
-                if not ipv4_regex.match(hextet):
-                    return [Error('Not a valid IPv6 address (v4 section not valid address)')]
-            else:
-                try:
-                    # a value error here means that we got a bad hextet,
-                    # something like 0xzzzz
-                    if int(hextet, 16) < 0x0 or int(hextet, 16) > 0xFFFF:
-                        return [Error('Not a valid IPv6 address (invalid hextet)')]
-                except ValueError:
-                    return [Error('Not a valid IPv6 address (invalid hextet)')]
-        return []
+                v.errors.append(Error('Not a valid IPv6 address (v4 section not valid address)'))
+
+        if not v.errors:
+            value = self.expand_ipv6_address(value)
+            # Check that each of the hextets are between 0x0 and 0xFFFF.
+            for hextet in value.split(':'):
+                if v.errors:
+                    # Fail fast if we have an error
+                    break
+                if hextet.count('.') == 3:
+                    # If we have an IPv4 mapped address, the IPv4 portion has to
+                    # be at the end of the IPv6 portion.
+                    if not value.split(':')[-1] == hextet:
+                        v.errors.append(Error(
+                            'Not a valid IPv6 address (v4 section not at end)',
+                        ))
+                    elif not ipv4_regex.match(hextet):
+                        v.errors.append(Error(
+                            'Not a valid IPv6 address (v4 section not valid address)',
+                        ))
+                else:
+                    try:
+                        # a value error here means that we got a bad hextet,
+                        # something like 0xzzzz
+                        if int(hextet, 16) < 0x0 or int(hextet, 16) > 0xFFFF:
+                            v.errors.append(Error('Not a valid IPv6 address (invalid hextet)'))
+                    except ValueError:
+                        v.errors.append(Error('Not a valid IPv6 address (invalid hextet)'))
+        return v
 
     @staticmethod
-    def expand_ipv6_address(value):  # type: (six.text_type) -> six.text_type
+    def expand_ipv6_address(value: str) -> str:
         """
         Expands a potentially-shortened IPv6 address into its full length
         """
@@ -120,7 +116,7 @@ class IPv6Address(UnicodeString):
         if len(hextet) > 1:
             sep = len(hextet[0].split(':')) + len(hextet[1].split(':'))
             new_ip = hextet[0].split(':')
-            for _ in six.moves.range(fill_to - sep):
+            for _ in range(fill_to - sep):
                 new_ip.append('0000')
             new_ip += hextet[1].split(':')
         else:
@@ -132,18 +128,13 @@ class IPv6Address(UnicodeString):
             ret_ip.append(('0' * (4 - len(hextet_str)) + hextet_str).lower())
         return ':'.join(ret_ip)
 
-    def introspect(self):  # type: () -> Introspection
-        return strip_none({
-            'type': self.introspect_type,
-            'description': self.description,
-        })
-
 
 class IPAddress(Any):
     """
-    Conformity field that ensures that the value is a unicode string that is a valid IPv4 or IPv6 address.
+    Validates that the value is a string that is a valid IPv4 or IPv6 address.
     """
+    valid_noun = 'an IP address'
     introspect_type = 'ip_address'
 
-    def __init__(self, **kwargs):  # type: (**AnyType) -> None
-        super(IPAddress, self).__init__(IPv4Address(), IPv6Address(), **kwargs)
+    def __init__(self, **kwargs: **AnyType) -> None:
+        super().__init__(IPv4Address(), IPv6Address(), **kwargs)

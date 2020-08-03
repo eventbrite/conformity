@@ -1,8 +1,3 @@
-from __future__ import (
-    absolute_import,
-    unicode_literals,
-)
-
 from typing import (
     Dict,
     Hashable,
@@ -22,8 +17,7 @@ VT = TypeVar('VT')
 IssueVar = TypeVar('IssueVar', Issue, Error, Warning)
 
 
-def strip_none(value):
-    # type: (Dict[KT, VT]) -> Dict[KT, VT]
+def strip_none(value: Dict[KT, VT]) -> Dict[KT, VT]:
     """
     Takes a dict and removes all keys that have `None` values, used mainly for
     tidying up introspection responses. Take care not to use this on something
@@ -32,8 +26,7 @@ def strip_none(value):
     return {k: v for k, v in value.items() if v is not None}
 
 
-def update_pointer(issue, pointer_or_prefix):
-    # type: (IssueVar, Hashable) -> IssueVar
+def update_pointer(issue: IssueVar, pointer_or_prefix: Hashable) -> IssueVar:
     """
     Helper function to update a pointer attribute with a (potentially prefixed)
     dictionary key or list index.
