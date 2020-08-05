@@ -54,6 +54,70 @@ from conformity.utils import (
 )
 
 
+class Anything(BaseField):
+    """
+    Validates that the value can be anything.
+    """
+
+    introspect_type = 'anything'
+
+    def validate(self, value: AnyType) -> Validation:
+        return Validation()
+
+
+
+
+# TODO: update
+class Constant(BaseField):
+    """
+    Conformity field that ensures that the value exactly matches the constant
+    value supplied or, if multiple constant values are supplied, exactly matches
+    one of those values.
+    """
+
+    introspect_type = 'constant'
+
+    def __init__(self, *args, **kwargs):  # type: (*AnyType, **AnyType) -> None
+        self.values = frozenset(args)
+        if not self.values:
+            raise ValueError('You must provide at least one constant value')
+        self.description = kwargs.pop(str('description'), None)  # type: Optional[six.text_type]
+        if self.description and not isinstance(self.description, six.text_type):
+            raise TypeError("'description' must be a unicode string")
+        # Check they didn't pass any other kwargs
+        if kwargs:
+            raise TypeError('Invalid keyword arguments for Constant: {}'.format(kwargs.keys()))
+
+        def _repr(cv):
+            return '"{}"'.format(cv) if isinstance(cv, six.string_types) else '{}'.format(cv)
+
+        if len(self.values) == 1:
+            self._error_message = 'Value is not {}'.format(_repr(tuple(self.values)[0]))
+        else:
+            self._error_message = 'Value is not one of: {}'.format(', '.join(sorted(_repr(v) for v in self.values)))
+
+    def errors(self, value):  # type: (AnyType) -> ListType[Error]
+        try:
+            is_valid = value in self.values
+        except TypeError:
+            # Unhashable values can't be used for membership checks.
+            is_valid = False
+
+        if not is_valid:
+            return [Error(self._error_message, code=ERROR_CODE_UNKNOWN)]
+        return []
+
+    def introspect(self) -> Introspection:
+        return strip_none({
+            'type': self.introspect_type,
+            'values': [
+                s if isinstance(s, (six.text_type, bool, int, float, type(None))) else six.text_type(s)
+                for s in sorted(self.values, key=six.text_type)
+            ],
+            'description': self.description,
+        })
+
+
 @attr.s
 class Nullable(Base):
     """

@@ -1,8 +1,3 @@
-from __future__ import (
-    absolute_import,
-    unicode_literals,
-)
-
 from typing import (
     Any as AnyType,
     AnyStr,
@@ -11,10 +6,12 @@ from typing import (
 )
 
 import pycountry
-import six
 
-from conformity.types import Error
-from conformity.fields.basic import Constant
+from conformity.types import (
+    Error,
+    Validation,
+)
+from conformity.fields.builtin import Constant
 
 
 _countries_a2 = sorted(c.alpha_2 for c in pycountry.countries)
@@ -27,9 +24,9 @@ __all__ = (
 
 class CountryCodeField(Constant):
     """
-    Conformity field that ensures that the value is a valid ISO 3166 country codes. It permits only current countries
-    according to the installed version of PyCountry and uses the ISO 3166 alpha-2 codes. This field requires that
-    PyCountry be installed.
+    Validates that the value is a valid ISO 3166 country code. It permits only
+    current countries according to the installed version of PyCountry and uses
+    the ISO 3166 alpha-2 codes. This field requires PyCountry to be installed.
     """
 
     introspect_type = 'country_code_field'
@@ -49,7 +46,7 @@ class CountryCodeField(Constant):
         super(CountryCodeField, self).__init__(*valid_country_codes, **kwargs)
         self._error_message = 'Not a valid country code'
 
-    def errors(self, value):  # type: (AnyType) -> ListType[Error]
-        if not isinstance(value, six.text_type):
+    def errors(self, value: AnyType) -> Validation:
+        if not isinstance(value, str):
             return [Error('Not a unicode string')]
         return super(CountryCodeField, self).errors(value)

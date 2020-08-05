@@ -11,6 +11,11 @@ from conformity.types import (
     Validation,
 )
 from conformity.fields.base import BaseField
+from conformity.fields.simple import (
+    Bytes,
+    Decimal,
+    String,
+)
 
 
 class Base(BaseField):
@@ -37,3 +42,18 @@ class Base(BaseField):
             errors=self.errors(value),
             warnings=self.warnings(value),
         )
+
+
+class UnicodeDecimal(String, Decimal):
+    """
+    Validates that the value is a string that is also a valid decimal and can
+    successfully be converted to a `decimal.Decimal`.
+    """
+
+    valid_noun = 'a unicode decimal'
+    introspect_type = 'unicode_decimal'
+
+
+# Deprecated Conformity 1.x aliases
+UnicodeString = String
+ByteString = Bytes

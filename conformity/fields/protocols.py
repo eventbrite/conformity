@@ -156,3 +156,69 @@ class Sized(BaseField):
             'max_length': self.max_length,
         }).update(super().introspect())
 
+
+class Collection(Sized):
+    """
+    Validates that the value is a collection of items that all pass validation with
+    the Conformity field passed to the `contents` argument and optionally
+    establishes boundaries for that list with the `max_length` and
+    `min_length` arguments.
+    """
+
+    valid_type = abc.Collection
+
+    def __init__(self, contents: BaseField, *, **kwargs) -> None:
+        super().__init__(**kwargs)
+        self.contents = contents
+
+    def validate(self, value: AnyType) -> Validation:
+        v = super().validate(value)
+
+        if not v.errors:
+            for lazy_pointer, element in self._enumerate(value):
+                v.errors.extend(
+                    update_pointer(error, lazy_pointer.get())
+                    for error in (self.contents.errors(element) or [])
+                )
+                v.warnings.extend(
+                    update_pointer(warning, lazy_pointer.get())
+                    for warning in self.contents.warnings(element)
+                )
+
+        return v
+
+    @classmethod
+    def _enumerate(cls, values):
+        # We use a lazy pointer here so that we don't evaluate the pointer for every item that doesn't generate an
+        # error. We only evaluate the pointer for each item that does generate an error. This is critical in sets,
+        # where the pointer is the value converted to a string instead of an index.
+        return ((cls.LazyPointer(i, value), value) for i, value in enumerate(values))
+
+    def introspect(self) -> Introspection:
+        return strip_none({
+            'contents': self.contents.introspect(),
+        }).update(super().introspect())
+
+    class LazyPointer(object):
+        def __init__(self, index, _):
+            self.get = lambda: index
+
+
+class Sequence(Collection):
+    valid_type = abc.Sequence
+
+
+class Set(Collection):
+    """
+    Validates that the value is an abstract set of items that all pass
+    validation with the Conformity field passed to the `contents` argument and
+    optionally establishes boundaries for that list with the `max_length` and
+    `min_length` arguments.
+    """
+
+    valid_type = abc.Set
+    introspect_type = 'set'
+
+    class LazyPointer(object):
+        def __init__(self, _, value):
+            self.get = lambda: '[{}]'.format(str(value))
