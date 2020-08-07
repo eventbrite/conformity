@@ -1,4 +1,4 @@
-from conformity.fields.builtin import Float
+from conformity.fields.simple import Float
 
 __all__ = (
     'Latitude',

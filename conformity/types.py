@@ -79,11 +79,11 @@ class Validation(object):
     ) -> None:
         if pointer is not None:
             self.errors.extend([
-                _update_pointer(error)
+                _update_pointer(error, pointer)
                 for error in other.errors
             ])
             self.warnings.extend([
-                _update_pointer(warning)
+                _update_pointer(warning, pointer)
                 for warning in other.warnings
             ])
         else:
@@ -94,7 +94,7 @@ class Validation(object):
 IssueVar = TypeVar('IssueVar', Issue, Error, Warning)
 
 
-def _update_pointer(issue: IssueVar, pointer_or_prefix: Hashable) -> IssueVar:
+def _update_pointer( issue: IssueVar, pointer_or_prefix: Hashable) -> IssueVar:
     """
     Helper function to update a pointer attribute with a (potentially prefixed)
     dictionary key or list index.
