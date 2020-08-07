@@ -7,7 +7,6 @@ from typing import (
     Iterable,
     Iterator,
     KeysView,
-    List,
     Mapping,
     Optional,
     Tuple,

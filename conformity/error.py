@@ -1,5 +1,3 @@
-from typing import cast
-
 __all__ = (
     'KeywordError',
     'PositionalError',

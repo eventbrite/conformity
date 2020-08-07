@@ -1,15 +1,42 @@
 from collections import abc
 import numbers
-from typing import Any
+from typing import (
+    Any,
+    HashableType,
+    IterableType,
+    Tuple,
+    TypeVar,
+)
 
-from conformity.fields.base import BaseField
+from conformity.fields.base import (
+    BaseField,
+    BaseTypeField,
+)
+from conformity.fields.utils import strip_none
 from conformity.types import (
     Error,
     Validation,
 )
+from conformity.typing import Introspection
+
+__all__ = (
+    'Callable',
+    'Collection',
+    'Container',
+    'Hashable',
+    'Iterable',
+    'Mapping',
+    'Number',
+    'Sequence',
+    'Set',
+    'Sized',
+)
 
 
-class Callable(BaseField):
+T = TypeVar['T']
+
+
+class Callable(BaseTypeField):
     """
     Validates that the value is callable
     """
@@ -18,7 +45,7 @@ class Callable(BaseField):
     valid_noun = 'callable'
 
 
-class Container(BaseField):
+class Container(BaseTypeField):
     """
     Validates that the value implements the Container protocol (i.e., implements
     the __conatins__ method)
@@ -27,7 +54,7 @@ class Container(BaseField):
     valid_type = abc.Container
 
 
-class Hashable(BaseField):
+class Hashable(BaseTypeField):
     """
     Validates that the value is hashable (i.e., `hash(...)` can be called on the
     value without error).
@@ -37,7 +64,7 @@ class Hashable(BaseField):
     valid_noun = 'hashable'
 
 
-class Iterable(BaseField):
+class Iterable(BaseTypeField):
     """
     Validates that the value is iterable
     """
@@ -46,7 +73,7 @@ class Iterable(BaseField):
     valid_noun = 'iterable'
 
 
-class Mapping(BaseField):
+class Mapping(BaseTypeField):
     """
     Validates that the value implements the Mapping protocol (e.g. a dictionary)
     """
@@ -54,7 +81,7 @@ class Mapping(BaseField):
     valid_type = abc.Mapping
 
 
-class Number(BaseField):
+class Number(BaseTypeField):
     """
     Validates that the value is a Number and, optionally, enforces boundaries
     for that number with the `gt`, `gte`, `lt`, and `lte` arguments.
@@ -65,14 +92,14 @@ class Number(BaseField):
     def __init__(
         self,
         *,
-        description: str,
-        allow_boolean: bool=False,
-        gt: int=None,
-        gte: int=None,
-        lt: int=None,
-        lte: int=None,
+        allow_boolean: bool = False,
+        gt: int = None,
+        gte: int = None,
+        lt: int = None,
+        lte: int = None,
+        **kwargs: Any
     ):
-        super().__init__(description)
+        super().__init__(**kwargs)
         self.allow_boolean = allow_boolean
         self.gt = gt
         self.gte = gte
@@ -104,7 +131,7 @@ class Number(BaseField):
         }).update(super().introspect())
 
 
-class Sized(BaseField):
+class Sized(BaseTypeField):
     """
     Validates that the value implements the Sized protocol (i.e., implements
     __len__). Optionally, enforces minimum and maximum lengths on sized values.
@@ -116,11 +143,11 @@ class Sized(BaseField):
     def __init__(
         self,
         *,
-        description: str=None,
-        min_length: int=None,
-        max_length: int=None,
+        min_length: int = None,
+        max_length: int = None,
+        **kwargs: Any
     ):
-        super().__init__(description=description)
+        super().__init__(**kwargs)
 
         # Validate the length constraints
         if min_length is not None:
@@ -134,7 +161,7 @@ class Sized(BaseField):
 
     def validate(self, value: Any) -> Validation:
         v = super().validate(value)
-        if v.is_valid():
+        if not v.errors:
             value_len = len(value)
             if self.min_length is not None and value_len < self.min_length:
                 v.errors.append(
@@ -159,49 +186,46 @@ class Sized(BaseField):
 
 class Collection(Sized):
     """
-    Validates that the value is a collection of items that all pass validation with
-    the Conformity field passed to the `contents` argument and optionally
-    establishes boundaries for that list with the `max_length` and
-    `min_length` arguments.
+    Validates that the value is a collection of items that all pass validation
+    with the Conformity field passed to the `contents` argument and optionally
+    establishes boundaries for that list with the `max_length` and `min_length`
+    arguments.
     """
 
     valid_type = abc.Collection
 
-    def __init__(self, contents: BaseField, *, **kwargs) -> None:
+    def __init__(
+        self,
+        contents: BaseField,
+        **kwargs: Any
+    ) -> None:
         super().__init__(**kwargs)
         self.contents = contents
 
-    def validate(self, value: AnyType) -> Validation:
+    def validate(self, value: Any) -> Validation:
         v = super().validate(value)
 
         if not v.errors:
-            for lazy_pointer, element in self._enumerate(value):
-                v.errors.extend(
-                    update_pointer(error, lazy_pointer.get())
-                    for error in (self.contents.errors(element) or [])
-                )
-                v.warnings.extend(
-                    update_pointer(warning, lazy_pointer.get())
-                    for warning in self.contents.warnings(element)
+            for p, element in self._enumerate(value):
+                v.extend(
+                    self.contents.validate(element),
+                    pointer=p,
                 )
 
         return v
 
     @classmethod
-    def _enumerate(cls, values):
-        # We use a lazy pointer here so that we don't evaluate the pointer for every item that doesn't generate an
-        # error. We only evaluate the pointer for each item that does generate an error. This is critical in sets,
-        # where the pointer is the value converted to a string instead of an index.
-        return ((cls.LazyPointer(i, value), value) for i, value in enumerate(values))
+    def _enumerate(
+        cls,
+        values: IterableType[T],
+    ) -> IterableType[Tuple[HashableType, T]]:
+        # Overridable value pointer enumeration method
+        return enumerate(values)
 
     def introspect(self) -> Introspection:
         return strip_none({
             'contents': self.contents.introspect(),
         }).update(super().introspect())
-
-    class LazyPointer(object):
-        def __init__(self, index, _):
-            self.get = lambda: index
 
 
 class Sequence(Collection):
@@ -219,6 +243,12 @@ class Set(Collection):
     valid_type = abc.Set
     introspect_type = 'set'
 
-    class LazyPointer(object):
-        def __init__(self, _, value):
-            self.get = lambda: '[{}]'.format(str(value))
+    @classmethod
+    def _enumerate(
+        cls,
+        values: IterableType[T],
+    ) -> IterableType[Tuple[HashableType, T]]:
+        return (
+            (str(value), value)
+            for value in values
+        )

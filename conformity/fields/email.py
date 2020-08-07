@@ -4,10 +4,13 @@ from typing import (
     Iterable,
 )
 
-from conformity.fields.builtin import String
-from conformity.fields.utils import strip_none
 from conformity.fields.net import IPAddress
-from conformity.types import Error
+from conformity.fields.simple import String
+from conformity.fields.utils import strip_none
+from conformity.types import (
+    Error,
+    Validation,
+)
 from conformity.typing import Introspection
 
 __all__ = (
@@ -15,7 +18,7 @@ __all__ = (
 )
 
 
-class EmailAddress(UnicodeString):
+class EmailAddress(String):
     """
     Validates that the value is a string that is a valid email address according
     to RFC 2822 and optionally accepts non-compliant fields listed in the
@@ -44,7 +47,12 @@ class EmailAddress(UnicodeString):
     )
     domain_whitelist = frozenset({'localhost'})
 
-    def __init__(self, *, whitelist: Iterable[str]=None, **kwargs) -> None:
+    def __init__(
+        self,
+        *,
+        whitelist: Iterable[str] = None,
+        **kwargs: Any
+    ) -> None:
         """
         Construct a new email address field.
 
@@ -80,7 +88,7 @@ class EmailAddress(UnicodeString):
             errors.append(Error(
                 'Not a valid email address (invalid local user field)',
                 pointer=user_part,
-            )]
+            ))
         if (
             domain_part not in self.domain_whitelist and
             not self.is_domain_valid(domain_part)
@@ -94,7 +102,7 @@ class EmailAddress(UnicodeString):
                 errors.append(Error(
                     'Not a valid email address (invalid domain field)',
                     pointer=domain_part,
-                )]
+                ))
         return Validation(errors=errors)
 
     @classmethod

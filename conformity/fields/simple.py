@@ -1,8 +1,12 @@
 import decimal
 from typing import Any
 
+from conformity.fields.base import BaseTypeField
+from conformity.fields.protocols import (
+    Number,
+    Sized,
+)
 from conformity.fields.utils import strip_none
-from conformity.fields.base import BaseField
 from conformity.types import (
     Error,
     Validation,
@@ -22,7 +26,7 @@ __all__ = (
 #
 # Numeric types
 #
-class Boolean(BaseField):
+class Boolean(BaseTypeField):
     """
     Validates that the value is a boolean
     """
@@ -57,6 +61,7 @@ class Decimal(Number):
 
     valid_type = decimal.Decimal
 
+
 #
 # String types
 #
@@ -68,7 +73,12 @@ class String(Sized):
     valid_type = str
     introspect_type = 'string'
 
-    def __init__(self, *, allow_blank: bool=True, **kwargs):
+    def __init__(
+        self,
+        *,
+        allow_blank: bool = True,
+        **kwargs: Any
+    ):
         super().__init__(**kwargs)
         self.allow_blank = allow_blank
 

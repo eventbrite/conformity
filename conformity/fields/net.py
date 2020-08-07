@@ -1,14 +1,18 @@
 import re
 from typing import Any as AnyType
 
-from conformity.fields.builtin import String
+from conformity.fields.simple import String
 from conformity.fields.meta import Any
-from conformity.fields.utils import strip_none
 from conformity.types import (
     Error,
     Validation,
 )
-from conformity.typing import Introspection
+
+__all__ = (
+    'IPAddress',
+    'IPv4Address',
+    'IPv6Address',
+)
 
 
 ipv4_regex = re.compile(r'^(25[0-5]|2[0-4]\d|[0-1]?\d?\d)(\.(25[0-5]|2[0-4]\d|[0-1]?\d?\d)){3}$')
@@ -136,5 +140,5 @@ class IPAddress(Any):
     valid_noun = 'an IP address'
     introspect_type = 'ip_address'
 
-    def __init__(self, **kwargs: **AnyType) -> None:
+    def __init__(self, **kwargs: AnyType) -> None:
         super().__init__(IPv4Address(), IPv6Address(), **kwargs)

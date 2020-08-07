@@ -5,13 +5,21 @@ from typing import (
     TypeVar,
 )
 
-from conformity.fields.base import BaseField
+from conformity.fields.base import BaseTypeField
 from conformity.fields.utils import strip_none
 from conformity.types import (
     Error,
     Validation,
 )
 from conformity.typing import Introspection
+
+__all__ = (
+    'Date',
+    'DateTime',
+    'Time',
+    'TimeDelta',
+    'TZInfo',
+)
 
 
 try:
@@ -27,7 +35,7 @@ except ImportError:
 T = TypeVar('T', datetime.date, datetime.time, datetime.datetime, datetime.timedelta)
 
 
-class TemporalBase(Generic[T], BaseField):
+class TemporalBase(Generic[T], BaseTypeField):
     """
     Common base class for all temporal types. Cannot be used on its own without extension.
     """
@@ -40,11 +48,11 @@ class TemporalBase(Generic[T], BaseField):
     def __init__(
         self,
         *,
-        gt: T=None,
-        gte: T=None,
-        lt: T=None,
-        lte: T=None,
-        **kwargs
+        gt: T = None,
+        gte: T = None,
+        lt: T = None,
+        lte: T = None,
+        **kwargs: AnyType
     ) -> None:
         super().__init__(**kwargs)
         self.gt = self.validate_parameter('gt', gt)
@@ -54,7 +62,7 @@ class TemporalBase(Generic[T], BaseField):
 
     @classmethod
     def validate_parameter(cls, name: str, value: T) -> T:
-        if value is not None and not isinstance(value, self.valid_type):
+        if value is not None and not isinstance(value, cls.valid_type):
             raise TypeError((
                 "'{}' value {!r} cannot be used for "
                 "comparisons in this type"
@@ -86,7 +94,7 @@ class TemporalBase(Generic[T], BaseField):
         }).update(super().introspect())
 
 
-class DateTime(TemporalBase[DATETIME_TYPES])
+class DateTime(TemporalBase[DATETIME_TYPES]):
     """
     Validates that the value is a `datetime.datetime` instance and optionally
     enforces boundaries for that `datetime` with the `gt`, `gte`, `lt`, and
@@ -134,7 +142,7 @@ class TimeDelta(TemporalBase[datetime.timedelta]):
     introspect_type = 'timedelta'
 
 
-class TZInfo(BaseField):
+class TZInfo(BaseTypeField):
     """
     Validates that the value is a `datetime.tzinfo` instance.
     """

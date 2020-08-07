@@ -1,44 +1,41 @@
 import abc
 from typing import (
-    Any as AnyType,
-    Callable,
-    Container,
-    Dict,
-    FrozenSet,
-    Generic,
+    Any,
     Hashable as HashableType,
+    Iterable,
     List as ListType,
-    Mapping,
-    Optional,
-    Sequence as SequenceType,
-    Sized,
-    Tuple as TupleType,
-    Type,
-    TypeVar,
-    Union,
-    cast,
+    Optional as OptionalType,
 )
 
 from conformity.constants import (
     ERROR_CODE_MISSING,
     ERROR_CODE_UNKNOWN,
 )
-from conformity.fields.basic import Anything
+
+from conformity.fields.base import (
+    BaseField,
+    BaseTypeField,
+)
 from conformity.fields.protocols import (
     Collection,
     Hashable,
     Sized,
 )
-from conformity.fields.utils import (
-    strip_none,
-    update_pointer,
-)
+from conformity.fields.meta import Anything
+from conformity.fields.modifiers import Optional
+from conformity.fields.utils import strip_none
 from conformity.types import (
     Error,
     Validation,
     Warning,
 )
 from conformity.typing import Introspection
+
+__all__ = (
+    'Dictionary',
+    'List',
+    'Tuple',
+)
 
 
 class List(Collection):
@@ -49,7 +46,7 @@ class List(Collection):
     valid_type = list
 
 
-class Dictionary(BaseField):
+class Dictionary(BaseTypeField):
     """
     Validates that the value is a dictionary with a specific set of keys and
     value that validate with the Conformity fields associated with those keys
@@ -72,18 +69,17 @@ class Dictionary(BaseField):
     introspect_type = 'dictionary'
 
     # Deprecated class var method
-    contents = None  # type: Optional[AnyContents]
-    optional_keys = None  # type: Optional[bool]
+    contents = None  # type: OptionalType[BaseField]
+    optional_keys = None  # type: OptionalType[bool]
     allow_extra_keys = False  # type: bool
     # TODO: add __class__.description and __init__ processing?
 
     def __init__(
         self,
         *contents,
-        *,
-        optional_keys: Iterable[HashableType]=None,
-        allow_extra_keys: bool=False,
-        **kwargs
+        optional_keys: Iterable[HashableType] = None,
+        allow_extra_keys: bool = False,
+        **kwargs: Any
     ) -> None:
         super.__init__(**kwargs)
 
@@ -156,7 +152,7 @@ class Dictionary(BaseField):
             # Add a variable field that accepts anything
             self._variable_fields.append((Hashable(), Anything()))
 
-    def validate(self, value: AnyType) -> Validation:
+    def validate(self, value: Any) -> Validation:
         v = super().validate(value)
         if v.errors:
             return v
@@ -199,7 +195,7 @@ class Dictionary(BaseField):
         #     else:
         #         # Check key type
         #         result.extend(
-        #             update_pointer(error, key)
+        #             #pdate_pointer(error, key)
         #             for error in (field.errors(value[key]) or [])
         #         )
         # # Check for extra keys
@@ -212,31 +208,15 @@ class Dictionary(BaseField):
         #         ),
         #     )
 
-        return result
-
-    def warnings(self, value):
-        # type: (AnyType) -> ListType[Warning]
-        if not isinstance(value, dict):
-            return []
-
-        result = []  # type: ListType[Warning]
-        for key, field in self.contents.items():
-            if key in value:
-                result.extend(
-                    update_pointer(warning, key)
-                    for warning in field.warnings(value[key])
-                )
-
-        return result
+        return v
 
     def extend(
         self,
         *contents,
-        *
-        optional_keys: Iterable[HashableType]=None,
-        allow_extra_keys: bool=None,
-        description: str=None,
-    ) -> Dictionary:
+        optional_keys: Iterable[HashableType] = None,
+        allow_extra_keys: bool = None,
+        description: str = None,
+    ) -> 'Dictionary':
         """
         Creates a new Dictionary instance that "extends" from this one.
 
@@ -268,29 +248,7 @@ class Dictionary(BaseField):
         }).update(super().introspect())
 
 
-class SchemalessDictionary(Dictionary, Sized):
-    """
-    Validates that the value is a dictionary of any keys and values, but
-    optionally enforcing that the keys pass the Conformity validation specified
-    with the `key_type` argument and/or that the values pass the Conformity
-    validation specified with the `value_type` argument. Size of the dictionary
-    can also be constrained with the optional `max_length` and `min_length`
-    arguments.
-    """
-
-    introspect_type = 'schemaless_dictionary'
-
-    def __init__(
-        self,
-        *,
-        key_type: BaseField=None,
-        value_type: BaseField=None,
-        **kwargs
-    ) -> None:
-        super().__init__((key_type, value_type), **kwargs)
-
-
-class Tuple(BaseField):
+class Tuple(BaseTypeField):
     """
     Validates that the value is a tuple with the same number of arguments as the
     number of positional arguments passed to this field, and that each argument
@@ -300,7 +258,7 @@ class Tuple(BaseField):
 
     valid_type = tuple
 
-    def __init__(self, *contents: Iterable[BaseField], **kwargs) -> None:
+    def __init__(self, *contents: BaseField, **kwargs: Any) -> None:
         super().__init__(**kwargs)
 
         self.contents = contents
@@ -313,7 +271,7 @@ class Tuple(BaseField):
                     'field instance, is actually: {!r}'
                 ).format(i, c))
 
-    def validate(self, value: AnyType) -> Validation:
+    def validate(self, value: Any) -> Validation:
         v = super().validate(value)
         if v.errors:
             return v
@@ -331,13 +289,9 @@ class Tuple(BaseField):
 
         # Validate each element against each field
         for i, (c_elem, v_elem) in enumerate(zip(self.contents, value)):
-            v.errors.extend(
-                update_pointer(error, i)
-                for error in (c_elem.errors(v_elem) or [])
-            )
-            v.warnings.extend(
-                update_pointer(warning, i)
-                for warning in field.warnings(item)
+            v.extend(
+                c_elem.validate(v_elem),
+                pointer=i,
             )
 
         return v

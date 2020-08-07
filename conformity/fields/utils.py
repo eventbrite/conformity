@@ -1,20 +1,14 @@
 from typing import (
     Dict,
-    Hashable,
     TypeVar,
 )
 
-from conformity.types import (
-    Issue,
-    Error,
-    Warning,
+__all__ = (
+    'strip_none',
 )
-
 
 KT = TypeVar('KT')
 VT = TypeVar('VT')
-
-IssueVar = TypeVar('IssueVar', Issue, Error, Warning)
 
 
 def strip_none(value: Dict[KT, VT]) -> Dict[KT, VT]:
@@ -24,15 +18,3 @@ def strip_none(value: Dict[KT, VT]) -> Dict[KT, VT]:
     that might legitimately contain a `None`.
     """
     return {k: v for k, v in value.items() if v is not None}
-
-
-def update_pointer(issue: IssueVar, pointer_or_prefix: Hashable) -> IssueVar:
-    """
-    Helper function to update a pointer attribute with a (potentially prefixed)
-    dictionary key or list index.
-    """
-    if issue.pointer:
-        issue.pointer = '{}.{}'.format(pointer_or_prefix, issue.pointer)
-    else:
-        issue.pointer = '{}'.format(pointer_or_prefix)
-    return issue
