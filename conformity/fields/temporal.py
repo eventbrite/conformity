@@ -2,6 +2,7 @@ import datetime
 from typing import (
     Any as AnyType,
     Generic,
+    Optional,
     TypeVar,
 )
 
@@ -22,16 +23,6 @@ __all__ = (
 )
 
 
-try:
-    # noinspection PyUnresolvedReferences
-    from freezegun import api as _freeze
-    DATETIME_TYPES = (datetime.datetime, _freeze.FakeDatetime)
-    DATE_TYPES = (datetime.date, _freeze.FakeDate)
-except ImportError:
-    DATETIME_TYPES = datetime.datetime
-    DATE_TYPES = datetime.date
-
-
 T = TypeVar('T', datetime.date, datetime.time, datetime.datetime, datetime.timedelta)
 
 
@@ -39,11 +30,6 @@ class TemporalBase(Generic[T], BaseTypeField):
     """
     Common base class for all temporal types. Cannot be used on its own without extension.
     """
-
-    # These three must be overridden
-    valid_type = None
-    valid_noun = None
-    introspect_type = None
 
     def __init__(
         self,
@@ -61,7 +47,7 @@ class TemporalBase(Generic[T], BaseTypeField):
         self.lte = self.validate_parameter('lte', lte)
 
     @classmethod
-    def validate_parameter(cls, name: str, value: T) -> T:
+    def validate_parameter(cls, name: str, value: Optional[T]) -> Optional[T]:
         if value is not None and not isinstance(value, cls.valid_type):
             raise TypeError((
                 "'{}' value {!r} cannot be used for "
@@ -87,33 +73,34 @@ class TemporalBase(Generic[T], BaseTypeField):
 
     def introspect(self) -> Introspection:
         return strip_none({
+            **super().introspect(),
             'gt': str(self.gt) if self.gt else None,
             'gte': str(self.gte) if self.gte else None,
             'lt': str(self.lt) if self.lt else None,
             'lte': str(self.lte) if self.lte else None,
-        }).update(super().introspect())
+        })
 
 
-class DateTime(TemporalBase[DATETIME_TYPES]):
+class DateTime(TemporalBase[datetime.datetime]):
     """
     Validates that the value is a `datetime.datetime` instance and optionally
     enforces boundaries for that `datetime` with the `gt`, `gte`, `lt`, and
     `lte` arguments, which must also be `datetime` instances if specified.
     """
 
-    valid_type = DATETIME_TYPES
+    valid_type = datetime.datetime
     valid_noun = 'a datetime.datetime'
     introspect_type = 'datetime'
 
 
-class Date(TemporalBase[DATE_TYPES]):
+class Date(TemporalBase[datetime.date]):
     """
     Validates that the value is a `datetime.date` instance and optionally
     enforces boundaries for that `date` with the `gt`, `gte`, `lt`, and `lte`
     arguments, which must also be `date` instances if specified.
     """
 
-    valid_type = DATE_TYPES
+    valid_type = datetime.date
     valid_noun = 'a datetime.date'
     introspect_type = 'date'
 

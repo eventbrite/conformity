@@ -1,10 +1,13 @@
 import abc
 from typing import (
     Any,
+    Dict as DictType,
     Hashable as HashableType,
     Iterable,
     List as ListType,
     Optional as OptionalType,
+    Tuple as TupleType,
+    Union,
 )
 
 from conformity.constants import (
@@ -37,6 +40,11 @@ __all__ = (
     'Tuple',
 )
 
+# Type aliases
+_DictContents = DictType[HashableType, BaseField]
+_TupleContents = TupleType[Union[HashableType, BaseField], BaseField]
+_Contents = Union[_DictContents, _TupleContents, 'Dictionary']
+
 
 class List(Collection):
     """
@@ -53,96 +61,78 @@ class Dictionary(BaseTypeField):
     (`contents`). Keys are required unless they are listed in the
     `optional_keys` argument. No extra keys are allowed unless the
     `allow_extra_keys` argument is set to `True`.
-
-    If the `contents` argument is an instance of `OrderedDict`, the field
-    introspection will include a `display_order` list of keys matching the order
-    they exist in the `OrderedDict`, and errors will be reported in the order
-    the keys exist in the `OrderedDict`. Order will be maintained for any calls
-    to `extend` as long as those calls also use `OrderedDict`. Ordering behavior
-    is undefined otherwise. This field does NOT enforce that the value it
-    validates presents keys in the same order. `OrderedDict` is used strictly
-    for documentation and error-object-ordering purposes only.
     """
 
     valid_type = dict
     valid_noun = 'a dictionary'
     introspect_type = 'dictionary'
 
-    # Deprecated class var method
-    contents = None  # type: OptionalType[BaseField]
-    optional_keys = None  # type: OptionalType[bool]
-    allow_extra_keys = False  # type: bool
-    # TODO: add __class__.description and __init__ processing?
-
     def __init__(
         self,
-        *contents,
+        *contents: _Contents,
         optional_keys: Iterable[HashableType] = None,
         allow_extra_keys: bool = False,
         **kwargs: Any
     ) -> None:
         super.__init__(**kwargs)
 
-        if (
-            contents is None and
-            getattr(self.__class__, 'contents', None) is not None
-        ):
-            # If no contents were provided but a subclass has hard-coded
-            # contents, use those
-            contents = self.__class__.contents
-        if contents is None:
+        self.contents = []  # type: ListType[TupleType[BaseField, BaseField]]
+        self._constant_fields = {}  # type: Dict[HashableType, Dict[str, BaseField]]
+        self._variable_fields = []  # type: ListType[TupleType[BaseField, BaseField]]
+
+        if not contents:
             # If there are still no contents, raise an error
             raise ValueError("'contents' is a required argument")
 
         # Build complete key/value field list
-        item_fields = []
+        temp_contents = []  # type: ListType[TupleType[Any, Any]]
         for fields in contents:
             if isinstance(fields, Dictionary):
-                fields = fields.contents.items()
+                # fields is a Dictionary instance, which is already valid
+                self.contents.extend(fields.contents)
+                self._constant_fields.update(fields._constant_fields)
+                self._variable_fields.extend(fields._variable_fields)
             elif isinstance(fields, dict):
-                fields = fields.items()
-            elif not isinstance(fields, abc.Iterable):
+                temp_contents.extend(fields.items())
+            elif isinstance(fields, tuple) and len(fields) == 2:
+                temp_contents.append(fields)
+            else:
                 raise TypeError(
                     'Positional arguments must be either a Dictionary instance, '
-                    'a dict instance, or an iterable of (key, value) tuples'
+                    'a dict instance, or a 2-tuple'
                 )
-            item_fields.extend(fields)
 
         # Validate optional keys
-        # TODO: handle __class__.optional_keys
         if optional_keys is None:
             optional_keys = ()
         elif not isinstance(optional_keys, abc.Iterable):
             raise ValueError("'optional_keys' must be an iterable")
         optional_keys = frozenset(optional_keys)
 
-        # Validate each key/value field pair
-        self._constant_fields = {}
-        self._variable_fields = []
-        for key_field, value_field in item_fields:
-            # Convert hashable builtin type instances to Literals (i.e., constants)
-            if isinstance(key_field, LITERAL_TYPES):
-                key_field = Literal(key_field)
-            if isinstance(value_field, LITERAL_TYPES):
-                value_field = Literal(value_field)
-
-            # Validate key/value field types
-            if not isinstance(key_field, Hashable):
-                raise ValueError(
-                    'Dictionary key field must be a Conformity Hashable field'
-                )
-            if not isinstance(value_field, BaseField):
-                raise ValueError(
-                    'Dictionary value fields must be a Conformity field'
-                )
-
-            if isinstance(key_field, Literal):
-                if key_field.value in optional_keys:
-                    self._variable_fields.append(Optional(key_field), value_field)
+        # Validate and process each key/value field pair
+        for key_field, value_field in temp_contents:
+            # Validate fields
+            if not isinstance(key_field, BaseField):
+                if isinstance(key_field, Hashable):
+                    # Convert immutable, hashable types to Constant fields
+                    if key_field in optional_keys:
+                        key_field = Optional(key_field)
+                    else:
+                        key_field = Constant(key_field)
                 else:
-                    self._constant_fields[key_field.value] = value_field
+                    raise TypeError(
+                        'Key field must be a Conformity field or hashable'
+                    )
+            if not isinstance(value_field, BaseField):
+                raise TypeError('Value fields must be Conformity fields')
+
+            # Sort fields
+            if isinstance(key_field, Constant):
+                self._constant_fields[key_field.value] = value_field
             else:
                 self._variable_fields.append((key_field, value_field))
+
+        self.contents = temp_contents
 
         # Validate allow_extra_keys
         # TODO: add __class__.allow_extra_keys handling
@@ -150,69 +140,63 @@ class Dictionary(BaseTypeField):
             raise TypeError("'allow_extra_keys' must be a boolean")
         if allow_extra_keys:
             # Add a variable field that accepts anything
-            self._variable_fields.append((Hashable(), Anything()))
+            self._variable_fields.append((Optional(Hashable()), Anything()))
 
     def validate(self, value: Any) -> Validation:
-        v = super().validate(value)
+        v = super().validate(d_value)
         if v.errors:
+            # Not a dict
             return v
 
         # Validate items
-        for d_key, d_value in value.items():
-            if d_key in self._constant_fields:
-                # Validate constant key field
-                value_field = self._constant_fields[d_key]
-                value_v = value_field.validate(d_value)
-            else:
-                # Validate variable key field
-                # TODO: extend warnings
-                key_valid = False
-                key_errors = []
-                value_valid = False
-                value_errors = []
-                for key_field, value_field in self._variable_fields:
-                    key_v = key_field.validate(d_key)
-                    if key_v.errors:
-                        if not key_valid:
-                            key_errors = []
-                    else:
-                        key_valid = True
-                        value_v = value_field.validate(d_value)
-                        if value_v.errors:
-                            if not value_valid:
-                                value_errors.extend(value_v.errors)
-                        else:
-                            value_valid = True
+        # NOTE: INCOMPLETE
+        # TODO: finish this. Particularly, figure out what to do if a dictionary
+        #       item matches multiple required content field pairs.
+        #
+        # This is effectively Any(Chain(key_field, value_field), ...) for each
+        # key/value pair. Should it behave identically?
+        for key_field, value_field in self.contents:
+            if isinstance(key_field, Constant):
+                # See if a constant value is in the dictionary
+                di_key = None
+                di_value = None
+                for c_value in key_field.values:
+                    if c_value in value:
+                        # Found a valid key
+                        di_key = c_value
+                        di_value = value[di_key]
+                        break
 
-        # result = []
-        # for key, field in self.contents.items():
-        #     # Check key is present
-        #     if key not in value:
-        #         if key not in self.optional_keys:
-        #             result.append(
-        #                 Error('Missing key: {}'.format(key), code=ERROR_CODE_MISSING, pointer=str(key)),
-        #             )
-        #     else:
-        #         # Check key type
-        #         result.extend(
-        #             #pdate_pointer(error, key)
-        #             for error in (field.errors(value[key]) or [])
-        #         )
-        # # Check for extra keys
-        # extra_keys = set(value.keys()) - set(self.contents.keys())
-        # if extra_keys and not self.allow_extra_keys:
-        #     result.append(
-        #         Error(
-        #             'Extra keys present: {}'.format(', '.join(str(key) for key in sorted(extra_keys))),
-        #             code=ERROR_CODE_UNKNOWN,
-        #         ),
-        #     )
+                if di_key is not None:
+                    v.extend(key_field.validate(di_key), pointer=di_key)
+                    v.extend(value_field.validate(di_value), pointer=di_key)
+                else:
+                    # Key not found
+                    if not getattr(key_field, 'optional', False):
+                        # TODO: handle missing required key
+                        pass
+            else:
+                # Variable field
+                # TODO: Record "unknown" key error if key matches no key field
+                #       If only key valid, merge all value validations
+                #       If key/value pair valid, break and merge key and value
+                #           validations for the pair
+                key_found = False
+                for di_key, di_value in value.items():
+                    key_v = key_field.validate(di_key)
+                    if not key_v.errors:
+                        key_found = True
+                        # v.extend(key_v, pointer=di_key)
+                        value_v = value_field.validate(di_value)
+                        if not value_v.errors:
+                            # Found a valid pair
+                            break
 
         return v
 
     def extend(
         self,
-        *contents,
+        *contents: _Contents,
         optional_keys: Iterable[HashableType] = None,
         allow_extra_keys: bool = None,
         description: str = None,

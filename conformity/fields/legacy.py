@@ -7,6 +7,7 @@ from typing import (
 
 from conformity.fields.base import BaseField
 from conformity.fields.meta import (
+    All,
     Constant,
     Instance,
     Type,
@@ -71,7 +72,8 @@ class Null(Constant):
     Legacy field that is shorthand for Constant(None, ...)
     """
     def __init__(self, **kwargs):
-        super().__init__(None, **kwargs)
+        # NOTE: Ignoring typing, since Mypy thinks None isn't hashable (it is)
+        super().__init__(None, **kwargs)  # type: ignore
 
 
 class Nullable(BaseField):
@@ -103,8 +105,9 @@ class Nullable(BaseField):
 
     def introspect(self) -> Introspection:
         return strip_none({
+            **super().introspect(),
             'nullable': self.field.introspect(),
-        }).update(super().introspect())
+        })
 
 
 class SchemalessDictionary(Dictionary, Sized):
@@ -129,14 +132,16 @@ class SchemalessDictionary(Dictionary, Sized):
         super().__init__((key_type, value_type), **kwargs)
 
 
-class UnicodeDecimal(String, Decimal):
+class UnicodeDecimal(All):
     """
     Validates that the value is a string that is also a valid decimal and can
     successfully be converted to a `decimal.Decimal`.
     """
 
-    valid_noun = 'a unicode decimal'
     introspect_type = 'unicode_decimal'
+
+    def __init__(self, **kwargs):
+        super().__init__(String(), Decimal(), **kwargs)
 
 
 # Deprecated Conformity 1.x aliases

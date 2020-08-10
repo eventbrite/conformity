@@ -128,5 +128,6 @@ class EmailAddress(String):
             domain_whitelist = sorted(self.domain_whitelist)
 
         return strip_none({
+            **super().introspect(),
             'domain_whitelist': domain_whitelist,
-        }).update(super().introspect())
+        })

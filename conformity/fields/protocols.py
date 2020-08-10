@@ -2,8 +2,8 @@ from collections import abc
 import numbers
 from typing import (
     Any,
-    HashableType,
-    IterableType,
+    Hashable as HashableType,
+    Iterable as IterableType,
     Tuple,
     TypeVar,
 )
@@ -33,16 +33,21 @@ __all__ = (
 )
 
 
-T = TypeVar['T']
+T = TypeVar('T')
 
 
-class Callable(BaseTypeField):
+class Callable(BaseField):
     """
     Validates that the value is callable
     """
 
-    valid_type = abc.Callable
-    valid_noun = 'callable'
+    introspect_type = 'callable'
+
+    def validate(self, value: Any) -> Validation:
+        v = super().validate(value)
+        if not v.errors and not callable(value):
+            v.errors.append(Error('Value is not a callable'))
+        return v
 
 
 class Container(BaseTypeField):
@@ -109,7 +114,9 @@ class Number(BaseTypeField):
     def validate(self, value: Any) -> Validation:
         v = super().validate(value)
         if not self.allow_boolean and isinstance(value, bool):
-            v.errors.append('Value is not {}'.format(self.valid_noun))
+            v.errors.append(Error(
+                'Value is not {}'.format(self.valid_noun),
+            ))
 
         if v.is_valid():
             if self.gt is not None and value <= self.gt:
@@ -124,11 +131,12 @@ class Number(BaseTypeField):
 
     def introspect(self) -> Introspection:
         return strip_none({
+            **super().introspect(),
             'gt': self.gt,
             'gte': self.gte,
             'lt': self.lt,
             'lte': self.lte,
-        }).update(super().introspect())
+        })
 
 
 class Sized(BaseTypeField):
@@ -164,24 +172,25 @@ class Sized(BaseTypeField):
         if not v.errors:
             value_len = len(value)
             if self.min_length is not None and value_len < self.min_length:
-                v.errors.append(
+                v.errors.append(Error(
                     'Value must have a length of at least {}'.format(
                         self.min_length,
                     ),
-                )
+                ))
             elif self.max_length is not None and value_len > self.max_length:
-                v.errors.append(
+                v.errors.append(Error(
                     'Value must have a length of no more than {}'.format(
                         self.max_length,
                     ),
-                )
+                ))
         return v
 
     def introspect(self) -> Introspection:
         return strip_none({
+            **super().introspect(),
             'min_length': self.min_length,
             'max_length': self.max_length,
-        }).update(super().introspect())
+        })
 
 
 class Collection(Sized):
@@ -224,8 +233,9 @@ class Collection(Sized):
 
     def introspect(self) -> Introspection:
         return strip_none({
+            **super().introspect(),
             'contents': self.contents.introspect(),
-        }).update(super().introspect())
+        })
 
 
 class Sequence(Collection):

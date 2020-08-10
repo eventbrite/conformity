@@ -1,11 +1,11 @@
-import abc
+from collections import abc
 from typing import (
     Any as AnyType,
     Callable,
     Hashable,
     Mapping,
     Tuple,
-    TypeType,
+    Type as TypeType,
     Union,
 )
 
@@ -82,7 +82,7 @@ class Constant(BaseField):
             )
 
     def validate(self, value: AnyType) -> Validation:
-        v = super().validate()
+        v = super().validate(value)
 
         try:
             is_valid = value in self.values
@@ -97,13 +97,14 @@ class Constant(BaseField):
 
     def introspect(self) -> Introspection:
         return strip_none({
+            **super().introspect(),
             'values': [
                 s
                 if isinstance(s, (str, bool, int, float, type(None)))
                 else str(s)
                 for s in sorted(self.values, key=str)
             ],
-        }).update(super().introspect())
+        })
 
 
 class Polymorph(BaseTypeField):
@@ -175,12 +176,13 @@ class Polymorph(BaseTypeField):
 
     def introspect(self) -> Introspection:
         return strip_none({
+            **super().introspect(),
             'switch_field': self.switch_field,
             'contents_map': {
                 key: value.introspect()
                 for key, value in self.contents_map.items()
             },
-        }).update(super().introspect())
+        })
 
 
 class Instance(BaseField):
@@ -215,8 +217,9 @@ class Instance(BaseField):
 
     def introspect(self) -> Introspection:
         return strip_none({
+            **super().introspect(),
             'valid_type': repr(self.valid_type),
-        }).update(super().introspect())
+        })
 
 
 class Type(BaseTypeField):
@@ -268,8 +271,9 @@ class Type(BaseTypeField):
             base_classes = [repr(c) for c in self.base_classes]
 
         return strip_none({
+            **super().introspect(),
             'base_classes': base_classes,
-        }).update(super().introspect())
+        })
 
 
 class Any(BaseField):
@@ -309,8 +313,9 @@ class Any(BaseField):
 
     def introspect(self) -> Introspection:
         return strip_none({
+            **super().introspect(),
             'options': [option.introspect() for option in self.options],
-        }).update(super().introspect())
+        })
 
 
 class All(BaseField):
@@ -341,8 +346,9 @@ class All(BaseField):
 
     def introspect(self) -> Introspection:
         return strip_none({
+            **super().introspect(),
             'requirements': [field.introspect() for field in self.requirements],
-        }).update(super().introspect())
+        })
 
 
 class Chain(BaseField):
@@ -376,8 +382,9 @@ class Chain(BaseField):
 
     def introspect(self) -> Introspection:
         return strip_none({
+            **super().introspect(),
             'fields': [field.introspect() for field in self.fields],
-        }).update(super().introspect())
+        })
 
 
 class Validator(BaseField):
@@ -391,24 +398,24 @@ class Validator(BaseField):
     def __init__(
         self,
         validator: Callable[[AnyType], bool],
-        *
+        *,
         validator_description: str,
         error: str,
         **kwargs
     ) -> None:
         super().__init__(**kwargs)
 
-        # Validate arguments
-        if not isinstance(validator, callable):
-            raise TypeError('validator argument must be a callable')
-        if not isinstance(validator_description, str):
-            raise TypeError('validator_description must be a string')
-        if not isinstance(error, str):
-            raise TypeError('error must be a string')
-
         self.validator = validator
         self.validator_description = validator_description
         self.error = error
+
+        # Validate arguments
+        if not callable(self.validator):
+            raise TypeError('validator argument must be callable')
+        if not isinstance(self.validator_description, str):
+            raise TypeError('validator_description must be a string')
+        if not isinstance(self.error, str):
+            raise TypeError('error must be a string')
 
     def validate(self, value: AnyType) -> Validation:
         v = super().validate(value)
@@ -430,5 +437,6 @@ class Validator(BaseField):
 
     def introspect(self) -> Introspection:
         return strip_none({
+            **super().introspect(),
             'validator': self.validator_description,
-        }).update(super().introspect())
+        })

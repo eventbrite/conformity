@@ -91,8 +91,9 @@ class String(Sized):
 
     def introspect(self) -> Introspection:
         return strip_none({
+            **super().introspect(),
             'allow_blank': self.allow_blank,
-        }).update(super().introspect())
+        })
 
 
 class Bytes(Sized):

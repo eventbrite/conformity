@@ -22,7 +22,7 @@ class Issue:
     """
     Represents an issue found during validation of a value.
     """
-    def __init__(self, message: str, pointer: str = None) -> None:
+    def __init__(self, message: str, *, pointer: str = None) -> None:
         self.message = message
         self.pointer = pointer
 
@@ -33,11 +33,11 @@ class Error(Issue):
     """
     def __init__(
         self,
-        *,
+        *args,
         code: str = None,
         **kwargs: Any
     ):
-        super().__init__(**kwargs)
+        super().__init__(*args, **kwargs)
         self.code = code or ERROR_CODE_INVALID
 
 
@@ -47,11 +47,11 @@ class Warning(Issue):
     """
     def __init__(
         self,
-        *,
+        *args,
         code: str = None,
         **kwargs: Any
     ):
-        super().__init__(**kwargs)
+        super().__init__(*args, **kwargs)
         self.code = code or WARNING_CODE_WARNING
 
 

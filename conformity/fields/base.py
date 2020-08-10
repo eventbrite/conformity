@@ -5,6 +5,8 @@ from abc import (
 from typing import (
     Any,
     List,
+    Optional,
+    Type,
 )
 
 from conformity.fields.utils import strip_none
@@ -38,6 +40,8 @@ class BaseField(metaclass=_BaseMeta):
     defines the common `validate()` and `introspect()` interfaces that must be
     implemented by BaseField subclasses.
     """
+
+    introspect_type = None  # type: Optional[str]
 
     def __init__(self, *, description: str = None) -> None:
         self.description = description
@@ -98,6 +102,9 @@ class BaseTypeField(BaseField, metaclass=_BaseTypeMeta):
     The base class from which all other typed Conformity fields inherit.
     Validates that the value is an instance of `__class__.valid_type`.
     """
+
+    valid_type = None  # type: Optional[Type]
+    valid_noun = None  # type: Optional[str]
 
     def validate(self, value: Any) -> Validation:
         """
