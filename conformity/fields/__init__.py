@@ -1,52 +1,71 @@
-from __future__ import (
-    absolute_import,
-    unicode_literals,
-)
-
-from conformity.fields.basic import (
-    Anything,
-    Base,
-    Boolean,
-    ByteString,
-    Constant,
-    Decimal,
-    Float,
-    Hashable,
-    Integer,
-    UnicodeDecimal,
-    UnicodeString,
+from conformity.fields.base import (
+    BaseField,
+    BaseTypeField,
 )
 from conformity.fields.email import EmailAddress
 from conformity.fields.geo import (
     Latitude,
     Longitude,
 )
-from conformity.fields.meta import (
-    All,
-    Any,
-    BooleanValidator,
-    ClassConfigurationSchema,
-    Deprecated,
+from conformity.fields.legacy import (
+    Base,
+    ByteString,
     Null,
     Nullable,
     ObjectInstance,
-    Polymorph,
-    PythonPath,
-    TypePath,
+    SchemalessDictionary,
     TypeReference,
+    UnicodeDecimal,
+    UnicodeString,
+)
+from conformity.fields.meta import (
+    All,
+    Any,
+    Anything,
+    Chain,
+    Constant,
+    Instance,
+    Polymorph,
+    Type,
+    Validator,
+)
+from conformity.fields.modifiers import (
+    Deprecated,
+    Optional,
 )
 from conformity.fields.net import (
     IPAddress,
     IPv4Address,
     IPv6Address,
 )
-from conformity.fields.structures import (
-    AdditionalCollectionValidator,
-    Dictionary,
-    List,
-    SchemalessDictionary,
+from conformity.fields.protocols import (
+    Callable,
+    Collection,
+    Container,
+    Hashable,
+    Iterable,
+    Mapping,
+    Number,
     Sequence,
     Set,
+    Sized,
+)
+from conformity.fields.python import (
+    ClassConfigurationSchema,
+    PythonPath,
+    TypePath,
+)
+from conformity.fields.simple import (
+    Boolean,
+    Bytes,
+    Decimal,
+    Float,
+    Integer,
+    String,
+)
+from conformity.fields.structures import (
+    Dictionary,
+    List,
     Tuple,
 )
 from conformity.fields.temporal import (
@@ -57,18 +76,22 @@ from conformity.fields.temporal import (
     TZInfo,
 )
 
-
 __all__ = (
-    'AdditionalCollectionValidator',
     'All',
     'Any',
     'Anything',
     'Base',
+    'BaseField',
+    'BaseTypeField',
     'Boolean',
-    'BooleanValidator',
     'ByteString',
+    'Bytes',
+    'Callable',
+    'Chain',
     'ClassConfigurationSchema',
+    'Collection',
     'Constant',
+    'Container',
     'Date',
     'DateTime',
     'Decimal',
@@ -77,27 +100,36 @@ __all__ = (
     'EmailAddress',
     'Float',
     'Hashable',
-    'Integer',
     'IPAddress',
     'IPv4Address',
     'IPv6Address',
+    'Instance',
+    'Integer',
+    'Iterable',
     'Latitude',
     'List',
     'Longitude',
+    'Mapping',
     'Null',
     'Nullable',
+    'Number',
     'ObjectInstance',
+    'Optional',
     'Polymorph',
     'PythonPath',
     'SchemalessDictionary',
     'Sequence',
     'Set',
+    'Sized',
+    'String',
+    'TZInfo',
     'Time',
     'TimeDelta',
     'Tuple',
+    'Type',
     'TypePath',
     'TypeReference',
-    'TZInfo',
     'UnicodeDecimal',
     'UnicodeString',
+    'Validator',
 )

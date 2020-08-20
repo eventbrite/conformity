@@ -1,20 +1,10 @@
-from __future__ import (
-    absolute_import,
-    unicode_literals,
-)
-
 from typing import (
+    Any,
+    Hashable,
     List,
-    Optional,
+    TypeVar,
 )
 
-import attr
-import six
-
-from conformity.utils import (
-    attr_is_optional,
-    attr_is_string,
-)
 from conformity.constants import (
     ERROR_CODE_INVALID,
     WARNING_CODE_WARNING,
@@ -28,35 +18,89 @@ __all__ = (
 )
 
 
-@attr.s
-class Issue(object):
+class Issue:
     """
     Represents an issue found during validation of a value.
     """
-    message = attr.ib(validator=attr_is_string())  # type: six.text_type
-    pointer = attr.ib(default=None, validator=attr_is_optional(attr_is_string()))  # type: Optional[six.text_type]
+    def __init__(self, message: str, *, pointer: str = None) -> None:
+        self.message = message
+        self.pointer = pointer
 
 
-@attr.s
 class Error(Issue):
     """
     Represents an error found during validation of a value.
     """
-    code = attr.ib(default=ERROR_CODE_INVALID, validator=attr_is_string())  # type: six.text_type
+    def __init__(
+        self,
+        *args,
+        code: str = None,
+        **kwargs: Any
+    ):
+        super().__init__(*args, **kwargs)
+        self.code = code or ERROR_CODE_INVALID
 
 
-@attr.s
 class Warning(Issue):
     """
     Represents a warning found during validation of a value.
     """
-    code = attr.ib(default=WARNING_CODE_WARNING, validator=attr_is_string())  # type: six.text_type
+    def __init__(
+        self,
+        *args,
+        code: str = None,
+        **kwargs: Any
+    ):
+        super().__init__(*args, **kwargs)
+        self.code = code or WARNING_CODE_WARNING
 
 
-@attr.s
 class Validation(object):
-    errors = attr.ib(factory=list)  # type: List[Error]
-    warnings = attr.ib(factory=list)  # type: List[Warning]
+    def __init__(
+        self,
+        *,
+        errors: List[Error] = None,
+        warnings: List[Warning] = None,
+    ):
+        self.errors = errors or []  # type: List[Error]
+        self.warnings = warnings or []  # type: List[Warning]
 
     def __bool__(self):
+        return self.is_valid()
+
+    def is_valid(self):
         return bool(self.errors)
+
+    def extend(
+        self,
+        other: 'Validation',
+        *,
+        pointer: Hashable = None,
+    ) -> None:
+        if pointer is not None:
+            self.errors.extend([
+                _update_pointer(error, pointer)
+                for error in other.errors
+            ])
+            self.warnings.extend([
+                _update_pointer(warning, pointer)
+                for warning in other.warnings
+            ])
+        else:
+            self.errors.extend(other.errors)
+            self.warnings.extend(other.warnings)
+
+
+IssueVar = TypeVar('IssueVar', Issue, Error, Warning)
+
+
+def _update_pointer( issue: IssueVar, pointer_or_prefix: Hashable) -> IssueVar:
+    """
+    Helper function to update a pointer attribute with a (potentially prefixed)
+    dictionary key or list index.
+    """
+    if issue.pointer:
+        issue.pointer = '{}.{}'.format(pointer_or_prefix, issue.pointer)
+    else:
+        issue.pointer = '{}'.format(pointer_or_prefix)
+    return issue

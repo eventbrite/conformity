@@ -1,9 +1,3 @@
-from __future__ import (
-    absolute_import,
-    unicode_literals,
-)
-
-
 # Error codes
 ERROR_CODE_INVALID = 'INVALID'
 ERROR_CODE_MISSING = 'MISSING'

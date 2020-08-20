@@ -1,34 +1,29 @@
-from __future__ import (
-    absolute_import,
-    unicode_literals,
+from conformity.fields.simple import Float
+
+__all__ = (
+    'Latitude',
+    'Longitude',
 )
 
-import attr
 
-from conformity.fields.basic import Float
-
-
-@attr.s
 class Latitude(Float):
     """
-    Conformity field that ensures that the value is a float within the normal boundaries of a geographical latitude on
-    an ellipsoid or sphere.
+    Validates that the value is a float within the normal boundaries of a
+    geographical latitude on an ellipsoid or sphere.
     """
+    def __init__(self, **kwargs) -> None:
+        kwargs['gte'] = max(kwargs.get('gte', -100), -90)
+        kwargs['lte'] = min(kwargs.get('lte', 100), 90)
+        super().__init__(**kwargs)
 
-    def __attrs_post_init__(self):  # type: () -> None
-        # Set end limits if they're not set (and clip any set ones to valid range)
-        self.gte = max(-90, self.gte or -100)
-        self.lte = min(90, self.lte or 100)
 
-
-@attr.s
 class Longitude(Float):
     """
-    Conformity field that ensures that the value is a float within the normal boundaries of a geographical longitude on
-    an ellipsoid or sphere.
+    Validates that the value is a float within the normal boundaries of a
+    geographical longitude on an ellipsoid or sphere.
     """
 
-    def __attrs_post_init__(self):  # type: () -> None
-        # Set end limits if they're not set (and clip any set ones to valid range)
-        self.gte = max(-180, self.gte or -190)
-        self.lte = min(180, self.lte or 190)
+    def __init__(self, **kwargs) -> None:
+        kwargs['gte'] = max(kwargs.get('gte', -190), -180)
+        kwargs['lte'] = min(kwargs.get('lte', 190), 180)
+        super().__init__(**kwargs)
