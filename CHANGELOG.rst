@@ -1,6 +1,10 @@
 Changelog
 =========
 
+1.28.0 (2020-09-09)
+-------------------
+- [MINOR] Add deprecation support (#88)
+
 1.27.3 (2020-06-29)
 -------------------
 - Add introspect type to IPAddress
