@@ -57,7 +57,7 @@ setup(
     zip_safe=False,  # PEP 561
     include_package_data=True,
     install_requires=[
-        'attrs>=17.4,<20',
+        'attrs>=17.4,<22',
         'six',
         'typing~=3.7.4;python_version<"3.5"',
     ],
