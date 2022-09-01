@@ -1,6 +1,10 @@
 Changelog
 =========
 
+1.28.1 (2022-09-01)
+-------------------
+- [PATCH] Relax attrs version (#90)
+
 1.28.0 (2020-09-09)
 -------------------
 - [MINOR] Add deprecation support (#88)
