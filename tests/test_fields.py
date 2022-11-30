@@ -144,7 +144,8 @@ class FieldTests(unittest.TestCase):
             sorted([
                 Error('Not an integer', pointer='child_ids.2'),
                 Error('Missing key: address', code=ERROR_CODE_MISSING, pointer='address'),
-                Error('Extra keys present: another_bad, unsolicited_item', code=ERROR_CODE_UNKNOWN),
+                Error('Extra key present: another_bad', code=ERROR_CODE_UNKNOWN, pointer='another_bad'),
+                Error('Extra key present: unsolicited_item', code=ERROR_CODE_UNKNOWN, pointer='unsolicited_item'),
                 Error('Not a set or frozenset', pointer='unique_things'),
             ]),
         )
