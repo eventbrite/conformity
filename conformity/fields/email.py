@@ -8,6 +8,7 @@ from typing import (
     Any as AnyType,
     Iterable,
     List as ListType,
+    Optional
 )
 import warnings
 
@@ -54,7 +55,7 @@ class EmailAddress(UnicodeString):
     domain_whitelist = frozenset({'localhost'})
 
     def __init__(self, message=None, code=None, whitelist=None, **kwargs):
-        # type: (None, None, Iterable[six.text_type], **AnyType) -> None
+        # type: (None, None, Optional[Iterable[six.text_type]], **AnyType) -> None
         """
         Construct a new email address field.
 

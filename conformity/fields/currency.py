@@ -139,7 +139,7 @@ class AmountRequestDictionary(Dictionary):
 
     def __init__(
         self,
-        valid_currencies=None,  # type: Iterable[six.text_type]
+        valid_currencies=None,  # type: Optional[Iterable[six.text_type]]
         gt=None,  # type: Optional[int]
         gte=None,  # type: Optional[int]
         lt=None,  # type: Optional[int]
@@ -199,7 +199,7 @@ class AmountDictionary(AmountRequestDictionary):
     """
     def __init__(
         self,
-        valid_currencies=None,  # type: Iterable[six.text_type]
+        valid_currencies=None,  # type: Optional[Iterable[six.text_type]]
         gt=None,  # type: Optional[int]
         gte=None,  # type: Optional[int]
         lt=None,  # type: Optional[int]
