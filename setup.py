@@ -36,7 +36,7 @@ tests_require = [
     'mock;python_version<"3.3"',
     'mypy~=0.740;python_version>"3.4"',
     'pytest>4.2,<5.4',
-    'pytest-cov~=2.6',
+    'pytest-cov~=2.5',
     'coverage~=4.5',
     'pytest-runner',
     'pytz',
