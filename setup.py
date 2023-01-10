@@ -37,6 +37,7 @@ tests_require = [
     'mypy~=0.740;python_version>"3.4"',
     'pytest>4.2,<5.4',
     'pytest-cov==2.1.0',
+    'coverage~=4.5',
     'pytest-runner',
     'pytz',
 ] + currency_requires + country_requires + spinx_requires
