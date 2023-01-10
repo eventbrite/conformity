@@ -42,7 +42,7 @@ matrix:
         - mypy . --exclude build --exclude sphinx_ext
     - stage: deploy
       if: tag =~ ^[0-9]+\.[0-9]+\.[0-9]+
-      python: '3.6'
+      python: '3.7'
       script: skip
       install:
         - pip install -U pip setuptools pyopenssl
