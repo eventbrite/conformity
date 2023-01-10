@@ -10,7 +10,7 @@ from typing import (
     List as ListType,
 )
 
-import pycountry
+import pycountry  # type: ignore
 import six
 
 from conformity.types import Error

@@ -32,7 +32,7 @@ from conformity.utils import (
 
 try:
     # noinspection PyUnresolvedReferences
-    from freezegun import api as _freeze
+    from freezegun import api as _freeze  # type: ignore
     valid_datetime_types = frozenset({datetime.datetime, _freeze.FakeDatetime})
     valid_date_types = frozenset({datetime.date, _freeze.FakeDate})
 except ImportError:

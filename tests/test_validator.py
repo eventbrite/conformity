@@ -5,7 +5,7 @@ from __future__ import (
 
 import unittest
 
-import pytest
+import pytest  # type: ignore
 
 from conformity.fields import (
     Dictionary,

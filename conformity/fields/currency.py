@@ -15,7 +15,7 @@ from typing import (
 import warnings
 
 import attr
-import currint
+import currint  # type: ignore
 import six
 
 from conformity.constants import ERROR_CODE_INVALID

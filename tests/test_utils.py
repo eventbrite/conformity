@@ -4,7 +4,7 @@ from __future__ import (
 )
 
 import attr
-import pytest
+import pytest  # type: ignore
 import six
 
 from conformity.utils import attr_is_instance_or_instance_tuple

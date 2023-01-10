@@ -16,7 +16,7 @@ from typing import (
 from unittest import mock
 
 import attr
-import pytest
+import pytest  # type: ignore
 import six
 from sphinx.application import Sphinx
 from sphinx.config import Config
@@ -50,15 +50,15 @@ class ClassHoldingSigsToTest:
     def sig1_35(self, one: AnyStr, two: Optional[bool] = None) -> None:  # noqa: E999
         pass
 
-    def sig2(self, one, two=None, *args):
+    def sig2(self, one, two=None, *args):  # type: ignore
         # type: (bool, Optional[AnyStr], *int) -> List[int]
         pass
 
-    def sig2_35(self, one: bool, *args: int, two: Optional[AnyStr] = None) -> List[int]:
+    def sig2_35(self, one: bool, *args: int, two: Optional[AnyStr] = None) -> List[int]:  # type: ignore
         pass
 
     @decorated
-    def sig3(
+    def sig3(  # type: ignore
         self,
         one,
         two=None,
@@ -70,7 +70,7 @@ class ClassHoldingSigsToTest:
     @decorated
     @validate_method(fields.SchemalessDictionary(), fields.Anything())
     @decorated
-    def sig3_super_wrapped(
+    def sig3_super_wrapped(  # type: ignore
         self,
         one,
         two=None,
@@ -79,7 +79,7 @@ class ClassHoldingSigsToTest:
         # type: (six.text_type, LocalToThisModuleOptionalInt, **bool) -> Dict[six.binary_type, int]
         pass
 
-    def sig3_35(
+    def sig3_35(  # type: ignore
         self,
         one: six.text_type,
         *args: AnyType,
@@ -88,21 +88,18 @@ class ClassHoldingSigsToTest:
     ) -> Dict[six.binary_type, int]:
         pass
 
-    def sig4\
-            (
-
-                self,
-                one,  # type: AnyStr
-                two=None,  # type:  Optional[six.text_type]
-                three=lambda x: True,  # type: Callable[[AnyStr], bool]
-                *args,  # type: str
-                **kwargs  # type: AnyType
-
-            ):
+    def sig4(  # type: ignore
+        self,
+        one,  # type: AnyStr
+        two=None,  # type:  Optional[six.text_type]
+        three=lambda x: True,  # type: Callable[[AnyStr], bool]
+        *args,  # type: str
+        **kwargs  # type: AnyType
+    ):
         # type: (...) -> six.binary_type
         pass
 
-    def sig4_35(
+    def sig4_35(  # type: ignore
         self,
         one: AnyStr,
         two: Optional[six.text_type],

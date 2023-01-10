@@ -17,8 +17,8 @@ from typing import (
 import unittest
 import warnings
 
-import freezegun
-import pytest
+import freezegun  # type: ignore
+import pytest  # type: ignore
 import pytz
 import six
 

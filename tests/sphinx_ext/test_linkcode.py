@@ -4,7 +4,7 @@ from typing import cast
 # noinspection PyCompatibility
 from unittest import mock
 
-import pytest
+import pytest  # type: ignore
 from sphinx.application import Sphinx
 
 from conformity import __version__
