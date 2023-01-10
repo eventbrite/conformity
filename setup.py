@@ -36,7 +36,7 @@ tests_require = [
     'mock;python_version<"3.3"',
     'mypy~=0.740;python_version>"3.4"',
     'pytest>4.2,<5.4',
-    'pytest-cov',
+    'pytest-cov==2.1.0',
     'pytest-runner',
     'pytz',
 ] + currency_requires + country_requires + spinx_requires
