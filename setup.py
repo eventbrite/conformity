@@ -42,9 +42,12 @@ tests_require = [
     'pytest-runner',
     'pytz',
     'importlib-metadata~=5.0;python_version>"3.6"'
+] + currency_requires + country_requires + spinx_requires
+
+mypy_requires = [
     'types-six;python_version>="3.7"',
     'types-pytz;python_version>="3.7"',
-] + currency_requires + country_requires + spinx_requires
+]
 
 setup(
     name='conformity',
@@ -75,6 +78,7 @@ setup(
         'sphinx': spinx_requires,
         'docs': spinx_requires + country_requires + currency_requires,
         'testing': tests_require,
+        'mypy': mypy_requires,
     },
     license='Apache 2.0',
     classifiers=[
