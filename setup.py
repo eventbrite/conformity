@@ -41,7 +41,9 @@ tests_require = [
     'coverage~=5.2',
     'pytest-runner',
     'pytz',
-    'importlib-metadata~=6.0;python_version>"3.6"'
+    'importlib-metadata~=5.0;python_version>"3.6"'
+    'types-six;python_version>="3.7"',
+    'types-pytz;python_version>="3.7"',
 ] + currency_requires + country_requires + spinx_requires
 
 setup(
@@ -62,8 +64,6 @@ setup(
     install_requires=[
         'attrs>=17.4,<22',
         'six',
-        'types-six;python_version>="3.7"',
-        'types-pytz;python_version>="3.7"',
         'typing~=3.7.4;python_version<"3.5"',
     ],
     tests_require=tests_require,
