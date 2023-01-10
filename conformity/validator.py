@@ -131,7 +131,7 @@ def validate_call(
 def validate_method(
     kwargs,  # type: Union[fields.Dictionary, fields.SchemalessDictionary]
     returns,  # type: fields.Base
-    args=None,  # type: Union[fields.Tuple, fields.List]
+    args=None,  # type: Optional[Union[fields.Tuple, fields.List]]
 ):
     # type: (...) -> Callable[[Callable], Callable]
     """

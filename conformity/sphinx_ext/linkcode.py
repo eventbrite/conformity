@@ -77,7 +77,7 @@ def create_linkcode_resolve(
 
         module = importlib.import_module(info['module'])
         file_name = module.__file__
-        source_path = source_re.sub(top_level_module, file_name)
+        source_path = source_re.sub(top_level_module, file_name)  # type: ignore
         where = f'blob/{commit}' if commit else f'tree/{project_version_tag}'
         suffix = ''
 

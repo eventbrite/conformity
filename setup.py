@@ -5,7 +5,7 @@ from __future__ import (
 
 import sys
 
-from setuptools import (
+from setuptools import (  # type: ignore
     find_packages,
     setup,
 )
@@ -28,18 +28,26 @@ country_requires = [
 ]
 
 spinx_requires = [
-    'sphinx~=2.2;python_version>="3.6"',
+    'sphinx~=3.5;python_version>="3.6"',
+    'jinja2==3.0.3;python_version>="3.6"',
 ]
 
 tests_require = [
-    'freezegun',
+    'freezegun==1.0.0',
     'mock;python_version<"3.3"',
     'mypy~=0.740;python_version>"3.4"',
     'pytest>4.2,<5.4',
-    'pytest-cov',
+    'pytest-cov~=2.5',
+    'coverage~=5.2',
     'pytest-runner',
     'pytz',
+    'importlib-metadata~=5.0;python_version>"3.6"'
 ] + currency_requires + country_requires + spinx_requires
+
+mypy_requires = [
+    'types-six;python_version>="3.7"',
+    'types-pytz;python_version>="3.7"',
+]
 
 setup(
     name='conformity',
@@ -70,6 +78,7 @@ setup(
         'sphinx': spinx_requires,
         'docs': spinx_requires + country_requires + currency_requires,
         'testing': tests_require,
+        'mypy': mypy_requires,
     },
     license='Apache 2.0',
     classifiers=[
