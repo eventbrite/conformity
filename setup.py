@@ -29,7 +29,7 @@ country_requires = [
 
 spinx_requires = [
     'sphinx~=3.5;python_version>="3.6"',
-    'jinja2~=3.0;python_version>="3.6"',
+    'jinja2==3.0.3;python_version>="3.6"',
 ]
 
 tests_require = [
