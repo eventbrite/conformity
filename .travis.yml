@@ -31,7 +31,7 @@ matrix:
         - pip install ".[mypy]"
       script:
         - python setup.py test --addopts "--cov-report term-missing"
-        - mypy . --exclude ./build
+        - mypy . --exclude build
     - stage: build
       python: '3.8'
       install:
@@ -39,7 +39,7 @@ matrix:
         - pip install ".[mypy]"
       script:
         - python setup.py test --addopts "--cov-report term-missing"
-        - mypy . --exclude ./build
+        - mypy . --exclude build
     - stage: deploy
       if: tag =~ ^[0-9]+\.[0-9]+\.[0-9]+
       python: '3.6'
