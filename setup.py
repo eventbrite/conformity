@@ -5,7 +5,7 @@ from __future__ import (
 
 import sys
 
-from setuptools import (
+from setuptools import (  # type: ignore
     find_packages,
     setup,
 )
@@ -62,6 +62,8 @@ setup(
     install_requires=[
         'attrs>=17.4,<22',
         'six',
+        'types-six;python_version>="3.7"',
+        'types-pytz;python_version>="3.7"',
         'typing~=3.7.4;python_version<"3.5"',
     ],
     tests_require=tests_require,
