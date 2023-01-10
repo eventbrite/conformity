@@ -40,6 +40,7 @@ tests_require = [
     'coverage~=5.2',
     'pytest-runner',
     'pytz',
+    'importlib-metadata~=5.0;python_version>"3.6"'
 ] + currency_requires + country_requires + spinx_requires
 
 setup(
