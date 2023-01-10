@@ -301,7 +301,7 @@ def _pretty_introspect(value: fields.Base, depth: int = 1, nullable: str = '') -
             documentation += '\nNo keys permitted.'
         iterate: Iterable[Tuple[Hashable, fields.Base]] = value.contents.items()
         if not isinstance(value.contents, collections.OrderedDict):
-            iterate = sorted(value.contents.items(), key=lambda i: i[0])  # type: ignore
+            iterate = sorted(value.contents.items(), key=lambda i: i[0])
         for k, v in iterate:
             documentation += '\n{}- ``{}`` - {}'.format(first, k, _pretty_introspect(v, depth + 1))
         if value.contents or not value.allow_extra_keys:
@@ -384,7 +384,7 @@ def _pretty_introspect(value: fields.Base, depth: int = 1, nullable: str = '') -
             nullable,
             description,
         )
-        for k, v in sorted(value.contents_map.items(), key=lambda i: i[0]):  # type: ignore
+        for k, v in sorted(value.contents_map.items(), key=lambda i: i[0]):
             documentation += '\n{spaces}- ``{field} == {value}`` - {doc}'.format(
                 spaces=first,
                 field=value.switch_field,

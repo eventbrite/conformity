@@ -7,7 +7,7 @@ from __future__ import (
 import unittest
 import warnings
 
-import pytest  # type: ignore
+import pytest
 
 from conformity.types import Error
 from conformity.fields import EmailAddress

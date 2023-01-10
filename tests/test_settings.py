@@ -10,7 +10,7 @@ from typing import (
     ValuesView,
 )
 
-import pytest  # type: ignore
+import pytest
 import six
 
 from conformity import fields

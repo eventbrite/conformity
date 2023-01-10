@@ -11,7 +11,7 @@ from typing import (
 )
 import unittest
 
-import pytest  # type: ignore
+import pytest
 import six
 
 from conformity.constants import WARNING_CODE_FIELD_DEPRECATED

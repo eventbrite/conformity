@@ -5,7 +5,7 @@ from __future__ import (
 
 import unittest
 
-import pytest  # type: ignore
+import pytest
 
 from conformity.constants import (
     ERROR_CODE_INVALID,

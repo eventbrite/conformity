@@ -6,12 +6,12 @@ from __future__ import (
 import unittest
 import warnings
 
-from currint import (  # type: ignore
+from currint import (
     Amount,
     Currency,
     currencies,
 )
-import pytest  # type: ignore
+import pytest
 import six
 
 from conformity.constants import (
