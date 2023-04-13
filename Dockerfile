@@ -1,14 +1,14 @@
 FROM ubuntu:16.04
 
 RUN apt-get update && \
-    apt-get install -y \
+    apt-get install --no-install-recommends -y \
         git \
         pkg-config \
         software-properties-common \
         wget
 RUN add-apt-repository ppa:deadsnakes/ppa && \
     apt-get update && \
-    apt-get install -y \
+    apt-get install --no-install-recommends -y \
         python2.7 \
         python2.7-dev \
         python3.4 \
