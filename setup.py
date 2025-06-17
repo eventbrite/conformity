@@ -37,18 +37,18 @@ spinx_requires = [
 tests_require = [
     'freezegun==1.0.0',
     'mock;python_version<"3.3"',
-    'mypy~=0.740;python_version>"3.4" and python_version<"3.10"',
-    'mypy>=1.5.1;python_version>="3.10"',
-    'pytest>4.2,<5.4;python_version<"3.10"',
-    'pytest>=7.4.0;python_version>="3.10"',
-    'pytest-cov~=2.5;python_version<"3.10"',
-    'pytest-cov>=4.1.0;python_version>="3.10"',
-    'coverage~=5.2;python_version<"3.10"',
-    'coverage>=7.2.7;python_version>="3.10"',
+    'mypy~=0.740;python_version>"3.4" and python_version<"3.12"',
+    'mypy>=1.5.1;python_version>="3.12"',
+    'pytest>4.2,<5.4;python_version<"3.12"',
+    'pytest>=7.4.0;python_version>="3.12"',
+    'pytest-cov~=2.5;python_version<"3.12"',
+    'pytest-cov>=4.1.0;python_version>="3.12"',
+    'coverage~=5.2;python_version<"3.12"',
+    'coverage>=7.2.7;python_version>="3.12"',
     'pytest-runner',
     'pytz',
-    'importlib-metadata~=5.0;python_version>"3.6" and python_version<"3.10"',
-    'importlib-metadata>=6.8.0;python_version>="3.10"'
+    'importlib-metadata~=5.0;python_version>"3.6" and python_version<"3.12"',
+    'importlib-metadata>=6.8.0;python_version>="3.12"'
 ] + currency_requires + country_requires + spinx_requires
 
 mypy_requires = [
@@ -101,9 +101,6 @@ setup(
         'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
         'Programming Language :: Python :: 3.8',
-        'Programming Language :: Python :: 3.9',
-        'Programming Language :: Python :: 3.10',
-        'Programming Language :: Python :: 3.11',
         'Programming Language :: Python :: 3.12',
         'Topic :: Software Development',
     ],
