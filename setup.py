@@ -28,20 +28,27 @@ country_requires = [
 ]
 
 spinx_requires = [
-    'sphinx~=3.5;python_version>="3.6"',
-    'jinja2==3.0.3;python_version>="3.6"',
+    'sphinx~=3.5;python_version>="3.6" and python_version<"3.12"',
+    'sphinx~=7.2;python_version>="3.12"',
+    'jinja2==3.0.3;python_version>="3.6" and python_version<"3.12"',
+    'jinja2>=3.1.2;python_version>="3.12"',
 ]
 
 tests_require = [
     'freezegun==1.0.0',
     'mock;python_version<"3.3"',
-    'mypy~=0.740;python_version>"3.4"',
-    'pytest>4.2,<5.4',
-    'pytest-cov~=2.5',
-    'coverage~=5.2',
+    'mypy~=0.740;python_version>"3.4" and python_version<"3.10"',
+    'mypy>=1.5.1;python_version>="3.10"',
+    'pytest>4.2,<5.4;python_version<"3.10"',
+    'pytest>=7.4.0;python_version>="3.10"',
+    'pytest-cov~=2.5;python_version<"3.10"',
+    'pytest-cov>=4.1.0;python_version>="3.10"',
+    'coverage~=5.2;python_version<"3.10"',
+    'coverage>=7.2.7;python_version>="3.10"',
     'pytest-runner',
     'pytz',
-    'importlib-metadata~=5.0;python_version>"3.6"'
+    'importlib-metadata~=5.0;python_version>"3.6" and python_version<"3.10"',
+    'importlib-metadata>=6.8.0;python_version>="3.10"'
 ] + currency_requires + country_requires + spinx_requires
 
 mypy_requires = [
@@ -65,9 +72,9 @@ setup(
     zip_safe=False,  # PEP 561
     include_package_data=True,
     install_requires=[
-        'attrs>=17.4,<22',
-        'six',
-        'typing~=3.7.4;python_version<"3.5"',
+    'attrs>=17.4,<24',
+    'six',
+    'typing~=3.7.4;python_version<"3.5"',
     ],
     tests_require=tests_require,
     setup_requires=['pytest-runner'] if {'pytest', 'test', 'ptr'}.intersection(sys.argv) else [],
@@ -94,6 +101,10 @@ setup(
         'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
         'Programming Language :: Python :: 3.8',
+        'Programming Language :: Python :: 3.9',
+        'Programming Language :: Python :: 3.10',
+        'Programming Language :: Python :: 3.11',
+        'Programming Language :: Python :: 3.12',
         'Topic :: Software Development',
     ],
     project_urls={

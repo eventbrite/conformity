@@ -1,4 +1,4 @@
-FROM ubuntu:16.04
+FROM ubuntu:22.04
 
 RUN apt-get update && \
     apt-get install -y \
@@ -21,10 +21,22 @@ RUN add-apt-repository ppa:deadsnakes/ppa && \
         python3.7-dev \
         python3.8 \
         python3.8-distutils \
-        python3.8-dev
+        python3.8-dev \
+        python3.9 \
+        python3.9-distutils \
+        python3.9-dev \
+        python3.10 \
+        python3.10-distutils \
+        python3.10-dev \
+        python3.11 \
+        python3.11-distutils \
+        python3.11-dev \
+        python3.12 \
+        python3.12-distutils \
+        python3.12-dev
 RUN wget https://bootstrap.pypa.io/get-pip.py -O /tmp/get-pip.py && \
-    python3.7 /tmp/get-pip.py && \
-    python3.7 -m pip install tox
+    python3.12 /tmp/get-pip.py && \
+    python3.12 -m pip install tox
 
 WORKDIR /test/conformity
 

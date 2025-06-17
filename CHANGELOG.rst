@@ -1,6 +1,13 @@
 Changelog
 =========
 
+1.29.0 (2025-06-17)
+-------------------
+- [MINOR] Add explicit support for Python 3.12
+- [MINOR] Update attrs dependency upper bound to <24
+
+=========
+
 1.28.1 (2022-09-01)
 -------------------
 - [PATCH] Relax attrs version (#90)

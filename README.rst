@@ -85,19 +85,19 @@ or ``Pipfile``:
 
 .. code-block:: bash
 
-    pip install 'conformity~=1.26'
+    pip install 'conformity~=1.29'
 
 .. code-block:: python
 
     install_requires=[
         ...
-        'conformity~=1.26',
+        'conformity~=1.29',
         ...
     ]
 
 .. code-block:: text
 
-    conformity~=1.26
+    conformity~=1.29
 
 .. code-block:: text
 

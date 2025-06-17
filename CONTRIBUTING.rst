@@ -128,6 +128,6 @@ Before you submit a pull request, check that it meets these guidelines:
    class or function with a docstring, and add the feature to the appropriate location in ``docs/``. If you created a
    new module and it contains classes that should be publicly documented, add an autodoc config for that module to
    ``docs/reference.rst``.
-3. The pull request should work for Python 2.7, 3.5, 3.6, and 3.7. Check
+3. The pull request should work for Python 2.7, 3.5, 3.6, 3.7, 3.8, and 3.12. Check
    https://travis-ci.org/eventbrite/conformity/pull_requests and make sure that the tests pass for all supported Python
    versions.
