@@ -1,8 +1,3 @@
-from __future__ import (
-    absolute_import,
-    unicode_literals,
-)
-
 import sys
 
 from setuptools import (  # type: ignore
@@ -23,8 +18,7 @@ currency_requires = [
 ]
 
 country_requires = [
-    'pycountry<19.7.15;python_version<"3"',
-    'pycountry>=19.7.15;python_version>="3"',
+    'pycountry>=19.7.15',
 ]
 
 spinx_requires = [
@@ -36,8 +30,7 @@ spinx_requires = [
 
 tests_require = [
     'freezegun==1.0.0',
-    'mock;python_version<"3.3"',
-    'mypy~=0.740;python_version>"3.4" and python_version<"3.12"',
+    'mypy~=0.740;python_version<"3.12"',
     'mypy>=1.5.1;python_version>="3.12"',
     'pytest>4.2,<5.4;python_version<"3.12"',
     'pytest>=7.4.0;python_version>="3.12"',
@@ -47,7 +40,7 @@ tests_require = [
     'coverage>=7.2.7;python_version>="3.12"',
     'pytest-runner',
     'pytz',
-    'importlib-metadata~=5.0;python_version>"3.6" and python_version<"3.12"',
+    'importlib-metadata~=5.0;python_version<"3.12"',
     'importlib-metadata>=6.8.0;python_version>="3.12"'
 ] + currency_requires + country_requires + spinx_requires
 
@@ -74,7 +67,6 @@ setup(
     install_requires=[
     'attrs>=17.4,<24',
     'six',
-    'typing~=3.7.4;python_version<"3.5"',
     ],
     tests_require=tests_require,
     setup_requires=['pytest-runner'] if {'pytest', 'test', 'ptr'}.intersection(sys.argv) else [],
@@ -94,8 +86,6 @@ setup(
         'License :: OSI Approved :: Apache Software License',
         'Operating System :: OS Independent',
         'Programming Language :: Python',
-        'Programming Language :: Python :: 2',
-        'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',

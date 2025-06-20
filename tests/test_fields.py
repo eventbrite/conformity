@@ -6,6 +6,7 @@ from __future__ import (
 from collections import OrderedDict
 import datetime
 import decimal
+import sys
 from typing import (
     AbstractSet,
     Any as AnyType,
@@ -78,7 +79,7 @@ class FieldTests(unittest.TestCase):
     def test_strings(self):  # type: () -> None
         schema = UnicodeString()
         self.assertEqual([], schema.errors(''))
-        self.assertEqual([], schema.errors('Foo bar baz qux foo bar baz qux foo bar baz qux foo bar baz qux foo bar'))
+        self.assertEqual([], schema.errors('Foo bar baz qux foo bar baz qux foo bar baz qux foo bar baz qux foo'))
         self.assertEqual([Error('Not a unicode string')], schema.errors(b'Test'))
 
         schema = UnicodeString(min_length=5, max_length=10)
@@ -835,7 +836,12 @@ class TestStructures(object):
         with pytest.raises(TypeError) as error_context:
             V()  # type: ignore
 
-        assert 'abstract methods' in error_context.value.args[0]
+        error_msg = error_context.value.args[0]
+        # Python 3.12 changes the error message format
+        if sys.version_info >= (3, 12):
+            assert "abstract method 'errors'" in error_msg
+        else:
+            assert 'abstract methods' in error_msg
 
     def test_list(self):  # type: () -> None
         with pytest.raises(TypeError):

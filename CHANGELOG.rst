@@ -1,10 +1,16 @@
 Changelog
 =========
 
-1.29.0 (2025-06-17)
+2.0.0 (2025-06-20)
 -------------------
-- [MINOR] Add explicit support for Python 3.12
+- [MAJOR] Drop support for Python 2.7
+- [MAJOR] Add official support for Python 3.12
+- [MAJOR] Remove Python 2.7 specific code, imports, and compatibility layers
+- [MAJOR] Update type annotations for modern Python typing standards
+- [MINOR] Fix test issues related to Optional vs Union[Type, None] representation differences in Python 3.12
+- [MINOR] Update error message assertions for abstract class instantiation in Python 3.12
 - [MINOR] Update attrs dependency upper bound to <24
+- [PATCH] Clean up deprecated __future__ imports and Python 2.x compatibility code
 
 =========
 
