@@ -1,16 +1,19 @@
 Changelog
 =========
 
-2.0.0 (2025-06-20)
+2.0.0 (2025-06-25)
 -------------------
 - [MAJOR] Drop support for Python 2.7
 - [MAJOR] Add official support for Python 3.12
 - [MAJOR] Remove Python 2.7 specific code, imports, and compatibility layers
 - [MAJOR] Update type annotations for modern Python typing standards
+- [MAJOR] Migrate to pyproject.toml for dependency management and configuration
 - [MINOR] Fix test issues related to Optional vs Union[Type, None] representation differences in Python 3.12
 - [MINOR] Update error message assertions for abstract class instantiation in Python 3.12
 - [MINOR] Update attrs dependency upper bound to <24
+- [MINOR] Simplify setup.py by delegating to pyproject.toml
 - [PATCH] Clean up deprecated __future__ imports and Python 2.x compatibility code
+- [PATCH] Modernize build system configuration
 
 =========
 

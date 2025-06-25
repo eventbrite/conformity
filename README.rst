@@ -26,6 +26,10 @@ Conformity - Declarative Schema for Python
 **Conformity** is a declarative schema validation library designed for use in libraries, services, application
 settings, and more.
 
+.. note::
+   Version 2.0.0 drops support for Python 2.7 and adds official support for Python 3.12. 
+   If you need Python 2.7 compatibility, please use version 1.x.
+
 ------------
 
 Declare a schema:
@@ -80,28 +84,44 @@ Conformity is licensed under the `Apache License, version 2.0 <LICENSE>`_.
 Installation
 ------------
 
-Conformity is available in PyPi and can be installing directly via Pip or listed in ``setup.py``, ``requirements.txt``,
-or ``Pipfile``:
+Conformity is available in PyPi and can be installed directly via Pip or listed in ``pyproject.toml``, ``setup.py``, ``requirements.txt``,
+or ``Pipfile``. Version 2.0.0 and above requires Python 3.5 or later:
 
 .. code-block:: bash
 
-    pip install 'conformity~=1.29'
+    pip install 'conformity~=2.0'
+
+For modern Python projects using ``pyproject.toml``:
+
+.. code-block:: toml
+
+    [project]
+    dependencies = [
+        "conformity~=2.0",
+        # other dependencies...
+    ]
+
+For ``setup.py``:
 
 .. code-block:: python
 
     install_requires=[
         ...
-        'conformity~=1.29',
+        'conformity~=2.0',
         ...
     ]
 
-.. code-block:: text
-
-    conformity~=1.29
+For ``requirements.txt``:
 
 .. code-block:: text
 
-    conformity = {version="~=1.26"}
+    conformity~=2.0
+
+For ``Pipfile``:
+
+.. code-block:: text
+
+    conformity = {version="~=2.0"}
 
 
 Documentation

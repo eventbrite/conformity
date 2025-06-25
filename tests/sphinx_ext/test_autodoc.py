@@ -114,12 +114,12 @@ class ClassHoldingSigsToTest:
         pass
 
 
-# Python 2.7 support removed - ClassUsingAttrs27HintsToTest class removed
+
 
 
 # noinspection PyCompatibility
 @attr.s
-class ClassUsingAttrs35HintsToTest:
+class ClassUsingAttrsHintsToTest:
 
     one: bytes = attr.ib()
 
@@ -135,8 +135,7 @@ class ClassUsingAttrs35HintsToTest:
 class SettingsToTest(settings.Settings):
     schema: settings.SettingsSchema = {
         'one': fields.Dictionary({
-            # Python 2.7 support removed - ClassConfigurationSchema test modified
-            'a': fields.ClassConfigurationSchema(base_class=ClassUsingAttrs35HintsToTest, description='Nifty schema.'),
+            'a': fields.ClassConfigurationSchema(base_class=ClassUsingAttrsHintsToTest, description='Nifty schema.'),
             'b': fields.PythonPath(value_schema=fields.UnicodeString(), description='Must be a path, yo.'),
             'c': fields.TypeReference(base_classes=ClassHoldingSigsToTest, description='Refer to that thing!'),
         }),
@@ -144,7 +143,7 @@ class SettingsToTest(settings.Settings):
         'three': fields.List(fields.Integer()),
         'four': fields.Nullable(fields.Set(fields.ByteString())),
         'five': fields.Any(fields.Integer(), fields.Float()),
-        'six': fields.ObjectInstance(valid_type=ClassUsingAttrs35HintsToTest, description='Y u no instance?'),
+        'six': fields.ObjectInstance(valid_type=ClassUsingAttrsHintsToTest, description='Y u no instance?'),
         'seven': fields.Polymorph(
             'thing',
             {
@@ -283,16 +282,15 @@ def test_get_annotations(obj, annotations):
             '*args: str, **kwargs: Any)',
             'bytes',
         ),
-        # Python 2.7 test cases removed
         (
-            ClassUsingAttrs35HintsToTest,
+            ClassUsingAttrsHintsToTest,
             '(one, two=None, three=None)',
             None,
             '(one: bytes, two: List[bool] = NOTHING, three: Union[Dict[str, int], None] = None)',
             None,
         ),
         (
-            ClassUsingAttrs35HintsToTest.__init__,
+            ClassUsingAttrsHintsToTest.__init__,
             '(one, two=None, three=None)',
             None,
             '(one: bytes, two: List[bool] = NOTHING, three: Union[Dict[str, int], None] = None)',
@@ -406,7 +404,7 @@ def test_autodoc_process_docstring_settings_class():
                         'based on the value of ``path``, dynamically based on class imported from ``path`` (see the ' \
                         'configuration settings schema documentation for the class named at ``path``). Nifty schema. ' \
                         'The imported item at the specified ``path`` must be a subclass of ' \
-                        '``tests.sphinx_ext.test_autodoc.ClassUsingAttrs35HintsToTest``.'
+                        '``tests.sphinx_ext.test_autodoc.ClassUsingAttrsHintsToTest``.'
     assert lines[18] == '  - ``b`` - a unicode string importable Python path in the format "foo.bar.MyClass", ' \
                         '"foo.bar:YourClass.CONSTANT", etc. Must be a path, yo. The imported item at the specified ' \
                         'path must match the following schema:'
@@ -433,7 +431,7 @@ def test_autodoc_process_docstring_settings_class():
     assert lines[37] == ''
     assert lines[38] == ''
     assert lines[39] == '- ``six`` - a Python object that is an instance of the following class or classes: ' \
-                        '``tests.sphinx_ext.test_autodoc.ClassUsingAttrs35HintsToTest``. Y u no instance?'
+                        '``tests.sphinx_ext.test_autodoc.ClassUsingAttrsHintsToTest``. Y u no instance?'
     assert lines[40] == '- ``three`` - ``list``: *(no description)*'
     assert lines[41] == ''
     assert lines[42] == '  **values**'

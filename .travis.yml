@@ -1,52 +1,51 @@
 os: linux
-dist: xenial
+dist: focal
 language: python
 matrix:
   include:
     - stage: build
-      python: '2.7'
-      install:
-        - pip install -U pip setuptools "flake8~=3.7,>=3.7.8"
-      script:
-        - python setup.py test --addopts "--cov-report term-missing"
-        - flake8 .
-    - stage: build
       python: '3.5'
       install:
-        - pip install -U pip setuptools
+        - pip install -U pip setuptools wheel
+        - pip install -e .
+        - pip install pytest pytest-cov
       script:
-        - python setup.py test --addopts "--cov-report term-missing"
+        - pytest --cov-report term-missing
     - stage: build
       python: '3.6'
       install:
-        - pip install -U pip setuptools "flake8~=3.7,>=3.7.8"
+        - pip install -U pip setuptools wheel "flake8~=3.7,>=3.7.8"
+        - pip install -e .
+        - pip install pytest pytest-cov
       script:
-        - python setup.py test --addopts "--cov-report term-missing"
+        - pytest --cov-report term-missing
         - flake8 .
     - stage: build
       python: '3.7'
       install:
-        - pip install -U pip setuptools "mypy~=0.740"
-        - pip install -U importlib-metadata~=5.0 # this needs to be installed separately BEFORE trying to parse the setup.py file
-        - pip install ".[mypy]"
+        - pip install -U pip setuptools wheel "mypy~=0.740"
+        - pip install -e ".[mypy]"
+        - pip install pytest pytest-cov
       script:
-        - python setup.py test --addopts "--cov-report term-missing"
+        - pytest --cov-report term-missing
         - mypy . --exclude build --exclude sphinx_ext
     - stage: build
       python: '3.8'
       install:
-        - pip install -U pip setuptools "mypy~=0.740"
-        - pip install ".[mypy]"
+        - pip install -U pip setuptools wheel "mypy~=0.740"
+        - pip install -e ".[mypy]"
+        - pip install pytest pytest-cov
       script:
-        - python setup.py test --addopts "--cov-report term-missing"
+        - pytest --cov-report term-missing
         - mypy . --exclude build --exclude sphinx_ext
     - stage: build
       python: '3.12'
       install:
-        - pip install -U pip setuptools "mypy>=1.8.0"
-        - pip install ".[mypy]"
+        - pip install -U pip setuptools wheel "mypy>=1.8.0"
+        - pip install -e ".[mypy]"
+        - pip install pytest pytest-cov
       script:
-        - python setup.py test --addopts "--cov-report term-missing"
+        - pytest --cov-report term-missing
         - mypy . --exclude build --exclude sphinx_ext
     - stage: deploy
       if: tag =~ ^[0-9]+\.[0-9]+\.[0-9]+
