@@ -2,6 +2,16 @@
 requires = ["setuptools>=42", "wheel"]
 build-backend = "setuptools.build_meta"
 
+[tool.bdist_wheel]
+python_tag = "py35.py36.py37.py38.py312"
+
+[tool.aliases]
+test = "pytest"
+
+[tool.flake8]
+exclude = ".git,.env/*,docs/*,build/*,.eggs/*,*.egg-info/*,.tox"
+max-line-length = 120
+
 [project]
 name = "conformity"
 dynamic = ["version"]
@@ -10,7 +20,7 @@ readme = "README.rst"
 authors = [
     {name = "Eventbrite, Inc.", email = "opensource@eventbrite.com"}
 ]
-license = {text = "Apache 2.0"}
+license = {text = "Apache 2.0", files = ["LICENSE"]}
 classifiers = [
     "Development Status :: 5 - Production/Stable",
     "Intended Audience :: Developers",
@@ -88,12 +98,10 @@ version = {attr = "conformity.__version__"}
 conformity = ["py.typed"]
 "conformity.sphinx_ext" = ["static/*"]
 
-[tool.pytest]
+[tool.pytest.ini_options]
 junit_family = "xunit2"
 addopts = "-s --junitxml=pytests.xml --cov-fail-under=85 --cov-branch --cov-report=term-missing --cov=conformity"
-
-[tool.pytest.filterwarnings]
-ignore = [
+filterwarnings = [
     "ignore::DeprecationWarning:jinja2.utils",
     "ignore::DeprecationWarning:jinja2.runtime"
 ]

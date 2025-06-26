@@ -27,7 +27,7 @@ Conformity - Declarative Schema for Python
 settings, and more.
 
 .. note::
-   Version 2.0.0 drops support for Python 2.7 and adds official support for Python 3.12. 
+   Version 2.0.0 drops support for Python 2.7, adds official support for Python 3.12, and uses modern Python packaging with pyproject.toml.
    If you need Python 2.7 compatibility, please use version 1.x.
 
 ------------
