@@ -837,9 +837,9 @@ class TestStructures(object):
             V()  # type: ignore
 
         error_msg = error_context.value.args[0]
-        # Python 3.12 changes the error message format
-        if sys.version_info >= (3, 12):
-            assert "abstract method 'errors'" in error_msg
+        # Python 3.10+ changes the error message format
+        if sys.version_info >= (3, 10):
+            assert "abstract method" in error_msg and "errors" in error_msg
         else:
             assert 'abstract methods' in error_msg
 

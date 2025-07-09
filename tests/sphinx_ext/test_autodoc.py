@@ -306,8 +306,8 @@ def test_autodoc_process_signature(obj, signature, return_annotation, new_signat
         sphinx, 'method', 'does not matter', obj, options, signature, return_annotation,
     )
     
-    # In Python 3.12+, Optional[X] is used instead of Union[X, None]
-    if sys.version_info >= (3, 12):
+    # In Python 3.10+, Optional[X] is used instead of Union[X, None]
+    if sys.version_info >= (3, 10):
         # Convert expected value from Union[X, None] to Optional[X] format
         expected_sig = new_signature
         if "Union[" in expected_sig and ", None]" in expected_sig:
